@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.5 2003/10/25 18:10:15 schwa Exp $
+# $Id: setup.py,v 1.6 2003/10/25 18:35:49 schwa Exp $
 
 """
 setup.py - installation script for Python distutils
@@ -46,7 +46,7 @@ from distutils import sysconfig
 _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
-_data_target = "%s/%s/" % (sysconfig.get_python_lib(), _package)
+_data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
 
 # add `download_url` parameter if the version of distutils supports it
 more_args = {}
