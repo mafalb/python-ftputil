@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.75 2002/03/30 22:57:47 schwa Exp $
+# $Id: ftputil.py,v 1.76 2002/03/31 23:19:01 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -95,6 +95,7 @@ from __future__ import nested_scopes
 import ftplib
 import stat
 import time
+import os
 import sys
 import posixpath
 import UserTuple
@@ -401,6 +402,9 @@ class FTPHost:
         else:
             self._parser = self._parse_unix_line
 
+    #
+    # dealing with child sessions and file-like objects
+    #
     def _make_session(self):
         """
         Return a new session object according to the current state
@@ -450,6 +454,91 @@ class FTPHost:
         host._file._open(path, mode)
         return host._file
 
+    def copyfileobj(self, source, target, length=64*1024):
+        "Copy data from file-like object source to file-like object target."
+        # inspired by shutil.copyfileobj (I don't use the
+        #  shutil code directly because it might change)
+        while 1:
+            buf = source.read(length)
+            if not buf:
+                break
+            target.write(buf)
+
+    def copyfile(self, src, dst):
+        """Copy data from src to dst (adapted from shutil.copyfile)."""
+        fsrc = None
+        fdst = None
+        try:
+            fsrc = self.file(src, 'rb')
+            fdst = self.file(dst, 'wb')
+            self.copyfileobj(fsrc, fdst)
+        finally:
+            if fdst:
+                fdst.close()
+            if fsrc:
+                fsrc.close()
+
+    def __get_modes(self, mode):
+        """Return modes for source and target file."""
+        if mode == 'b':
+            return 'rb', 'wb'
+        else:
+            return 'r', 'w'
+
+    def upload(self, source, target, mode=''):
+        """
+        Upload a file from the local source (name) to the remote
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
+        source_mode, target_mode = self.__get_modes(mode)
+        source = open(source, source_mode)
+        target = self.file(target, target_mode)
+        self.copyfileobj(source, target)
+        source.close()
+        target.close()
+
+    def download(self, source, target, mode=''):
+        """
+        Download a file from the remote source (name) to the local
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
+        source_mode, target_mode = self.__get_modes(mode)
+        source = self.file(source, source_mode)
+        target = open(target, target_mode)
+        self.copyfileobj(source, target)
+        source.close()
+        target.close()
+
+    def upload_if_newer(self, source, target, mode=''):
+        """
+        Upload a file only if it's newer than the target on the
+        remote host.
+        """
+        source_timestamp = os.path.getmtime(source)
+        if self.path.exists(target):
+            target_timestamp = self.path.getmtime(target)
+        else:
+            # _very_ old file
+            target_timestamp = 0.0
+        if source_timestamp > target_timestamp:
+            self.upload(source, target, mode)
+        
+    def download_if_newer(self, source, target, mode=''):
+        """
+        Download a file only if it's newer than the target on the
+        local host or the target file does not exist.
+        """
+        source_timestamp = self.path.getmtime(source)
+        if os.path.exists(target):
+            target_timestamp = os.path.getmtime(target)
+        else:
+            # _very_ old file
+            target_timestamp = 0.0
+        if source_timestamp > target_timestamp:
+            self.download(source, target, mode)
+        
     def close(self):
         """Close host connection."""
         if not self.closed:
@@ -676,63 +765,6 @@ class FTPHost:
         else:
             return stat_result
 
-    def copyfileobj(self, source, target, length=64*1024):
-        "Copy data from file-like object source to file-like object target."
-        # inspired by shutil.copyfileobj (I don't use the
-        #  shutil code directly because it might change)
-        while 1:
-            buf = source.read(length)
-            if not buf:
-                break
-            target.write(buf)
-
-    def copyfile(self, src, dst):
-        """Copy data from src to dst (adapted from shutil.copyfile)."""
-        fsrc = None
-        fdst = None
-        try:
-            fsrc = self.file(src, 'rb')
-            fdst = self.file(dst, 'wb')
-            self.copyfileobj(fsrc, fdst)
-        finally:
-            if fdst:
-                fdst.close()
-            if fsrc:
-                fsrc.close()
-
-    def __get_modes(self, mode):
-        """Return modes for source and target file."""
-        if mode == 'b':
-            return 'rb', 'wb'
-        else:
-            return 'r', 'w'
-
-    def upload(self, source, target, mode=''):
-        """
-        Upload a file from the local source (name) to the remote
-        target (name). The argument mode is an empty string or 'a' for
-        text copies, or 'b' for binary copies.
-        """
-        source_mode, target_mode = self.__get_modes(mode)
-        source = open(source, source_mode)
-        target = self.file(target, target_mode)
-        self.copyfileobj(source, target)
-        source.close()
-        target.close()
-
-    def download(self, source, target, mode=''):
-        """
-        Download a file from the remote source (name) to the local
-        target (name). The argument mode is an empty string or 'a' for
-        text copies, or 'b' for binary copies.
-        """
-        source_mode, target_mode = self.__get_modes(mode)
-        source = self.file(source, source_mode)
-        target = open(target, target_mode)
-        self.copyfileobj(source, target)
-        source.close()
-        target.close()
-
 
 #####################################################################
 # Helper classes _Stat and _Path to imitate behaviour of stat objects
@@ -741,8 +773,7 @@ class FTPHost:
 class _Stat(UserTuple.UserTuple):
     """
     Support class resembling a tuple like that which is returned
-    from os.(l)stat. Deriving from the tuple type will only work
-    in Python 2.2+
+    from os.(l)stat.
     """
 
     _index_mapping = {'st_mode':  0, 'st_ino':   1,
