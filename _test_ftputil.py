@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.32 2002/03/30 15:31:30 schwa Exp $
+# $Id: _test_ftputil.py,v 1.33 2002/03/30 15:36:25 schwa Exp $
 
 import unittest
 import stat
@@ -57,13 +57,16 @@ class TestLogin(unittest.TestCase):
 
 
 class TestStat(unittest.TestCase):
-    """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.
-    (test currently only implemented for Unix server format.
+    """
+    Test FTPHost.lstat and FTPHost.stat (test currently only
+    implemented for Unix server format).
     """
 
     def test_failing_lstat(self):
         """Test whether lstat fails for a nonexistent path."""
         host = FTPHostWrapper(_mock_ftplib.MockSession)
+        self.assertRaises(ftputil.PermanentError, host.lstat,
+                          '/home/sschw/notthere')
         self.assertRaises(ftputil.PermanentError, host.lstat,
                           '/home/sschwarzer/notthere')
 
@@ -73,7 +76,7 @@ class TestStat(unittest.TestCase):
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
-    
+
     def test_lstat_one_dir(self):
         """Test FTPHost.lstat with a directory."""
         # some directory
@@ -90,19 +93,25 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         self.assertEqual(stat_result.st_ctime, None)
         self.assertEqual(stat_result.st_name, 'scios2')
-    
+
     def test_lstat_via_stat_module(self):
         """Test FTPHost.lstat indirectly via stat module."""
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
-    def test_listdir(self):
-        """Test FTPHost.listdir."""
-        # try to list a path which isn't there
+
+class TestListdir(unittest.TestCase):
+    """Test FTPHost.listdir."""
+
+    def test_failing_listdir(self):
+        """Test failing FTPHost.listdir."""
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         self.assertRaises(ftputil.PermanentError,
                           host.listdir, 'notthere')
+
+    def test_succeeding_listdir(self):
+        """Test succeeding FTPHost.listdir."""
         # do we have all expected "files"?
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         self.assertEqual( len(host.listdir(host.curdir)), 9 )
@@ -199,7 +208,7 @@ class TestFileOperations(unittest.TestCase):
 #         remote_data = input_.read()
 #         input_.close()
 #         self.assertEqual(local_data, remote_data)
-# 
+#
 #     def ascii_write(self):
 #         """Write an ASCII to the host and check the written file."""
 #         host = self.host
