@@ -86,16 +86,14 @@ class _FTPFile:
     FTP host. File and socket are closed appropriately if
     the close operation is requested.'''
 
-    def __init__(self, host, path, mode):
+    def __init__(self, host):
         '''Construct the file(-like) object.'''
         self._host = host
         self._session = host._session
         self.closed = 1   # yet closed
-        self._open(path, mode)
 
     def _open(self, path, mode):
-        '''Open the remote file with given pathname
-        and mode.'''
+        '''Open the remote file with given pathname and mode.'''
         # check mode
         if '+' in mode:
             raise FTPIOError("append modes not supported")
@@ -208,58 +206,55 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
+        print 'New FTPHost'
         self._session = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
         self._args = args
         self._kwargs = kwargs
-        # store files associated with this host object
-        self._file_pool = []
-        self._closed = 0
+        # associated FTPHost objects for data transfers
+        self._clones = []
+        self.closed = 0
 
     def _copy(self):
-        '''Return a copy of this FTPHost object. This includes
-        opening an additional FTP control connection and
-        changing to the path which is currently set in self.'''
-        host_copy = FTPHost(*self._args, **self._kwargs)
-        # copy directory status
-        current_dir = self.getcwd()
-        host_copy.chdir(current_dir)
-        # we don't need to copy the _file_pool because nobody
-        #  will call the anonymous new host's file method
-        return host_copy
+        '''Return a copy of this FTPHost object.'''
+        # The copy includes a new ftplib.FTP instance
+        #  (aka session) but doesn't copy the state of
+        #  self.getcwd()
+        return FTPHost(*self._args, **self._kwargs)
+        
+    def _available_clone(self):
+        '''Return a closed file object from the pool or
+        None if there aren't any.'''
+        for host in self._clones:
+            if host._file.closed:
+                return host
+        return None
         
     def file(self, path, mode='r'):
-        '''Return a file(-like) object which is associated
-        with this FTPHost object.'''
-        # look if there are non-busy (i. e. closed) _FTPFile
-        #  objects associated with this host; in this case
-        #  re-use one; else make a new host object for the
-        #  requested _FTPFile
-        for file in self._file_pool:
-            if file.closed:
-                # re-use it
-                current_dir = self.getcwd()
-                file._host.chdir(current_dir)
-                file._open(path, mode)
-                return file
-        # use a new FTPHost object to generate a new file
-        #  associated with that new host
-        host_copy = self._copy()
-        new_file = _FTPFile(host_copy, path, mode)
-        self._file_pool.append(new_file)
-        return new_file
+        '''Return an open file(-like) object which is
+        associated with this FTPHost object.'''
+        host = self._available_clone()
+        if host is None:
+            host = self._copy()
+            self._clones.append(host)
+        basedir = self.getcwd()
+        host.chdir(basedir)
+        host._file = _FTPFile(host)
+        host._file._open(path, mode)
+        return host._file
 
     def close(self):
         '''Close host connection.'''
-        if not self._closed:
-            for file in self._file_pool:
-                file.close()
-                file._host.close()
-            self._file_pool = []
+        if not self.closed:
+            # close associated clones
+            for host in self._clones:
+                host.close()
+            # now deal with our-self
             self._session.close()
-            self._closed = 1
+            self._clones = []
+            self.closed = 1
 
     def __del__(self):
         self.close()
