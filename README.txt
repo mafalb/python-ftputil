@@ -4,10 +4,10 @@ ftputil
 Purpose
 -------
 
-ftputil is a high-level alternative to Python's ftplib module. With ftputil,
-you can (almost) access directories and files on remote FTP servers as if they
-were in your local file system. This includes using file-like objects
-representing remote files.
+ftputil is a high-level alternative to Python's ftplib module. With
+ftputil, you can access directories and files on remote FTP servers
+almost as if they were in your local file system. This includes using
+file-like objects representing remote files.
 
 What's new?
 -----------
@@ -40,7 +40,7 @@ Prerequisites
 -------------
 
 To use ftputil, you need Python, at least version 2.0. Python is a
-programming language, available from http://www.python.org at no cost.
+programming language, available from http://www.python.org for free.
 
 Installation
 ------------
@@ -48,14 +48,15 @@ Installation
 - *If you have an older version of ftputil installed, delete it or move
   it somewhere else, so that it doesn't conflict with the new version!*
 
-- Unpack the archive file containing the distribution files. If you have
-  ftputil version 1.2, you would type at the shell prompt
+- Unpack the archive file containing the distribution files. If you
+  had an hypothetical ftputil version 1.2, you would type at the shell
+  prompt:
 
     tar xzf ftputil-1.2.tar.gz
 
   However, if you read this, you probably unpacked the archive already. ;-)
 
-- Make the directory where most of the files are your current directory.
+- Make the directory to where the files were unpacked your current directory.
   Consider that after unpacking, you have a directory ftputil-1.2. Make it
   the current directory with
 
