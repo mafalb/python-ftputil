@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.152 2004/02/27 23:20:34 schwa Exp $
+# $Id: ftputil.py,v 1.153 2004/03/08 21:20:25 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -75,17 +75,6 @@ Note: ftputil currently is not threadsafe. More specifically, you can
       use different `FTPHost` objects in different threads but not
       using a single `FTPHost` object in different threads.
 """
-
-# TODO
-# - write a benchmark to show how fast caching is ;-)
-# - caching of `FTPHost.stat` results? policy?
-# - add `ftp_session` module containing session classes (e. g. for passive
-#   mode connections)
-#
-# Ideas for future development:
-# - handle connection timeouts
-# - what about thread safety? (also have a look at `ftplib`)
-# - map FTP error numbers to os error numbers (ENOENT etc.)?
 
 # for Python 2.1
 from __future__ import nested_scopes

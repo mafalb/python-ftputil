@@ -1,0 +1,22 @@
+Planned features:
+
+- write a ftputil_mirror.py script
+  a) as a usage example of ftputil
+  b) for benchmarking
+  c) as a useful tool
+- caching of `FTPHost.stat` results; policy?
+- migrate CVS repository to subversion and make it publicly available
+  on codespeak
+- support more directory formats (see mails from Oleg Broytmann)
+- support time resolution in stat results (Oleg Broytmann)
+- add `ftp_session` module containing session classes (e. g. for
+  passive mode connections)
+
+Ideas for future development:
+
+- handle connection timeouts (Antonio Beamud Montero)
+- merge with vpath project (Holger Krekel)
+- merge WebDAV support
+- what about thread safety? (also have a look at `ftplib`)
+- map FTP error numbers to os error numbers (ENOENT etc.)?
+
