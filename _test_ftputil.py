@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.67 2003/03/16 18:53:00 schwa Exp $
+# $Id: _test_ftputil.py,v 1.68 2003/06/09 18:38:05 schwa Exp $
 
 import operator
 import os
@@ -131,10 +131,10 @@ def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
 # test cases
 #
 class TestOpenAndClose(unittest.TestCase):
-    """Test opening and closing of FTPHost objects."""
+    """Test opening and closing of `FTPHost` objects."""
 
     def test_open_and_close(self):
-        """Test closing of FTPHost."""
+        """Test closing of `FTPHost`."""
         host = ftp_host_factory()
         host.close()
         self.assertEqual(host.closed, 1)
@@ -151,7 +151,7 @@ class TestLogin(unittest.TestCase):
 
 class TestStat(unittest.TestCase):
     """
-    Test FTPHost.lstat and FTPHost.stat (test currently only
+    Test `FTPHost.lstat` and `FTPHost.stat` (test currently only
     implemented for Unix server format).
     """
 
@@ -164,10 +164,10 @@ class TestStat(unittest.TestCase):
                           '/home/sschwarzer/notthere')
 
     def test_lstat_for_root(self):
-        """Test lstat for / .
-        Note: (l)stat works by going one directory up and parsing
-        the output of an FTP DIR command. Unfortunately, it is not
-        possible to to this for the root directory / .
+        """Test `lstat` for `/` .
+        Note: `(l)stat` works by going one directory up and parsing
+        the output of an FTP `DIR` command. Unfortunately, it is not
+        possible to to this for the root directory `/`.
         """
         host = ftp_host_factory()
         self.assertRaises(ftputil.RootDirError, host.lstat, '/')
@@ -177,14 +177,14 @@ class TestStat(unittest.TestCase):
             self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
 
     def test_lstat_one_file(self):
-        """Test lstat for a file."""
+        """Test `lstat` for a file."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
 
     def test_lstat_one_dir(self):
-        """Test lstat for a directory."""
+        """Test `lstat` for a directory."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
@@ -208,13 +208,13 @@ class TestStat(unittest.TestCase):
                                          512, None, 937778400.0, None) )
 
     def test_lstat_via_stat_module(self):
-        """Test lstat indirectly via stat module."""
+        """Test `lstat` indirectly via `stat` module."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
     def test_stat_following_link(self):
-        """Test stat when invoked on a link."""
+        """Test `stat` when invoked on a link."""
         host = ftp_host_factory()
         # simple link
         stat_result = host.stat('/home/link')
@@ -232,15 +232,15 @@ class TestStat(unittest.TestCase):
 
 
 class TestListdir(unittest.TestCase):
-    """Test FTPHost.listdir."""
+    """Test `FTPHost.listdir`."""
 
     def test_failing_listdir(self):
-        """Test failing FTPHost.listdir."""
+        """Test failing `FTPHost.listdir`."""
         host = ftp_host_factory()
         self.assertRaises(ftputil.PermanentError, host.listdir, 'notthere')
 
     def test_succeeding_listdir(self):
-        """Test succeeding FTPHost.listdir."""
+        """Test succeeding `FTPHost.listdir`."""
         # do we have all expected "files"?
         host = ftp_host_factory()
         self.assertEqual( len(host.listdir(host.curdir)), 9 )
@@ -254,10 +254,10 @@ class TestListdir(unittest.TestCase):
 
 
 class TestPath(unittest.TestCase):
-    """Test operations in FTPHost.path."""
+    """Test operations in `FTPHost.path`."""
 
     def test_isdir_isfile_islink(self):
-        """Test FTPHost._Path.isdir/isfile/islink."""
+        """Test `FTPHost._Path.isdir/isfile/islink`."""
         testdir = '/home/sschwarzer'
         host = ftp_host_factory()
         host.chdir(testdir)
@@ -285,7 +285,7 @@ class TestFileOperations(unittest.TestCase):
     """Test operations with file-like objects."""
 
     def test_caching(self):
-        """Test whether _FTPFile cache of FTPHost object works."""
+        """Test whether `_FTPFile` cache of `FTPHost` object works."""
         host = ftp_host_factory()
         self.assertEqual( len(host._children), 0 )
         path1 = 'path1'
@@ -323,7 +323,7 @@ class TestFileOperations(unittest.TestCase):
                           '/home/sschwarzer', 'w')
 
     def test_binary_write(self):
-        """Write binary data with 'write'."""
+        """Write binary data with `write`."""
         host = ftp_host_factory()
         data = '\000a\001b\r\n\002c\003\n\004\r\005'
         output = host.file('dummy', 'wb')
@@ -334,7 +334,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(child_data, expected_data)
 
     def test_ascii_write(self):
-        """Write ASCII text with 'write'."""
+        """Write ASCII text with `write`."""
         host = ftp_host_factory()
         data = ' \nline 2\nline 3'
         output = host.file('dummy', 'w')
@@ -345,7 +345,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(child_data, expected_data)
 
     def test_ascii_writelines(self):
-        """Write ASCII text with 'writelines'."""
+        """Write ASCII text with `writelines`."""
         host = ftp_host_factory()
         data = [' \n', 'line 2\n', 'line 3']
         backup_data = data[:]
@@ -359,7 +359,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, backup_data)
 
     def test_ascii_read(self):
-        """Read ASCII text with plain 'read'."""
+        """Read ASCII text with plain `read`."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'r')
         data = input_.read(0)
@@ -374,7 +374,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, '')
         input_.close()
         # try it again with a more "problematic" string which
-        #  makes several reads in the read() method necessary.
+        #  makes several reads in the `read` method necessary
         host = ftp_host_factory(session_factory=AsciiReadMockSession)
         expected_data = AsciiReadMockSession.mock_file_content.\
                         replace('\r\n', '\n')
@@ -383,7 +383,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, expected_data)
 
     def test_binary_readline(self):
-        """Read binary data with 'readline'."""
+        """Read binary data with `readline`."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'rb')
         data = input_.readline(3)
@@ -401,7 +401,7 @@ class TestFileOperations(unittest.TestCase):
         input_.close()
 
     def test_ascii_readline(self):
-        """Read ASCII text with 'readline'."""
+        """Read ASCII text with `readline`."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'r')
         data = input_.readline(3)
@@ -417,7 +417,7 @@ class TestFileOperations(unittest.TestCase):
         input_.close()
 
     def test_ascii_readlines(self):
-        """Read ASCII text with 'readlines'."""
+        """Read ASCII text with `readlines`."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'r')
         data = input_.read(3)
@@ -428,7 +428,7 @@ class TestFileOperations(unittest.TestCase):
         input_.close()
 
     def test_ascii_xreadlines(self):
-        """Read ASCII text with 'xreadlines'."""
+        """Read ASCII text with `xreadlines`."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         # open file, skip some bytes
         input_ = host.file('dummy', 'r')
@@ -473,7 +473,7 @@ class TestUploadAndDownload(unittest.TestCase):
         host.upload(local_source, 'dummy')
         # check uploaded content
         # the data which was uploaded has its line endings converted
-        #  so the conversion must also be applied to 'data'
+        #  so the conversion must also be applied to `data`
         data = data.replace('\n', '\r\n')
         remote_file_content = _mock_ftplib.content_of('dummy')
         self.assertEqual(data, remote_file_content)
