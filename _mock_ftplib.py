@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.7 2002/03/30 14:53:01 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.8 2002/03/30 16:48:07 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -40,20 +40,7 @@ run the unit tests.
 """
 
 import ftplib
-
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
-
-DEBUG = 0
-
-class MockSocket:
-    def __init__(self, mock_socket_file_contents=''):
-        self.mock_socket_file_contents = mock_socket_file_contents
-
-    def makefile(self, mode):
-        return StringIO.StringIO(self.mock_socket_file_contents)
+import StringIO
 
 
 class MockSession:
@@ -322,8 +309,35 @@ class MockSession:
             self.file = self.sock = None
 
 
-class MockSession:
+DEBUG = 0
 
+# class MockFileObject(StringIO.StringIO):
+#     """
+#     Mock class for the file objects _contained in_ _FTPFile
+#     objects (not for _FTPFile objects themselves!).
+#     """
+#     contents = ''
+# 
+#     def __init__(self, contents, mode='r'):
+        
+    
+class MockSocket:
+    """
+    Mock class which is used to return something from
+    MockSession.transfercmd.
+    """
+    def __init__(self, mock_file_content=''):
+        self.mock_file_content = mock_file_content
+
+    def makefile(self, mode):
+        return StringIO.StringIO(self.mock_file_content)
+
+
+class MockSession:
+    """
+    Mock class which works like ftplib.FTP for the purpose of the
+    unit tests.
+    """
     # used by MockSession.cwd and MockSession.pwd
     current_dir = '/home/sschwarzer'
     
@@ -343,23 +357,39 @@ drwxr-sr-x   2 45854    200           512 May 25  2000 publications
 drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
 drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 
+    # file content to be used (indirectly) with transfercmd
+    mock_file_content = ''
+    
     def __init__(self, host='', user='', password=''):
-        self.pwd_result_index = 0
+        pass
 
+    def _remove_trailing_slash(self, path):
+        if path.endswith('/'):
+            path = path[:-1]
+        return path
+        
     def voidcmd(self, cmd):
+        if DEBUG:
+            print cmd
         if cmd == 'STAT':
             return 'MockSession server awaiting your commands ;-)'
+        elif cmd.startswith('TYPE '):
+            return
         else:
             raise ftplib.error_perm
 
     def pwd(self):
         return self.current_dir
 
+    def cwd(self, path):
+        path = self._remove_trailing_slash(path)
+        self.current_dir = path
+
     def dir(self, path, callback=None):
+        "Provide a callback function with each line of a directory listing."
         if DEBUG:
             print 'dir: %s' % path
-        if path.endswith('/'):
-            path = path[:-1]
+        path = self._remove_trailing_slash(path)
         if not self.dir_contents.has_key(path):
             raise ftplib.error_perm
         dir_lines = self.dir_contents[path].split('\n')
@@ -369,8 +399,18 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
             else:
                 callback(line)
 
+    def transfercmd(self, cmd):
+        """
+        Return a MockSocket object whose makefile method will return
+        a mock file object.
+        """
+        if DEBUG:
+            print cmd
+        return MockSocket(self.mock_file_content)
+
 
 class FailOnLoginSession(MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
+
 
