@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.14 2002/03/30 22:38:12 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.15 2002/03/30 22:44:41 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -187,6 +187,7 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
         return MockSocket(path, self.mock_file_content)
 
     def close(self):
-        self.closed = 1
-        assert self._transfercmds == 0
+        if not self.closed:
+            self.closed = 1
+            assert self._transfercmds == 0
 
