@@ -72,7 +72,9 @@ Note: ftputil currently is not threadsafe. More specifically,
 
 import ftplib
 import os
+import stat
 import sys
+import re
 import posixpath
 
 
@@ -95,16 +97,17 @@ _strings_dict = {'msdos': _dos_strings,
 
 class FTPOSError(OSError):
     def __init__(self, ftp_exception):
+        OSError.__init__( self, str(ftp_exception) )
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
             self.errno = int(self.strerror[:3])
-        except (TypeError, IndexError):
+        except (TypeError, IndexError, ValueError):
             self.errno = None
         self.filename = None
         
     def __str__(self):
-        return str(self.ftp_exception)
+        return self.strerror
 
 
 #####################################################################
@@ -280,7 +283,7 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        self._session = ftplib.FTP(*args, **kwargs)
+        #self._session = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -401,14 +404,74 @@ class FTPHost:
                 result.append(line)
         return result
         
+    def _parse_line(self, line, path):
+        '''Return _Stat instance corresponding to the given
+        text line.'''
+        line_pattern = re.compile(
+          r'(\S+)\s+'       # directory metadata
+          r'(\d+)\s+'       # inodes?
+          r'(\S+)\s+'       # user
+          r'(\S+)\s+'       # group
+          r'(\d+)\s+'       # size
+          r'(\w{3})\s+'     # month name
+          r'(\d\d?)\s+'     # day
+          r'(\d{4}|\d\d?:\d\d)\s+'  # year or time
+          r'(.*)'           # name
+        )
+        try:
+            metadata, nlink, user, group, size, month, day, \
+              year_or_time, name = \
+              line_pattern.match(line).groups()
+        except (TypeError, ValueError):
+            raise FTPOSError("can't stat path '%s'" % path)
+        # st_mode
+        st_mode = 0
+        for bit in metadata[1:10]:
+            bit = (bit != '-')
+            st_mode = 2 * st_mode + bit
+        if metadata[3] == 's':
+            st_mode = st_mode | stat.S_ISUID
+        if metadata[6] == 's':
+            st_mode = st_mode | stat.S_ISGID
+        if metadata[0] == 'd':
+            st_mode = st_mode | stat.S_IFDIR
+        elif metadata[0] == 'l':
+            st_mode = st_mode | stat.S_IFLNK
+        # st_ino
+        st_ino = 0
+        # st_dev
+        st_dev = 0
+        # st_nlink
+        st_nlink = int(nlink)
+        # st_uid
+        st_uid = user
+        # st_gid
+        st_gid = group
+        # st_size
+        st_size = int(size)
+        # st_atime
+        st_atime = 0
+        # st_mtime
+        st_mtime = None
+        # st_ctime
+        st_ctime = 0
+        # st_name
+        if name.find(' -> ') != -1:
+            st_name = name.split(' -> ')[0]
+        else:
+            st_name = name
+        return _Stat( (st_mode, st_ino, st_dev, st_nlink,
+                       st_uid, st_gid, st_size, st_atime,
+                       st_mtime, st_ctime, st_name) )
+          
     def lstat(self, path):
         '''Return an object similar to that returned
         by os.stat.'''
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._session.dir( dirname,
-                           lambda line: lines.append(line) )
+        #self._session.dir( dirname,
+        #                   lambda line: lines.append(line) )
         # example for testing
         lines = ['total 14',
 'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
@@ -416,6 +479,7 @@ class FTPHost:
 'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
 '-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
 'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
+'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
 'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
 'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
 'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
@@ -429,7 +493,9 @@ class FTPHost:
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
-            
+            stat_data = self._parse_line(line, path)
+            if stat_data.st_name == basename:
+                return stat_data
 
 
 class _Stat(tuple):
@@ -440,7 +506,7 @@ class _Stat(tuple):
     _index_mapping = {'st_mode':  0, 'st_ino':   1, 
       'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
       'st_gid':   5,  'st_size':  6, 'st_atime': 7,
-      'st_mtime': 8,  'st_ctime': 9}
+      'st_mtime': 8,  'st_ctime': 9, 'st_name': 10}
 
     def __getattr__(self, attr_name):
         if attr_name in self._index_mapping:
