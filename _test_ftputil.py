@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.37 2002/03/30 17:51:53 schwa Exp $
+# $Id: _test_ftputil.py,v 1.38 2002/03/30 18:13:47 schwa Exp $
 
 import unittest
 import stat
@@ -46,8 +46,11 @@ class FailOnLoginSession(_mock_ftplib.MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
 
-class BinaryReadMockSession(_mock_ftplib.MockSession):
-        file_content = '\000a\001b\r\n\002c\003\n\004\r\005'
+class AsciiReadMockSession1(_mock_ftplib.MockSession):
+    mock_file_content = 'line 1\r\nanother line\r\nyet another line'
+
+class AsciiReadMockSession2(_mock_ftplib.MockSession):
+    mock_file_content = '\r\n'.join( map( str, range(20) ) )
 
 
 class InspectableFTPHost(ftputil.FTPHost):
@@ -55,7 +58,7 @@ class InspectableFTPHost(ftputil.FTPHost):
         """
         Return content for the associated file object of a child
         FTPHost object.
-        
+
         Usage of the getvalue() method implies that the file object
         really is a StringIO.StringIO object. In fact, this kind of
         file object is established by the MockSocket class which in
@@ -267,38 +270,32 @@ class TestFileOperations(unittest.TestCase):
         # ensure that the original data was not modified
         self.assertEqual(data, backup_data)
 
-#
-#     def ascii_read(self):
-#         """Write some ASCII data to the host and use plain
-#         read operations to get it back.
-#         """
-#         host = self.host
-#         # write some data
-#         local_data = 'line 1\nanother line\nyet another line'
-#         self.write_test_data(local_data, 'w')
-#         # read with read method
-#         input_ = host.file(self.remote_name, 'r')
-#         data = input_.read(0)
-#         self.assertEqual(data, '')
-#         data = input_.read(3)
-#         self.assertEqual(data, 'lin')
-#         data = input_.read(7)
-#         self.assertEqual(data, 'e 1\nano')
-#         data = input_.read()
-#         self.assertEqual(data, 'ther line\nyet another line')
-#         data = input_.read()
-#         self.assertEqual(data, '')
-#         input_.close()
-#         # try it again with a more "problematic" string which
-#         #  makes several reads in the read() method necessary.
-#         local_data = '\n'.join( map( str, range(20) ) )
-#         output = host.file(self.remote_name, 'w')
-#         output.writelines(local_data)
-#         output.close()
-#         input_ = host.file(self.remote_name, 'r')
-#         data = input_.read( len(local_data) )
-#         self.assertEqual(data, local_data)
-#
+    def test_ascii_read(self):
+        """Write some ASCII data to the host and use plain
+        read operations to get it back.
+        """
+        host = ftp_host_factory(session_factory=AsciiReadMockSession1)
+        input_ = host.file('dummy', 'r')
+        data = input_.read(0)
+        self.assertEqual(data, '')
+        data = input_.read(3)
+        self.assertEqual(data, 'lin')
+        data = input_.read(7)
+        self.assertEqual(data, 'e 1\nano')
+        data = input_.read()
+        self.assertEqual(data, 'ther line\nyet another line')
+        data = input_.read()
+        self.assertEqual(data, '')
+        input_.close()
+        # try it again with a more "problematic" string which
+        #  makes several reads in the read() method necessary.
+        host = ftp_host_factory(session_factory=AsciiReadMockSession2)
+        expected_data = AsciiReadMockSession2.mock_file_content.\
+                        replace('\r\n', '\n')
+        input_ = host.file('dummy', 'r')
+        data = input_.read( len(expected_data) )
+        self.assertEqual(data, expected_data)
+
 #     def ascii_readline(self):
 #         """Write some ASCII data to the host and use readline
 #         operations to get it back.
