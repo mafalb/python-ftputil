@@ -79,21 +79,42 @@ class TestDirectories(Base):
           host.path.join(self.rootdir, self.testdir) )
 
     def test_mkdir(self):
-        '''Dirs must be constructed on the host.'''
+        '''Test FTPHost.mkdir.'''
         host = self.host
         # use invalid directory name (__test2 doesn't exist)
-        self.assertRaises( host.mkdir, host.path.join(
-          self.rootdir, '__test2', '__test3') )
+        self.assertRaises( ftputil.PermanentError, host.mkdir,
+          host.path.join(self.rootdir, '__test2', '__test3') )
         # this is valid
         host.mkdir( host.path.join(self.rootdir, self.testdir,
                     '__test2') )
         # repeat first mkdir (now valid)
-        host.mkdir( host.path.join(self.rootdir, '__test2',
-                    '__test3') )
+        host.mkdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2', '__test3') )
         # clean up for this test
-        host.rmdir( host.path.join(self.rootdir, '__test2',
-                    '__test3') )
-        host.rmdir( host.path.join(self.rootdir, '__test2') )
+        host.rmdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2', '__test3') )
+        host.rmdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2') )
+
+    def test_rmdir(self):
+        '''Test FTPHost.rmdir.'''
+        host = self.host
+        # try to remove nonexistent directory
+        self.assertRaises( ftputil.PermanentError, host.rmdir,
+          host.path.join(self.rootdir, '__test2') )
+        # make two nested directories
+        host.mkdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2') )
+        host.mkdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2', '__test3') )
+        # try to remove non-empty directory
+        self.assertRaises( ftputil.PermanentError, host.rmdir,
+          host.path.join(self.rootdir, '__test2') )
+        # clean up
+        host.rmdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2', '__test3') )
+        host.rmdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2') )
 
 
 class TestStat(Base):
@@ -102,7 +123,7 @@ class TestStat(Base):
 class TestPath(Base):
     pass
 
-class TestFiles(unittest.TestCase):
+class TestFiles(Base):
     pass
 
 
