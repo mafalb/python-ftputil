@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.109 2003/03/15 22:44:00 schwa Exp $
+# $Id: ftputil.py,v 1.110 2003/03/15 23:03:23 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -332,8 +332,8 @@ class _FTPFile:
         if attr_name in ( 'flush isatty fileno seek tell '
                           'truncate name softspace'.split() ):
             return getattr(self._fo, attr_name)
-        raise AttributeError("'FTPFile' object has no "
-              "attribute '%s'" % attr_name)
+        raise AttributeError(
+              "'FTPFile' object has no attribute '%s'" % attr_name)
 
     def close(self):
         """Close the `FTPFile`."""
@@ -509,7 +509,7 @@ class FTPHost:
         seconds.
         """
         minute = 60.0
-        hour = 60 * minute
+        hour = 60.0 * minute
         # avoid division by zero below
         if time_shift == 0:
             return 0.0
@@ -519,7 +519,7 @@ class FTPHost:
         # round it to hours; this code should also work for later Python
         #  versions because of the explicit `int`
         absolute_rounded_time_shift = \
-          int( (absolute_time_shift+30*minute) / hour) * hour
+          int( (absolute_time_shift + 30*minute) / hour) * hour
         # return with correct sign
         return signum * absolute_rounded_time_shift
 
@@ -530,7 +530,7 @@ class FTPHost:
         else simply return `None`.
         """
         minute = 60.0
-        hour = 60 * minute
+        hour = 60.0 * minute
         absolute_rounded_time_shift = \
           abs( self.__rounded_time_shift(time_shift) )
         # test 1: fail if the absolute time shift is greater than
@@ -735,7 +735,7 @@ class FTPHost:
             raise PermanentError("550 %s: no such directory" % path)
         names = []
         def callback(line):
-            stat_result = self._parse_line(line, fail=0)
+            stat_result = self._parse_line(line, fail=False)
             if stat_result is not None:
                 names.append(stat_result._st_name)
         _try_with_oserror(self._session.dir, path, callback)
@@ -865,7 +865,7 @@ class FTPHost:
         result._st_target = None
         return result
 
-    def _parse_line(self, line, fail=1):
+    def _parse_line(self, line, fail=True):
         """Return `_Stat` instance corresponding to the given text line."""
         try:
             return self._parser(line)
@@ -892,7 +892,7 @@ class FTPHost:
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
-            stat_result = self._parse_line(line, fail=0)
+            stat_result = self._parse_line(line, fail=False)
             if (stat_result is not None) and \
               (stat_result._st_name == basename):
                 return stat_result
@@ -910,7 +910,7 @@ class FTPHost:
             path = self.path.normpath(path)
             if visited_paths.has_key(path):
                 raise PermanentError("recursive link structure detected")
-            visited_paths[path] = 1
+            visited_paths[path] = True
 
 
 #####################################################################
