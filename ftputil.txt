@@ -2,7 +2,7 @@
 =========================
 
 :Version:   2.0 beta 2
-:Date:      2003-10-05
+:Date:      2003-10-10
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
 
