@@ -83,14 +83,15 @@ Note: ftputil currently is not threadsafe. More specifically,
 # - caching of FTPHost.stat results??
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
+# for Python 2.1
+from __future__ import nested_scopes
+
 import ftplib
 import stat
 import time
 import sys
 import posixpath
 import UserList
-
-from __future__ import nested_scopes
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
@@ -663,7 +664,7 @@ class FTPHost:
                 break
             target.write(buf)
 
-    #XXX Test this
+    #TODO Test this
     def copyfile(self, src, dst):
         '''Copy data from src to dst (adapted from
         shutil.copyfile).'''
