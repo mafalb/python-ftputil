@@ -1,8 +1,12 @@
-# define `True` and `False` if necessary
+"""
+true_false.py - define `True` and `False` if necessary
+"""
+
 try:
     # make module-global copies
     True = True
     False = False
 except NameError:
-    True, False = (1 == 1), (1 == 0)
+    True = (1 == 1)
+    False = (1 == 0)
 
