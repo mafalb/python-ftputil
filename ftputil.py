@@ -31,6 +31,7 @@
 
 import ftplib
 import os
+import posixpath
 
 
 #####################################################################
@@ -261,8 +262,8 @@ class FTPHost:
         '''Rename the src on the FTP host to dst.'''
         self._host.rename(src, dst)
 
-    def stat(self. path):
-        '''Return an object similar to this returned
+    def stat(self, path):
+        '''Return an object similar to that returned
         by os.stat.'''
         pass
 
@@ -272,7 +273,7 @@ class FTPHost:
     class _EmptyClass:
         pass
 
-    def _init_path(self):
+    def _init_path_methods(self):
         self.path = _EmptyClass()
         self.path.abspath      = self._abspath
         self.path.basename     = self._basename
@@ -288,20 +289,21 @@ class FTPHost:
         self.path.normcase     = self._normcase
         self.path.normpath     = self._normpath
         self.path.split        = self._split
+        self.path.splitdrive   = self._splitdrive
         self.path.splitext     = self._splitext
         self.path.walk         = self._walk
 
     def _abspath(self, path):
-        pass
+        return posixpath.abspath(path)
 
     def _basename(self, path):
-        pass
+        return posixpath.basename(path)
 
-    def _commonprefix(self, list):
-        pass
+    def _commonprefix(self, path_list):
+        return posixpath.commonprefix(path_list)
 
     def _dirname(self, path):
-        pass
+        return posixpath.dirname(path)
 
     def _exists(self, path):
         pass
@@ -314,7 +316,7 @@ class FTPHost:
         pass
 
     def _isabs(self, path):
-        pass
+        return posixpath.isabs(path)
 
     def _isfile(self, path):
         pass
@@ -323,19 +325,22 @@ class FTPHost:
         pass
 
     def _join(self, *paths):
-        pass
+        return posixpath.join(paths)
 
     def _normcase(self, path):
-        pass
+        return posixpath.normcase(path)
 
     def _normpath(self, path):
-        pass
+        return posixpath.normpath(path)
 
     def _split(self, path):
-        pass
+        return posixpath.split(path)
+
+    def _splitdrive(self, path):
+        return posixpath.splitdrive(path)
 
     def _splitext(self, path):
-        pass
+        return posixpath.splitext(path)
 
     def _walk(self, visit, arg):
         pass
