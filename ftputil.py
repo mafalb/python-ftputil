@@ -88,7 +88,14 @@ class _FTPFile:
 
     def __init__(self, host, path, mode):
         '''Construct the file(-like) object.'''
+        self._host = host
         self._session = host._session
+        self.closed = 1   # yet closed
+        self._open(path, mode)
+
+    def _open(self, path, mode):
+        '''Open the remote file with given pathname
+        and mode.'''
         # check mode
         if '+' in mode:
             raise FTPIOError("append modes not supported")
