@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.1 2003/10/04 18:59:55 schwa Exp $
+# $Id: Makefile,v 1.2 2003/10/10 18:23:19 schwa Exp $
 
 
 SHELL=/bin/sh
@@ -53,6 +53,10 @@ docs: ${DOC_FILES} README.txt ftputil.txt
 
 dist: clean docs
 	python setup.py sdist
+
+extdist: test dist
+	cp -p dist/ftputil-`VERSION`.tar.gz ~/www/download
+	cp -p ftputil.html ~/www/python
 
 clean:
 	rm -f ${DOC_FILES}
