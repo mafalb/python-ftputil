@@ -33,7 +33,7 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.4 2003/06/08 19:42:06 schwa Exp $
+# $Id: ftp_file.py,v 1.5 2003/06/09 12:32:00 schwa Exp $
 
 import ftp_error
 
@@ -203,7 +203,10 @@ class _FTPFile:
     # other attributes
     #
     def __getattr__(self, attr_name):
-        """Delegate unknown attribute requests to the file."""
+        """
+        Handle requests for attributes unknown to `_FTPFile` objects:
+        delegate the requests to the contained file object.
+        """
         if attr_name in ( 'flush isatty fileno seek tell '
                           'truncate name softspace'.split() ):
             return getattr(self._fo, attr_name)
