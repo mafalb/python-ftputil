@@ -73,6 +73,7 @@ Note: ftputil currently is not threadsafe. More specifically,
 import ftplib
 import os
 import stat
+import time
 import sys
 import re
 import posixpath
@@ -453,13 +454,23 @@ class FTPHost:
         st_size = int(size)
         st_atime = 0
         # st_mtime
-        month = int(month)
+        month = self._month_numbers[ month.lower() ]
         day = int(day)
-        if year_or_time.find(':') = -1:
+        if year_or_time.find(':') == -1:
             year, hour, minute = int(year_or_time), 0, 0
+            st_mtime = time.mktime( (year, month, day, hour,
+                       minute, 0, 0, 0, 0) )
         else:
             hour, minute = year_or_time.split(':')
             year, hour, minute = None, int(hour), int(minute)
+            # try the current year
+            year = time.localtime()[0]
+            st_mtime = time.mktime( (year, month, day, hour,
+                       minute, 0, 0, 0, 0) )
+            if st_mtime > time.time():
+                # if it's in the future use previous year
+                st_mtime = time.mktime( (year-1, month, day,
+                           hour, minute, 0, 0, 0, 0) )
         # st_ctime
         st_ctime = 0
         # st_name
