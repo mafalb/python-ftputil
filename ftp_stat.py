@@ -30,10 +30,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-ftp_stat.py - stat result class for `ftputil`
+ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.4 2003/06/09 15:52:02 schwa Exp $
+# $Id: ftp_stat.py,v 1.5 2003/06/09 15:56:59 schwa Exp $
 
 import stat
 import sys
