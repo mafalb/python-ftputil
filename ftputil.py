@@ -64,8 +64,8 @@ FTPHost objects
 FTPFile objects
     FTPFile objects are constructed via the file method of
     FTPHost objects. FTPFile objects support the usual file
-    oprations for non-seekable files (read, readline, write,
-    writelines, close).
+    operations for non-seekable files (read, readline,
+    readlines, xreadlines, write, writelines, close).
 
 Note: ftputil currently is not threadsafe. More specifically,
       you can use different FTPHost objects in different
@@ -233,7 +233,7 @@ class _FTPFile:
     def __getattr__(self, attr_name):
         '''Delegate unknown attribute requests to the file.'''
         if attr_name in ( 'flush isatty fileno seek tell '
-          'truncate closed name softspace'.split() ):
+          'truncate name softspace'.split() ):
             return getattr(self._fo, attr_name)
         else:
             raise AttributeError("'FTPFile' object has no "
@@ -377,9 +377,9 @@ class FTPHost:
         path = self.path.abspath(path)
         names = []
         def callback(line):
-            stat_data = self._parse_line(line, fail=0)
-            if stat_data is not None:
-                names.append(stat_data.st_name)
+            stat_result = self._parse_line(line, fail=0)
+            if stat_result is not None:
+                names.append(stat_result.st_name)
         self._try(self._session.dir, path, callback)
         return names
 
@@ -541,21 +541,21 @@ class FTPHost:
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
-            stat_data = self._parse_line(line, fail=0)
-            if (stat_data is not None) and \
-              (stat_data.st_name == basename):
-                return stat_data
+            stat_result = self._parse_line(line, fail=0)
+            if (stat_result is not None) and \
+              (stat_result.st_name == basename):
+                return stat_result
         raise FTPOSError("no such file or directory: '%s'" %
                          path)
 
     def stat(self, path):
         '''Return info from a stat call.'''
-        stat_ = self.lstat(path)
-        if stat.S_ISLNK(stat_.st_mode):
+        stat_result = self.lstat(path)
+        if stat.S_ISLNK(stat_result.st_mode):
             raise NotImplementedError("how should links be "
                   "handled in ftputil.FTPHost.stat?")
         else:
-            return stat_
+            return stat_result
 
     def copyfileobj(self, source, target, length=8*1024):
         '''Copy data from file-like object source to file-like
