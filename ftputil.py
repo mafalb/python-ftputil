@@ -73,11 +73,15 @@ import time
 import sys
 import posixpath
 
+__all__ = ['FTPOSError', 'FTPIOError', 'FTPHost']
+
 
 #####################################################################
-# Exception class
+# Exception classes
 
 class FTPOSError(OSError):
+    '''Error class resembling OSError.'''
+
     def __init__(self, ftp_exception):
         OSError.__init__( self, str(ftp_exception) )
         self.args = (ftp_exception,)
@@ -90,6 +94,10 @@ class FTPOSError(OSError):
         
     def __str__(self):
         return self.strerror
+
+class FTPIOError(IOError):
+    '''Error class resembling IOError.'''
+    pass
 
 
 #####################################################################
@@ -145,9 +153,9 @@ class _FTPFile:
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
+        self.closed = 0   #XXX safer to do this before?
         self._conn = self._session.transfercmd(command)
         self._fo = self._conn.makefile(mode)
-        self.closed = 0
 
     #
     # Read and write operations with support for
@@ -274,7 +282,7 @@ class FTPHost:
         # associated FTPHost objects for data transfer
         self._children = []
         self.closed = 0
-        # set curdir, pardir etc. for the remote host
+        # set curdir, pardir etc. for the remote host;
         #  RFC 959 states that this is, strictly spoken,
         #  dependent on the server OS but it seems to work
         #  at least with Unix and Windows servers
@@ -462,8 +470,8 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._session.dir( dirname,
-                           lambda line: lines.append(line) )
+        self._try( self._session.dir( dirname,
+                   lambda line: lines.append(line) ) )
 #        # example for testing
         lines = ['total 14',
 'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
@@ -496,7 +504,7 @@ class FTPHost:
         stat_ = self.lstat(path)
         if stat_.islink():
             raise NotImplementedError("how should links be "
-                  "handled in ftputil._Path.stat?")
+                  "handled in ftputil.FTPHost.stat?")
         else:
             return stat_
 
@@ -504,7 +512,7 @@ class FTPHost:
 class _Stat(tuple):
     '''Support class resembling a tuple like that which is
     returned from os.(l)stat. Deriving from the tuple type
-    will only work with Python 2.2+'''
+    will only work in Python 2.2+'''
     
     _index_mapping = {'st_mode':  0, 'st_ino':   1, 
       'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
@@ -571,6 +579,7 @@ class _Path:
         return posixpath.join(*paths)
 
     def normcase(self, path):
+        # do (almost) nothing
         return path
 
     def normpath(self, path):
@@ -586,5 +595,6 @@ class _Path:
         return posixpath.splitext(path)
 
     def walk(self, visit, arg):
-        pass
+        raise NotImplementedError(
+             "ftputil._Path.walk is not yet implemented")
 
