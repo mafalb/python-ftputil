@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.61 2002/10/22 20:58:17 schwa Exp $
+# $Id: _test_ftputil.py,v 1.62 2002/10/22 21:01:30 schwa Exp $
 
 import unittest
 import stat
@@ -41,6 +41,12 @@ import random
 import ftplib
 import ftputil
 import _mock_ftplib
+
+# define `True` and `False` if necessary
+try:
+    True, False
+except NameError:
+    True, False = (1 == 1), (1 == 0)
 
 
 #
