@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.79 2002/04/01 14:14:16 schwa Exp $
+# $Id: ftputil.py,v 1.80 2002/04/01 14:31:38 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -591,7 +591,7 @@ class FTPHost:
         def callback(line):
             stat_result = self._parse_line(line, fail=0)
             if stat_result is not None:
-                names.append(stat_result.st_name)
+                names.append(stat_result._st_name)
         _try_with_oserror(self._session.dir, path, callback)
         return names
 
@@ -661,12 +661,15 @@ class FTPHost:
         st_ctime = None
         # st_name
         if name.find(' -> ') != -1:
-            st_name = name.split(' -> ')[0]
+            st_name, st_target = name.split(' -> ')
         else:
-            st_name = name
-        return _Stat( (st_mode, st_ino, st_dev, st_nlink,
-                       st_uid, st_gid, st_size, st_atime,
-                       st_mtime, st_ctime, st_name) )
+            st_name, st_target = name, None
+        result = _Stat( (st_mode, st_ino, st_dev, st_nlink,
+                         st_uid, st_gid, st_size, st_atime,
+                         st_mtime, st_ctime) )
+        result._st_name = st_name
+        result._st_target = st_target
+        return result
 
     def _parse_robin_line(self, line):
         """
@@ -709,11 +712,13 @@ class FTPHost:
                    minute, 0, 0, 0, 0) )
         # st_ctime
         st_ctime = None
-        # st_name
-        st_name = name
-        return _Stat( (st_mode, st_ino, st_dev, st_nlink,
-                       st_uid, st_gid, st_size, st_atime,
-                       st_mtime, st_ctime, st_name) )
+        result = _Stat( (st_mode, st_ino, st_dev, st_nlink,
+                         st_uid, st_gid, st_size, st_atime,
+                         st_mtime, st_ctime) )
+        # _st_name and _st_target
+        result._st_name = name
+        result._st_target = None
+        return result
 
     def _parse_line(self, line, fail=1):
         """Return _Stat instance corresponding to the given text line."""
@@ -739,7 +744,7 @@ class FTPHost:
         for line in candidates:
             stat_result = self._parse_line(line, fail=0)
             if (stat_result is not None) and \
-              (stat_result.st_name == basename):
+              (stat_result._st_name == basename):
                 return stat_result
         raise PermanentError("550 %s: no such file or directory" % path)
 
@@ -763,9 +768,9 @@ class _Stat(UserTuple.UserTuple):
     """
 
     _index_mapping = {
-      'st_mode':  0, 'st_ino':   1, 'st_dev':   2, 'st_nlink':   3,
-      'st_uid':   4, 'st_gid':   5, 'st_size':  6, 'st_atime':   7,
-      'st_mtime': 8, 'st_ctime': 9, 'st_name': 10}
+      'st_mode':  0, 'st_ino':   1, 'st_dev':    2, 'st_nlink':    3,
+      'st_uid':   4, 'st_gid':   5, 'st_size':   6, 'st_atime':    7,
+      'st_mtime': 8, 'st_ctime': 9, '_st_name': 10, '_st_target': 11}
 
     def __getattr__(self, attr_name):
         if self._index_mapping.has_key(attr_name):
