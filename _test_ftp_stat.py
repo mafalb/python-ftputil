@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.4 2003/06/09 19:17:15 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.5 2003/06/09 19:25:11 schwa Exp $
 
 import stat
 import unittest
@@ -38,6 +38,12 @@ import _test_base
 import ftp_error
 import ftp_stat
 import ftputil
+
+
+def test_stat():
+    host = _test_base.ftp_host_factory()
+    stat = ftp_stat._UnixStat(host)
+    return stat
 
 
 class TestStatParsers(unittest.TestCase):
@@ -110,13 +116,14 @@ class TestLstatAndStat(unittest.TestCase):
     Test `FTPHost.lstat` and `FTPHost.stat` (test currently only
     implemented for Unix server format).
     """
+    def setUp(self):
+        self.stat = test_stat()
 
     def test_failing_lstat(self):
         """Test whether lstat fails for a nonexistent path."""
-        host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.PermanentError, host.lstat,
+        self.assertRaises(ftputil.PermanentError, self.stat.lstat,
                           '/home/sschw/notthere')
-        self.assertRaises(ftputil.PermanentError, host.lstat,
+        self.assertRaises(ftputil.PermanentError, self.stat.lstat,
                           '/home/sschwarzer/notthere')
 
     def test_lstat_for_root(self):
@@ -125,24 +132,21 @@ class TestLstatAndStat(unittest.TestCase):
         the output of an FTP `DIR` command. Unfortunately, it is not
         possible to to this for the root directory `/`.
         """
-        host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.RootDirError, host.lstat, '/')
+        self.assertRaises(ftputil.RootDirError, self.stat.lstat, '/')
         try:
-            host.lstat('/')
+            self.stat.lstat('/')
         except ftputil.RootDirError, exc_obj:
             self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
 
     def test_lstat_one_file(self):
         """Test `lstat` for a file."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/index.html')
+        stat_result = self.stat.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
 
     def test_lstat_one_dir(self):
         """Test `lstat` for a directory."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/scios2')
+        stat_result = self.stat.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
         self.assertEqual(stat_result.st_ino, None)
         self.assertEqual(stat_result.st_dev, None)
@@ -165,26 +169,45 @@ class TestLstatAndStat(unittest.TestCase):
 
     def test_lstat_via_stat_module(self):
         """Test `lstat` indirectly via `stat` module."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/')
+        stat_result = self.stat.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
     def test_stat_following_link(self):
         """Test `stat` when invoked on a link."""
-        host = _test_base.ftp_host_factory()
         # simple link
-        stat_result = host.stat('/home/link')
+        stat_result = self.stat.stat('/home/link')
         self.assertEqual(stat_result.st_size, 4604)
         # link pointing to a link
-        stat_result = host.stat('/home/python/link_link')
+        stat_result = self.stat.stat('/home/python/link_link')
         self.assertEqual(stat_result.st_size, 4604)
-        stat_result = host.stat('../python/link_link')
+        stat_result = self.stat.stat('../python/link_link')
         self.assertEqual(stat_result.st_size, 4604)
         # recursive link structures
-        self.assertRaises(ftputil.PermanentError, host.stat,
+        self.assertRaises(ftputil.PermanentError, self.stat.stat,
                           '../python/bad_link')
-        self.assertRaises(ftputil.PermanentError, host.stat,
+        self.assertRaises(ftputil.PermanentError, self.stat.stat,
                           '/home/bad_link')
+
+
+class TestListdir(unittest.TestCase):
+    """Test `FTPHost.listdir`."""
+    def setUp(self):
+        self.stat = test_stat()
+
+    def test_failing_listdir(self):
+        """Test failing `FTPHost.listdir`."""
+        self.assertRaises(ftputil.PermanentError, self.stat.listdir, 'notthere')
+
+    def test_succeeding_listdir(self):
+        """Test succeeding `FTPHost.listdir`."""
+        # do we have all expected "files"?
+        self.assertEqual( len(self.stat.listdir('.')), 9 )
+        # have they the expected names?
+        expected = ('chemeng download image index.html os2 '
+                    'osup publications python scios2').split()
+        remote_file_list = self.stat.listdir('.')
+        for file in expected:
+            self.failUnless(file in remote_file_list)
 
 
 if __name__ == '__main__':
