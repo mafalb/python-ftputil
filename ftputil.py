@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.100 2003/03/15 18:52:17 schwa Exp $
+# $Id: ftputil.py,v 1.101 2003/03/15 18:55:45 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -405,7 +405,8 @@ class FTPHost:
             self._parser = self._parse_unix_line
 
     #
-    # dealing with child sessions and file-like objects
+    # dealing with child sessions and file-like objects (rather
+    #  low-level)
     #
     def _make_session(self):
         """
@@ -460,6 +461,29 @@ class FTPHost:
     def open(self, path, mode='r'):
         return self.file(path, mode)
 
+    def close(self):
+        """Close host connection."""
+        if not self.closed:
+            # close associated children
+            for host in self._children:
+                # only children have `_file` attributes
+                host._file.close()
+                host.close()
+            # now deal with our-self
+            _try_with_oserror(self._session.close)
+            self._children = []
+            self.closed = True
+
+    def __del__(self):
+        try:
+            self.close()
+        except:
+            # we don't want warnings if the constructor did fail
+            pass
+
+    #
+    # operations based on file-like objects (rather high-level)
+    #
     def copyfileobj(self, source, target, length=64*1024):
         "Copy data from file-like object source to file-like object target."
         # inspired by `shutil.copyfileobj` (I don't use the `shutil`
@@ -542,26 +566,6 @@ class FTPHost:
             return True
         else:
             return False
-
-    def close(self):
-        """Close host connection."""
-        if not self.closed:
-            # close associated children
-            for host in self._children:
-                # only children have `_file` attributes
-                host._file.close()
-                host.close()
-            # now deal with our-self
-            _try_with_oserror(self._session.close)
-            self._children = []
-            self.closed = True
-
-    def __del__(self):
-        try:
-            self.close()
-        except:
-            # we don't want warnings if the constructor did fail
-            pass
 
     #
     # miscellaneous utility methods resembling those in `os`
@@ -754,7 +758,7 @@ class FTPHost:
         path = self.path.abspath(path)
         # Note: (l)stat works by going one directory up and parsing
         #  the output of an FTP `DIR` command. Unfortunately, it is
-        #  not #  possible to to this for the root directory `/` .
+        #  not possible to to this for the root directory `/`.
         if path == '/':
             raise RootDirError("can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
