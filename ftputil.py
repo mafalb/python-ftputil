@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.77 2002/04/01 13:40:05 schwa Exp $
+# $Id: ftputil.py,v 1.78 2002/04/01 13:56:33 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -661,12 +661,12 @@ class FTPHost:
         st_ctime = None
         # st_name
         if name.find(' -> ') != -1:
-            st_name = name.split(' -> ')[0]
+            st_name, st_target = name.split(' -> ')
         else:
-            st_name = name
+            st_name, st_target = name, None
         return _Stat( (st_mode, st_ino, st_dev, st_nlink,
                        st_uid, st_gid, st_size, st_atime,
-                       st_mtime, st_ctime, st_name) )
+                       st_mtime, st_ctime, st_name, st_target) )
 
     def _parse_robin_line(self, line):
         """
@@ -711,9 +711,10 @@ class FTPHost:
         st_ctime = None
         # st_name
         st_name = name
+        st_target = None
         return _Stat( (st_mode, st_ino, st_dev, st_nlink,
                        st_uid, st_gid, st_size, st_atime,
-                       st_mtime, st_ctime, st_name) )
+                       st_mtime, st_ctime, st_name, st_target) )
 
     def _parse_line(self, line, fail=1):
         """Return _Stat instance corresponding to the given text line."""
@@ -762,10 +763,10 @@ class _Stat(UserTuple.UserTuple):
     from os.(l)stat.
     """
 
-    _index_mapping = {'st_mode':  0, 'st_ino':   1,
-      'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
-      'st_gid':   5,  'st_size':  6, 'st_atime': 7,
-      'st_mtime': 8,  'st_ctime': 9, 'st_name': 10}
+    _index_mapping = {
+      'st_mode':  0, 'st_ino':   1, 'st_dev':   2, 'st_nlink':   3,
+      'st_uid':   4, 'st_gid':   5, 'st_size':  6, 'st_atime':   7,
+      'st_mtime': 8, 'st_ctime': 9, 'st_name': 10, 'st_target': 11}
 
     def __getattr__(self, attr_name):
         if self._index_mapping.has_key(attr_name):
