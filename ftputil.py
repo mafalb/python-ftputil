@@ -227,7 +227,7 @@ class FTPHost:
         current_dir = self.getcwd()
         host_copy.chdir(current_dir)
         # we don't need to copy the _file_pool because nobody
-        #  will call the anonymous new host's method file
+        #  will call the anonymous new host's file method
         return host_copy
         
     def file(self, path, mode='r'):
@@ -267,16 +267,20 @@ class FTPHost:
     #
     # miscellaneous utility methods resembling those in os
     #
+    def _try(self, callee, *args):
+        '''Try to execute the callee with the given args.'''
+        try:
+            return callee(*args)
+        except ftplib.all_errors:
+            raise FTPOSError( sys.exc_info()[1] )
+        
     def getcwd(self):
         '''Return the current path name.'''
-        return self._session.pwd()
+        return self._try(self._session.pwd)
 
     def chdir(self, path):
         '''Change the directory on the host.'''
-        try:
-            self._session.cwd(path)
-        except ftplib.error_perm, obj:
-            raise FTPOSError(obj)
+        self._try(self._session.cwd, path)
 
     def listdir(self, path):
         '''Return a list with directories, files etc. in the
@@ -287,15 +291,15 @@ class FTPHost:
         '''Make the directory path on the remote host. The
         argument mode is ignored and only supported for
         similarity with os.mkdir.'''
-        self._session.mkd(path)
+        self._try(self._session.mkd, path)
 
     def rmdir(self, path):
         '''Remove the directory on the remote host.'''
-        self._session.rmd(self, path)
+        self._try(self._session.rmd, path)
 
     def remove(self, path):
         '''Remove the given file.'''
-        self._session.delete(path)
+        self._try(self._session.delete, path)
 
     def unlink(self, path):
         '''Remove the given file.'''
@@ -303,25 +307,13 @@ class FTPHost:
 
     def rename(self, src, dst):
         '''Rename the src on the FTP host to dst.'''
-        self._session.rename(src, dst)
+        self._try(self._session.rename, src, dst)
 
     def _stat_candidates(self, lines, wanted_name):
-        '''Return candidate lines for further analysis.
-        Warning: This implementation will dismiss names
-        with whitespace in them!'''
-        if wanted_name.find(' ') > -1:
-            raise NotImplementedError("Names to stat "
-                  "'%s' must not contain whitespace" %
-                  wanted_name)
+        '''Return candidate lines for further analysis.'''
         result = []
         for line in lines:
-            parts = line.split()
-            if parts[-2] == '->':
-                # we found a link; name before "->" counts
-                name = parts[-3]
-            else:
-                name = parts[-1]
-            if name == wanted_name:
+            if line.find(wanted_name) > -1:
                 result.append(line)
         return result
         
