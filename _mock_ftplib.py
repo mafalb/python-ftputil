@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.4 2002/03/29 21:47:11 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.5 2002/03/29 23:03:13 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -46,6 +46,7 @@ try:
 except ImportError:
     import StringIO
 
+DEBUG = 0
 
 class MockSocket:
     def __init__(self, mock_socket_file_contents=''):
@@ -321,7 +322,59 @@ class MockSession:
             self.file = self.sock = None
 
 
-class FailOnLoginSession:
+class MockSession:
+
+    # used by MockSession.pwd
+    pwd_results = []
+    
+    # used by MockSession.dir
+    dir_contents = {
+          '/absolute': """\
+drwxr-sr-x   2 45854    200           512 May  4  2000 path""",
+          '/absolute/path': """\
+total 14
+drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
+drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
+drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
+-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
+drwxr-sr-x   2 45854    200           512 May 29  2000 os2
+lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2
+drwxr-sr-x   2 45854    200           512 May 25  2000 publications
+drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
+drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
+
+    def __init__(self, host='', user='', password=''):
+        self.pwd_result_index = 0
+
+    def voidcmd(self, cmd):
+        if cmd == 'STAT':
+            return 'MockSession server awaiting your commands ;-)'
+        else:
+            raise ftplib.error_perm
+
+    def pwd(self):
+        result = self.pwd_results[self.pwd_result_index]
+        self.pwd_result_index += 1
+        return result
+
+    def dir(self, path, callback=None):
+        if DEBUG:
+            print 'dir: %s' % path
+        if not self.dir_contents.has_key(path):
+            raise ftplib.error_perm
+        dir_lines = self.dir_contents[path].split('\n')
+        for line in dir_lines:
+            if callback is None:
+                print line
+            else:
+                callback(line)
+
+
+class FailOnLoginSession(MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
+
+
+class ListdirTest(MockSession):
+    pwd_results = ['/absolute/path']
 
