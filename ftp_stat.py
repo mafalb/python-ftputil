@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.16 2003/10/04 14:35:04 schwa Exp $
+# $Id: ftp_stat.py,v 1.17 2003/10/04 14:39:23 schwa Exp $
 
 import stat
 import sys
@@ -53,7 +53,7 @@ except TypeError:
     # "base is not a class object"
     import UserTuple
     _StatResultBase = UserTuple.UserTuple
-    
+
 
 class _StatResult(_StatResultBase):
     """
@@ -321,7 +321,7 @@ class _MSStat(_Stat):
         except (ValueError, IndexError):
             raise ftp_error.ParserError("invalid time string '%s'" % time_)
         if am_pm == 'P':
-            hour = 12 + hour
+            hour = hour + 12
         st_mtime = time.mktime( (year, month, day, hour,
                    minute, 0, 0, 0, -1) )
         # st_ctime
