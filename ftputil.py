@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.121 2003/06/09 15:53:50 schwa Exp $
+# $Id: ftputil.py,v 1.122 2003/06/09 16:00:38 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -552,7 +552,8 @@ class FTPHost:
         dirname, basename = self.path.split(path)
         ftp_error._try_with_oserror( self._session.dir, dirname,
                                      lambda line: lines.append(line) )
-        # search for name to be stat'ed without full parsing
+        # search for name to be stat'ed without parsing the whole
+        #  directory listing
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
@@ -572,7 +573,7 @@ class FTPHost:
             # stat the link if it is one, else the file/directory
             stat_result = self.lstat(path)
             # if the file is not a link, the `stat` result is the
-            #  same than the `lstat` result
+            #  same as the `lstat` result
             if not stat.S_ISLNK(stat_result.st_mode):
                 return stat_result
             # if we stat'ed a link, calculate a normalized path for
