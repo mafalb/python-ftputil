@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.74 2002/03/30 22:53:42 schwa Exp $
+# $Id: ftputil.py,v 1.75 2002/03/30 22:57:47 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -97,7 +97,7 @@ import stat
 import time
 import sys
 import posixpath
-import UserList
+import UserTuple
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
@@ -274,8 +274,7 @@ class _FTPFile:
             if not more_data:
                 break
             more_data = _crlf_to_python_linesep(more_data)
-            # print '-> new (normalized) data:', \
-            #       repr(more_data)
+            # print '-> new (normalized) data:', repr(more_data)
             chunks.append(more_data)
             current_size += len(more_data)
         return ''.join(chunks)
@@ -286,7 +285,7 @@ class _FTPFile:
         if self._binmode:
             return data
         # eventually complete begun newline
-        if data and data[-1] == '\r':
+        if data.endswith('\r'):
             data = data + self.read(1)
         return _crlf_to_python_linesep(data)
 
@@ -739,7 +738,7 @@ class FTPHost:
 # Helper classes _Stat and _Path to imitate behaviour of stat objects
 #  and os.path module contents.
 
-class _Stat(UserList.UserList):
+class _Stat(UserTuple.UserTuple):
     """
     Support class resembling a tuple like that which is returned
     from os.(l)stat. Deriving from the tuple type will only work
