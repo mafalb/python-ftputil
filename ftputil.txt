@@ -62,7 +62,9 @@ The exceptions are in the namespace of the ``ftputil`` package (e. g.
             PermanentError(FTPOSError)
             ParserError(FTPOSError)
         FTPIOError(FTPError)
-        RootDirError(FTPError)
+        InternalError(FTPError)
+            RootDirError(InternalError)
+            InaccessibleLoginDirError(InternalError)
         TimeShiftError(FTPError)
 
 and are described here:
@@ -171,12 +173,27 @@ and are described here:
   As you can see, both code snippets are similar. (However, the error
   codes aren't the same.)
 
+- ``InternalError``
+
+  subsumes exception classes for signaling errors due to limitations
+  of the FTP protocol or the concrete implementation of ``ftputil``.
+
 - ``RootDirError``
 
-  is a special case. Due to the implementation of the lstat method it
-  is not possible to do a ``stat`` call  on the root directory ``/``. If
-  you know *any* way to do it, please let me know. :-)
+  Because of the implementation of the ``lstat`` method it is not
+  possible to do a ``stat`` call  on the root directory ``/``.
+  If you know *any* way to do it, please let me know. :-)
 
+- ``InaccessibleLoginDirError``
+
+  This exception is only raised if *both* of the following conditions
+  are met:
+
+  - The directory in which "you" are placed upon login is not
+    accessible, i. e. a ``chdir`` call fails.
+
+  - You try to access a path which contains whitespace.
+  
 - ``TimeShiftError``
 
   is used to denote errors which relate to setting the `time shift`_,
