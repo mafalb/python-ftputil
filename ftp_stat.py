@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.28 2003/10/30 19:25:57 schwa Exp $
+# $Id: ftp_stat.py,v 1.29 2003/10/30 19:49:53 schwa Exp $
 
 import stat
 import sys
@@ -121,6 +121,7 @@ class _Stat:
                 if st_name not in (self._host.curdir, self._host.pardir):
                     names.append(st_name)
             except ftp_error.ParserError:
+                # ignore things like ".", "..", "total 17"
                 pass
         return names
 
@@ -165,6 +166,7 @@ class _Stat:
                 if stat_result._st_name == basename:
                     return stat_result
             except ftp_error.ParserError:
+                # ignore things like ".", "..", "total 17"
                 pass
         # path was not found
         if _exception_for_missing_path:
@@ -181,10 +183,12 @@ class _Stat:
     def stat(self, path, _exception_for_missing_path=True):
         """
         Return info from a `stat` call.
-        
+
         (`_exception_for_missing_path` is an implementation aid and
         not intended for use by ftputil clients.)
         """
+        # save for error message
+        original_path = path
         # most code in this method is used to detect recursive
         #  link structures
         visited_paths = {}
@@ -206,7 +210,8 @@ class _Stat:
             if visited_paths.has_key(path):
                 # we had this path already
                 raise ftp_error.PermanentError(
-                      "recursive link structure detected")
+                      "recursive link structure detected for path '%s'" %
+                      original_path)
             # remember the path we have encountered
             visited_paths[path] = True
 
