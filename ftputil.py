@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.127 2003/06/09 19:05:12 schwa Exp $
+# $Id: ftputil.py,v 1.128 2003/10/04 14:07:53 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -66,9 +66,9 @@ FTPHost objects
     `ftputil.txt`.
 
 FTPFile objects
-    `FTPFile` objects are constructed via the `file` method of
-    `FTPHost` objects. `FTPFile` objects support the usual file
-    operations for non-seekable files (`read`, `readline`,
+    `FTPFile` objects are constructed via the `file` method (`open`
+    is an alias) of `FTPHost` objects. `FTPFile` objects support the
+    usual file operations for non-seekable files (`read`, `readline`,
     `readlines`, `xreadlines`, `write`, `writelines`, `close`).
 
 Note: ftputil currently is not threadsafe. More specifically, you can
@@ -90,14 +90,15 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 # for Python 2.1
 from __future__ import nested_scopes
 
-import ftp_error
-import ftp_file
-import ftp_path
-import ftp_stat
 import ftplib
 import os
 import sys
 import time
+
+import ftp_error
+import ftp_file
+import ftp_path
+import ftp_stat
 
 # make exceptions available in this module for backwards compatibilty
 from ftp_error import *
@@ -231,6 +232,7 @@ class FTPHost:
         return host._file
 
     def open(self, path, mode='r'):
+        # alias for `file` method
         return self.file(path, mode)
 
     def close(self):
@@ -298,7 +300,7 @@ class FTPHost:
     def __assert_valid_time_shift(self, time_shift):
         """
         Perform sanity checks on the time shift value (given in
-        seconds). If the value fails, raise a `TimeShiftError`,
+        seconds). If the value is invalid, raise a `TimeShiftError`,
         else simply return `None`.
         """
         minute = 60.0
@@ -331,8 +333,8 @@ class FTPHost:
         - The connection between server and client is established.
         - The client has write access to the directory that is
           current when `synchronize_time` is called.
-        - That directory is _not_ the root directory of the FTP
-          server.
+        - That directory is _not_ the root directory (i. e. `/`) of
+          the FTP server.
 
         The usual usage pattern of `synchronize_time` is to call it
         directly after the connection is established. (As can be
@@ -390,7 +392,7 @@ class FTPHost:
     def __copy_file(self, source, target, mode, source_open, target_open):
         """
         Copy a file from source to target. Which of both is a local
-        or a remote file is determined by the arguments.
+        or a remote file, repectively, is determined by the arguments.
         """
         source_mode, target_mode = self.__get_modes(mode)
         source = source_open(source, source_mode)
@@ -446,6 +448,7 @@ class FTPHost:
         respect to the time shift between client and server.
         """
         local_mtime = os.path.getmtime(file_name)
+        # transform to server time
         return local_mtime + self.time_shift()
 
     def upload_if_newer(self, source, target, mode=''):
@@ -485,8 +488,9 @@ class FTPHost:
 
     def mkdir(self, path, mode=None):
         """
-        Make the directory path on the remote host. The argument mode
-        is ignored and only "supported" for similarity with os.mkdir.
+        Make the directory path on the remote host. The argument
+        `mode` is ignored and only "supported" for similarity with
+        `os.mkdir`.
         """
         ftp_error._try_with_oserror(self._session.mkd, path)
 

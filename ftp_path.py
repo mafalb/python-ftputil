@@ -33,11 +33,12 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.5 2003/06/09 18:19:01 schwa Exp $
+# $Id: ftp_path.py,v 1.6 2003/10/04 14:07:53 schwa Exp $
 
-import ftp_error
 import posixpath
 import stat
+
+import ftp_error
 
 # `True`, `False`
 from true_false import *
@@ -73,6 +74,7 @@ class _Path:
 
     def exists(self, path):
         try:
+            # we don't need this call's result
             self._host.lstat(path)
             return True
         except ftp_error.RootDirError:

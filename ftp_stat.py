@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.13 2003/06/09 19:33:00 schwa Exp $
+# $Id: ftp_stat.py,v 1.14 2003/10/04 14:07:53 schwa Exp $
 
 import stat
 import sys
@@ -54,7 +54,6 @@ class _StatResult(_StatResultBase):
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
     """
-
     _index_mapping = {
       'st_mode':  0, 'st_ino':   1, 'st_dev':    2, 'st_nlink':    3,
       'st_uid':   4, 'st_gid':   5, 'st_size':   6, 'st_atime':    7,
@@ -78,14 +77,15 @@ class _Stat:
         """
         Return a `_Stat` object as derived from the string `line`.
         The parser code to use depends on the directory format the
-        FTP server delivers.
+        FTP server delivers (also see examples at end of file).
         """
         raise NotImplementedError("must be defined by subclass")
 
     def parse_lines(self, lines):
         """
         Return a list of `_Stat` objects with one `_Stat` object per
-        line in the list `lines`. The order of the entries is kept.
+        line in the list `lines`. The order of the returned list
+        corresponds to the order in the `lines` argument.
         """
         stat_results = [ self.parse_line(line) for line in lines ]
         return stat_results
@@ -99,7 +99,7 @@ class _Stat:
         Return a list with directories, files etc. in the directory
         named path.
         """
-        # we _can't_ put this check into `_dir`, s. a.
+        # we _can't_ put this check into `FTPHost._dir`, see its docstring
         path = self._path.abspath(path)
         if not self._path.isdir(path):
             raise ftp_error.PermanentError("550 %s: no such directory" % path)

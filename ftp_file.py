@@ -33,7 +33,7 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.6 2003/06/09 12:34:09 schwa Exp $
+# $Id: ftp_file.py,v 1.7 2003/10/04 14:07:53 schwa Exp $
 
 import ftp_error
 
@@ -41,12 +41,15 @@ import ftp_error
 from true_false import *
 
 
-# converter for `\r\n` line ends to normalized ones in Python.
-#  RFC 959 states that the server will send `\r\n` on text mode
-#  transfers, so this conversion should be safe. I still use
-#  text mode transfers (mode 'r', not 'rb') in socket.makefile
-#  (below) because the server may do charset conversions on
-#  text transfers.
+# converter for `\r\n` line ends to normalized ones in Python. RFC 959
+#  states that the server will send `\r\n` on text mode transfers, so
+#  this conversion should be safe. I still use text mode transfers
+#  (mode 'r', not 'rb') in `socket.makefile` (below) because the
+#  server may do charset conversions on text transfers.
+#
+# Note that the "obvious" implementation of replacing "\r\n" with
+#  "\n" would fail, if "\r" (without "\n") occured at the end of the
+#  string `text`
 _crlf_to_python_linesep = lambda text: text.replace('\r', '')
 
 # converter for Python line ends into `\r\n`
@@ -54,9 +57,9 @@ _python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 
 
 # helper class for xreadline protocol for ASCII transfers
+#XXX maybe we can use the `xreadlines` module instead of this?
 class _XReadlines:
     """Represents `xreadline` objects for ASCII transfers."""
-
     def __init__(self, ftp_file):
         self._ftp_file = ftp_file
         self._next_index = 0
@@ -76,19 +79,19 @@ class _XReadlines:
 
 class _FTPFile:
     """
-    Represents a file-like object connected to an FTP host.
-    File and socket are closed appropriately if the close
-    operation is requested.
+    Represents a file-like object connected to an FTP host. File and
+    socket are closed appropriately if the `close` operation is
+    requested.
     """
-
     def __init__(self, host):
         """Construct the file(-like) object."""
         self._host = host
         self._session = host._session
-        self.closed = True   # yet closed
+        # the file is closed yet
+        self.closed = True
 
     def _open(self, path, mode):
-        """Open the remote file with given pathname and mode."""
+        """Open the remote file with given path name and mode."""
         # check mode
         if 'a' in mode:
             raise ftp_error.FTPIOError("append mode not supported")
@@ -112,7 +115,7 @@ class _FTPFile:
         self._conn = ftp_error._try_with_ioerror(
                      self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
-        # this comes last so that close does not try to
+        # this comes last so that `close` does not try to
         #  close `_FTPFile` objects without `_conn` and `_fo`
         #  attributes
         self.closed = False
@@ -136,6 +139,7 @@ class _FTPFile:
         #  characters will be too small! Thus we (would) have to
         #  continue to read until we have fetched the requested number
         #  of bytes (or run out of source data).
+        #
         # The algorithm below avoids repetitive string concatanations
         #  in the style of
         #      data = data + more_data
@@ -161,7 +165,7 @@ class _FTPFile:
         data = self._fo.readline(*args)
         if self._binmode:
             return data
-        # possibly, complete begun newline
+        # if necessary, complete begun newline
         if data.endswith('\r'):
             data = data + self.read(1)
         return _crlf_to_python_linesep(data)
