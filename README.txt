@@ -9,6 +9,24 @@ you can (almost) access directories and files on remote FTP servers as if they
 were in your local file system. This includes using file-like objects
 representing remote files.
 
+What's new?
+-----------
+
+From version 1.1 to 2.0, the following has changed:
+
+- ftputil was re-organized and is now a package
+- installation with Python distutils
+- stat, listdir etc. work if server is in another time zone than
+  the client running ftputil (with help from Andrew Ittner); see
+  section "Time zone correction" in the documentation
+- it's possibly to set the directory listing format "manually"
+  (though in most cases it's recognized automatically)
+- added a workaround regarding whitespace in directory names (thanks
+  to Tommy Sundström and H. Y. Chu)
+- extended documentation, now in HTML format (generated from
+  reStructured Text)
+- some more bugfixes
+
 Documentation
 -------------
 
