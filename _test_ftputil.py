@@ -92,8 +92,21 @@ class TestRemoveAndRename(Base):
         
     def test_rename(self):
         '''Test FTPHost.rename.'''
-        pass
-        
+        host = self.host
+        # try to rename a file which is not there
+        host.chdir(self.testdir)
+        self.assertRaises(ftputil.PermanentError, host.rename,
+                          'notthere', 'notthere2')
+        # upload a file, rename it and look if the name
+        #  has changed
+        host.upload('ftputil.py', 'ftputil2.py', 'b')
+        host.rename('ftputil2.py', 'ftputil3.py')
+        self.failIf( host.path.exists('ftputil2.py') )
+        self.failUnless( host.path.exists('ftputil3.py') )
+        # clean up
+        host.remove('ftputil3.py')
+        host.chdir(self.rootdir)
+
 
 class TestDirectories(Base):
     '''Getting, making, changing, deleting directories.'''
@@ -189,7 +202,7 @@ class TestStat(Base):
 class TestPath(Base):
     pass
 
-class TestFiles(Base):
+class TestFileOperations(Base):
     pass
 
 
