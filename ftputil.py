@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.84 2002/04/01 16:26:16 schwa Exp $
+# $Id: ftputil.py,v 1.85 2002/04/01 17:41:55 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -572,9 +572,9 @@ class FTPHost:
         """Remove the given file."""
         self.remove(path)
 
-    def rename(self, src, dst):
-        """Rename the src on the FTP host to dst."""
-        _try_with_oserror(self._session.rename, src, dst)
+    def rename(self, source, target):
+        """Rename the source on the FTP host to target."""
+        _try_with_oserror(self._session.rename, source, target)
 
     def listdir(self, path):
         """
