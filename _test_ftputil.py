@@ -29,8 +29,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.72 2003/10/04 19:29:32 schwa Exp $
+# $Id: _test_ftputil.py,v 1.73 2003/10/05 15:53:52 schwa Exp $
 
+import ftplib
 import operator
 import os
 import random
@@ -41,7 +42,6 @@ import unittest
 import _mock_ftplib
 import _test_base
 import ftp_file
-import ftplib
 import ftputil
 
 # `True`, `False`
@@ -123,7 +123,6 @@ class TimeShiftFTPHost(ftputil.FTPHost):
 #
 class TestOpenAndClose(unittest.TestCase):
     """Test opening and closing of `FTPHost` objects."""
-
     def test_open_and_close(self):
         """Test closing of `FTPHost`."""
         host = _test_base.ftp_host_factory()
@@ -133,7 +132,6 @@ class TestOpenAndClose(unittest.TestCase):
 
 
 class TestLogin(unittest.TestCase):
-
     def test_invalid_login(self):
         """Login to invalid host must fail."""
         self.assertRaises(ftputil.FTPOSError, _test_base.ftp_host_factory,
@@ -142,7 +140,6 @@ class TestLogin(unittest.TestCase):
 
 class TestFileOperations(unittest.TestCase):
     """Test operations with file-like objects."""
-
     def test_caching(self):
         """Test whether `_FTPFile` cache of `FTPHost` object works."""
         host = _test_base.ftp_host_factory()
@@ -315,7 +312,6 @@ class TestFileOperations(unittest.TestCase):
 
 class TestUploadAndDownload(unittest.TestCase):
     """Test ASCII upload and binary download as examples."""
-
     def generate_ascii_file(self, data, filename):
         """Generate an ASCII data file."""
         source_file = open(filename, 'w')
