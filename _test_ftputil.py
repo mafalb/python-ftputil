@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.23 2002/03/29 21:50:41 schwa Exp $
+# $Id: _test_ftputil.py,v 1.24 2002/03/29 21:51:52 schwa Exp $
 
 # Ideas for future development:
 #   - Rewrite tests to use mock FTP sessions
@@ -76,46 +76,6 @@ class TestLogin(unittest.TestCase):
         # plain FTPOSError, no derived class
         self.assertRaises(ftputil.FTPOSError, FTPHostWrapper,
                           _mock_ftplib.FailOnLoginSession)
-
-
-class TestRemoveAndRename(Base):
-    """Removing and renaming files."""
-
-    def test_remove(self):
-        """Test FTPHost.remove."""
-        host = self.host
-        # try to remove a file which is not there
-        self.assertRaises( ftputil.PermanentError, host.remove,
-          host.path.join(self.testdir, 'notthere') )
-        # remove a directory and check if it's removed
-        host.mkdir( host.path.join(self.testdir, '__test2') )
-        host.remove( host.path.join(self.testdir, '__test2') )
-        self.failIf( host.path.exists( host.path.join(
-                     self.testdir, '__test2') ) )
-        # remove a file and check if it's removed
-        host.upload( 'ftputil.py', host.path.join(self.testdir,
-                     'ftputil2.py'), 'b' )
-        host.unlink( host.path.join(self.testdir,
-                                    'ftputil2.py') )
-        self.failIf( host.path.exists( host.path.join(
-                     self.testdir, 'ftputil2.py') ) )
-
-    def test_rename(self):
-        """Test FTPHost.rename."""
-        host = self.host
-        # try to rename a file which is not there
-        host.chdir(self.testdir)
-        self.assertRaises(ftputil.PermanentError, host.rename,
-                          'notthere', 'notthere2')
-        # upload a file, rename it and look if the name
-        #  has changed
-        host.upload('ftputil.py', 'ftputil2.py', 'b')
-        host.rename('ftputil2.py', 'ftputil3.py')
-        self.failIf( host.path.exists('ftputil2.py') )
-        self.failUnless( host.path.exists('ftputil3.py') )
-        # clean up
-        host.remove('ftputil3.py')
-        host.chdir(self.rootdir)
 
 
 class TestDirectories(Base):
