@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.97 2002/10/22 21:07:53 schwa Exp $
+# $Id: ftputil.py,v 1.98 2003/01/26 18:16:57 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
