@@ -29,7 +29,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftp_path.py,v 1.1 2003/03/16 19:07:50 schwa Exp $
+"""
+ftp_path.py - simulate `os.path` for FTP servers
+"""
+
+# $Id: ftp_path.py,v 1.2 2003/03/16 19:11:15 schwa Exp $
 
 import ftp_error
 import posixpath
