@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.50 2002/03/30 22:18:20 schwa Exp $
+# $Id: _test_ftputil.py,v 1.51 2002/03/30 22:36:31 schwa Exp $
 
 import unittest
 import stat
@@ -98,9 +98,19 @@ def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
 #
 # test cases
 #
-class TestLogin(unittest.TestCase):
-    """Test invalid logins."""
+class TestOpenAndClose(unittest.TestCase):
+    """Test opening and closing of FTPHost objects."""
 
+    def test_open_and_close(self):
+        """Test closing of FTPHost."""
+        host = ftp_host_factory()
+        host.close()
+        self.assertEqual(host.closed, 1)
+        self.assertEqual(host._children, [])
+    
+
+class TestLogin(unittest.TestCase):
+    
     def test_invalid_login(self):
         """Login to invalid host must fail."""
         self.assertRaises(ftputil.FTPOSError, ftp_host_factory,
