@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2004, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.7 2004/02/27 18:39:50 schwa Exp $
+# $Id: setup.py,v 1.8 2004/02/27 23:34:52 schwa Exp $
 
 """
 setup.py - installation script for Python distutils

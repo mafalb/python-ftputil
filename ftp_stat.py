@@ -1,4 +1,4 @@
-# Copyright (C) 2002, Stefan Schwarzer
+# Copyright (C) 2002-2004, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.33 2004/02/26 22:57:06 schwa Exp $
+# $Id: ftp_stat.py,v 1.34 2004/02/27 23:34:52 schwa Exp $
 
 import stat
 import sys
