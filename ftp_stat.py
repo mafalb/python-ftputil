@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.2 2003/06/08 19:42:06 schwa Exp $
+# $Id: ftp_stat.py,v 1.3 2003/06/09 12:47:29 schwa Exp $
 
 import sys
 
@@ -62,6 +62,30 @@ class _Stat(_StatBase):
         else:
             raise AttributeError("'_Stat' object has no attribute '%s'" %
                                  attr_name)
+
+
+class _StatParser:
+    """
+    Provide parsing of directory lines and full directory listings.
+    """
+    def parse_line(self, line):
+        """
+        Return a `_Stat` object as derived from the string `line`.
+        The parser code to use depends on the directory format the
+        FTP server delivers.
+        """
+        raise NotImplementedError("must be defined by subclass")
+
+    def parse_directory_listing(self, listing):
+        """
+        Return a list of `_Stat` objects with one `_Stat` object per
+        line in the listing. The order of the entries is kept.
+        """
+        lines = listing.splitlines()
+        stat_results = [ self.parse_line( line.strip() )
+                         for line in lines ]
+        return stat_results
+
 
 
 # Unix format
