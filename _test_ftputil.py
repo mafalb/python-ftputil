@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.30 2002/03/30 15:24:45 schwa Exp $
+# $Id: _test_ftputil.py,v 1.31 2002/03/30 15:28:35 schwa Exp $
 
 import unittest
 import stat
@@ -57,16 +57,19 @@ class TestLogin(unittest.TestCase):
 
 
 class TestStat(unittest.TestCase):
-    """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir."""
+    """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.
+    (test currently only implemented for Unix server format.
+    """
 
-    def test_lstat(self):
-        """Test FTPHost.lstat."""
-        # check if stat results are correct (currently only for Unix server)
-        # some file
+    def test_lstat_one_file(self):
+        """Test FTPHost.lstat with a file."""
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
+    
+    def test_lstat_one_dir(self):
+        """Test FTPHost.lstat with a directory."""
         # some directory
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/scios2')
@@ -81,7 +84,9 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         self.assertEqual(stat_result.st_ctime, None)
         self.assertEqual(stat_result.st_name, 'scios2')
-        # test status indirectly via stat module
+    
+    def test_lstat_via_stat_module(self):
+        """Test FTPHost.lstat indirectly via stat module."""
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
