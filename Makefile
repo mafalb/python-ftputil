@@ -29,13 +29,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.7 2004/02/27 22:57:05 schwa Exp $
+# $Id: Makefile,v 1.8 2004/02/27 23:18:00 schwa Exp $
 
 
 SHELL=/bin/sh
 DOC_FILES=README.html ftputil.html
 
-.PHONY: dist extdist test docs clean register
+.PHONY: dist extdist test docs clean register patch
 .SUFFIXES: .txt .html
 
 test:
@@ -49,9 +49,15 @@ test:
 	--stylesheet-path=/usr/opt/docutils/stylesheets/default.css \
 	--embed-stylesheet $< $@
 
+patch:
+	@echo "Patching files"
+	sed -i -E -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
+	sed -i -E -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
+	sed -i -E -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
+
 docs: ${DOC_FILES} README.txt ftputil.txt
 
-dist: clean docs
+dist: clean patch docs
 	python setup.py sdist
 
 localcopy:
