@@ -483,8 +483,8 @@ Files
 
   are needed for the unit tests of ftputil. If you don't want to
   debug or modify ftputil, you can delete these files.
-  ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module. See
-  below for details.
+  ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module
+  (see `Endo-Testing: Unit Testing with Mock Objects`_ for details).
 
 References
 ----------
@@ -497,7 +497,7 @@ References
 - Van Rossum G, Drake Jr FL. 2001. `Python Library Reference`_.
 
 .. _`Endo-Testing: Unit Testing with Mock Objects`:
-   http://www.mockobjects.com/misc/mockobjects.pdf
+   http://www.connextra.com/aboutUs/mockobjects.pdf
 .. _`RFC 959 - File Transfer Protocol (FTP)`: http://www.ietf.org/rfc/rfc959.txt
 .. _`Python Library Reference`: http://www.python.org/doc/current/lib/lib.html
 
