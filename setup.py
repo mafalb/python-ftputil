@@ -31,24 +31,20 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.1 2003/10/04 18:01:55 schwa Exp $
+# $Id: setup.py,v 1.2 2003/10/04 18:59:29 schwa Exp $
 
 """
 setup.py - installation script for Python distutils
 """
 
 from distutils import core
+from distutils import sysconfig
 
-file_list = """
-  UserTuple.py       ftp_error.py   ftp_stat.py
-  _mock_ftplib.py    ftp_file.py    ftputil.py
-  _test_ftputil.py   ftp_path.py    true_false.py
-  setup.py           ftputil.txt    ftputil_pydoc.txt""".split()
 
 _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
-_data_target = "%s/%s/" % (sysconfig.get_python_lib(), _package)
+_doc_target = "%s/%s/doc/" % (sysconfig.get_python_lib(), _package)
 
 core.setup(
   # installation data
@@ -56,15 +52,17 @@ core.setup(
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
-  data_files=[(_data_target, ["ftputil.txt", "ftputil.html"])],
+  data_files=[(_doc_target, ["ftputil.txt", "ftputil.html",
+                             "README.txt", "README.html"])],
   # metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
   url="http://www.sschwarzer.net/python/python_software.html",
   description="High-level FTP client interface",
   license="Open source (BSD-style)",
-  platforms=["Pure Python (Python version >= 2.1)"],
+  platforms=["Pure Python (Python version >= 2.0)"],
   # has to be added yet
   #long_description="",
   download_url="http://www.sschwarzer.net/download/%s-%s.tar.gz" %
                (_name, _version))
+
