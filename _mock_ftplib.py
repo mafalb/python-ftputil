@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.16 2002/03/31 23:17:26 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.17 2002/04/01 13:05:04 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -52,10 +52,14 @@ mock_files = {}
 def content_of(path):
     return mock_files[path].getvalue()
 
+
 class MockFile(StringIO.StringIO):
     """
     Mock class for the file objects _contained in_ _FTPFile
-    objects (not for _FTPFile objects themselves!).
+    objects (not _FTPFile objects themselves!).
+
+    Unless StringIO.StringIO instances, MockFile objects can be
+    queried for their contents after been closed.
     """
     def __init__(self, path, content=''):
         global mock_files
@@ -73,7 +77,7 @@ class MockFile(StringIO.StringIO):
             self._value_after_close = StringIO.StringIO.getvalue(self)
         StringIO.StringIO.close(self)
 
-    
+
 class MockSocket:
     """
     Mock class which is used to return something from
@@ -99,7 +103,7 @@ class MockSession:
     """
     # used by MockSession.cwd and MockSession.pwd
     current_dir = '/home/sschwarzer'
-    
+
     # used by MockSession.dir
     dir_contents = {
           '/home': """\
@@ -120,7 +124,7 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 
     # file content to be used (indirectly) with transfercmd
     mock_file_content = ''
-    
+
     def __init__(self, host='', user='', password=''):
         self.closed = 0
         # count successful transfercmd invocations to ensure
@@ -131,7 +135,7 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
         if path.endswith('/'):
             path = path[:-1]
         return path
-        
+
     def voidcmd(self, cmd):
         if DEBUG:
             print cmd
