@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.22 2003/03/15 21:21:37 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.23 2003/03/15 21:38:51 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -130,11 +130,7 @@ drwxr-sr-x   2 45854    200           512 May 29  2000 os2
 lrwxrwxrwx   2 45854    200             6 May 29  2000 osup -> ../os2
 drwxr-sr-x   2 45854    200           512 May 25  2000 publications
 drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
-drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
-
-          # for time synchronization; mtime is never used
-          '/login/dir': """\
--rw-r--r--   1 45854    200             0 Jan 19 23:11 _ftputil_sync_"""}
+drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 
     # file content to be used (indirectly) with transfercmd
     mock_file_content = ''
