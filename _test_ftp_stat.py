@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.10 2003/10/30 20:08:11 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.11 2003/12/30 20:45:00 schwa Exp $
 
 import stat
 import time
@@ -46,6 +46,17 @@ def test_stat():
     stat = ftp_stat._UnixStat(host)
     return stat
 
+def time_offset():
+    """
+    Return the difference between local time and GMT as a number
+    of seconds, rounded to full hours.
+    """
+    local_time, gm_time = time.localtime(), time.gmtime()
+    offset = time.mktime(local_time) - time.mktime(gm_time)
+    # round to full hours
+    hour = 60 * 60
+    return (offset + hour//2) // hour * hour
+        
 
 class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
@@ -68,12 +79,13 @@ class TestStatParsers(unittest.TestCase):
           "lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> "
                                                                   "../os2"
           ]
+        o = time_offset()
         expected_stat_results = [
-          (17901, None, None, 2, '45854', '200', 512, None, 957391200.0, None),
-          (33188, None, None, 1, '45854', '200', 4604, None, 1043014260.0,
+          (17901, None, None, 2, '45854', '200', 512, None, 957387600+o, None),
+          (33188, None, None, 1, '45854', '200', 4604, None, 1043010660+o,
            None),
-          (17901, None, None, 2, '45854', '200', 512, None, 959551200.0, None),
-          (41471, None, None, 2, '45854', '200', 512, None, 959551200.0, None)
+          (17901, None, None, 2, '45854', '200', 512, None, 959547600+o, None),
+          (41471, None, None, 2, '45854', '200', 512, None, 959547600+o, None)
           ]
         self._test_valid_lines(ftp_stat._UnixStat, lines, expected_stat_results)
 
@@ -93,10 +105,11 @@ class TestStatParsers(unittest.TestCase):
           "10-23-95  03:25PM       <DIR>          WindowsXP",
           "07-17-00  02:08PM             12266720 test.exe"
           ]
+        o = time_offset()
         expected_stat_results = [
-          (16640, None, None, None, None, None, None, None, 996225360.0, None),
-          (16640, None, None, None, None, None, None, None, 814458300.0, None),
-          (33024, None, None, None, None, None, 12266720, None, 963835680.0,
+          (16640, None, None, None, None, None, None, None, 996221760+o, None),
+          (16640, None, None, None, None, None, None, None, 814454700+o, None),
+          (33024, None, None, None, None, None, 12266720, None, 963832080+o,
            None)
           ]
         self._test_valid_lines(ftp_stat._MSStat, lines, expected_stat_results)
@@ -227,17 +240,11 @@ class TestLstatAndStat(unittest.TestCase):
         self.assertEqual(stat_result.st_gid, '200')
         self.assertEqual(stat_result.st_size, 512)
         self.assertEqual(stat_result.st_atime, None)
-        # The comparison with the value 937785600.0 may fail in
-        #  some Python environments. It seems that this depends on
-        #  how `time.mktime` interprets the dst flag.
-        self.failUnless(stat_result.st_mtime == 937785600.0 or
-                        stat_result.st_mtime == 937778400.0)
+        o = time_offset()
+        self.failUnless(stat_result.st_mtime == 937774800+o)
         self.assertEqual(stat_result.st_ctime, None)
-        # same here (or similarly)
         self.failUnless(stat_result == (17901, None, None, 6, '45854', '200',
-                                        512, None, 937785600.0, None) or
-                        stat_result == (17901, None, None, 6, '45854', '200',
-                                        512, None, 937778400.0, None))
+                                        512, None, 937774800+o, None))
 
     def test_lstat_via_stat_module(self):
         """Test `lstat` indirectly via `stat` module."""
