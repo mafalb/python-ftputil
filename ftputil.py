@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.83 2002/04/01 16:25:38 schwa Exp $
+# $Id: ftputil.py,v 1.84 2002/04/01 16:26:16 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -449,7 +449,7 @@ class FTPHost:
         return host._file
 
     def open(self, path, mode='r'):
-        return file(self, path, mode)
+        return self.file(path, mode)
 
     def copyfileobj(self, source, target, length=64*1024):
         "Copy data from file-like object source to file-like object target."
