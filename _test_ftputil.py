@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.79 2004/07/12 22:02:12 schwa Exp $
+# $Id: _test_ftputil.py,v 1.80 2004/07/12 22:08:45 schwa Exp $
 
 import ftplib
 import operator
@@ -147,7 +147,7 @@ class TestOpenAndClose(unittest.TestCase):
 class TestLogin(unittest.TestCase):
     def test_invalid_login(self):
         """Login to invalid host must fail."""
-        self.assertRaises(ftputil.FTPOSError, _test_base.ftp_host_factory,
+        self.assertRaises(ftp_error.FTPOSError, _test_base.ftp_host_factory,
                           FailOnLoginSession)
 
 
@@ -195,7 +195,7 @@ class TestFileOperations(unittest.TestCase):
     def test_write_to_directory(self):
         """Test whether attempting to write to a directory fails."""
         host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.FTPIOError, host.file,
+        self.assertRaises(ftp_error.FTPIOError, host.file,
                           '/home/sschwarzer', 'w')
 
     def test_binary_write(self):
@@ -327,7 +327,7 @@ class TestFileOperations(unittest.TestCase):
     def test_read_unknown_file(self):
         """Test whether reading a file which isn't there fails."""
         host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.FTPIOError, host.file, 'notthere', 'r')
+        self.assertRaises(ftp_error.FTPIOError, host.file, 'notthere', 'r')
 
 
 class TestUploadAndDownload(unittest.TestCase):
@@ -471,11 +471,11 @@ class TestTimeShift(unittest.TestCase):
         for time_shift in test_data:
             self.failUnless(assert_time_shift(time_shift) is None)
         # invalid time shift (exceeds one day)
-        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 25*3600)
-        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, -25*3600)
+        self.assertRaises(ftp_error.TimeShiftError, assert_time_shift, 25*3600)
+        self.assertRaises(ftp_error.TimeShiftError, assert_time_shift, -25*3600)
         # invalid time shift (deviation from full hours unacceptable)
-        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 10*60)
-        self.assertRaises(ftputil.TimeShiftError, assert_time_shift,
+        self.assertRaises(ftp_error.TimeShiftError, assert_time_shift, 10*60)
+        self.assertRaises(ftp_error.TimeShiftError, assert_time_shift,
                           -3600-10*60)
 
     def test_synchronize_times(self):
@@ -488,7 +488,7 @@ class TestTimeShift(unittest.TestCase):
         self.assertEqual(host.time_shift(), 3600)
         # invalid time shift
         host.path.set_mtime(time.time() + 3600+10*60)
-        self.assertRaises(ftputil.TimeShiftError, host.synchronize_times)
+        self.assertRaises(ftp_error.TimeShiftError, host.synchronize_times)
 
 
 if __name__ == '__main__':

@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.15 2004/01/31 22:37:53 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.16 2004/07/12 22:08:45 schwa Exp $
 
 from __future__ import division
 
@@ -214,9 +214,9 @@ class TestLstatAndStat(unittest.TestCase):
 
     def test_failing_lstat(self):
         """Test whether lstat fails for a nonexistent path."""
-        self.assertRaises(ftputil.PermanentError, self.stat.lstat,
+        self.assertRaises(ftp_error.PermanentError, self.stat.lstat,
                           '/home/sschw/notthere')
-        self.assertRaises(ftputil.PermanentError, self.stat.lstat,
+        self.assertRaises(ftp_error.PermanentError, self.stat.lstat,
                           '/home/sschwarzer/notthere')
 
     def test_lstat_for_root(self):
@@ -225,11 +225,11 @@ class TestLstatAndStat(unittest.TestCase):
         the output of an FTP `DIR` command. Unfortunately, it is not
         possible to to this for the root directory `/`.
         """
-        self.assertRaises(ftputil.RootDirError, self.stat.lstat, '/')
+        self.assertRaises(ftp_error.RootDirError, self.stat.lstat, '/')
         try:
             self.stat.lstat('/')
-        except ftputil.RootDirError, exc_obj:
-            self.failIf(isinstance(exc_obj, ftputil.FTPOSError))
+        except ftp_error.RootDirError, exc_obj:
+            self.failIf(isinstance(exc_obj, ftp_error.FTPOSError))
 
     def test_lstat_one_file(self):
         """Test `lstat` for a file."""
@@ -271,9 +271,9 @@ class TestLstatAndStat(unittest.TestCase):
         stat_result = self.stat.stat('../python/link_link')
         self.assertEqual(stat_result.st_size, 4604)
         # recursive link structures
-        self.assertRaises(ftputil.PermanentError, self.stat.stat,
+        self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '../python/bad_link')
-        self.assertRaises(ftputil.PermanentError, self.stat.stat,
+        self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '/home/bad_link')
 
 
@@ -284,7 +284,8 @@ class TestListdir(unittest.TestCase):
 
     def test_failing_listdir(self):
         """Test failing `FTPHost.listdir`."""
-        self.assertRaises(ftputil.PermanentError, self.stat.listdir, 'notthere')
+        self.assertRaises(ftp_error.PermanentError,
+                          self.stat.listdir, 'notthere')
 
     def test_succeeding_listdir(self):
         """Test succeeding `FTPHost.listdir`."""
