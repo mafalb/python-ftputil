@@ -79,7 +79,8 @@ import time
 import sys
 import posixpath
 
-__all__ = ['FTPOSError', 'FTPIOError', 'FTPHost']
+__all__ = ['FTPOSError', 'TemporaryError', 'PermanentError',
+           'ParserError', 'FTPIOError', 'FTPHost']
 __version__ = '1.0.2'
 
 
@@ -91,6 +92,12 @@ class FTPOSError(OSError):
 
     def __init__(self, ftp_exception):
         OSError.__init__(self, ftp_exception)
+        if type(ftp_exception) is type(''):
+            # strings, e. g. for parsing errors
+            self.ftp_exception = None
+        else:
+            # assume ftplib errors
+            self.ftp_exception = ftp_exception
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
@@ -101,6 +108,10 @@ class FTPOSError(OSError):
         
     def __str__(self):
         return self.strerror
+
+class TemporaryError(FTPOSError): pass
+class PermanentError(FTPOSError): pass
+class ParserError(FTPOSError): pass
 
 class FTPIOError(IOError):
     '''Error class resembling IOError.'''
@@ -351,6 +362,10 @@ class FTPHost:
         error class FTPOSError.'''
         try:
             return callee(*args)
+        except ftplib.error_temp, obj:
+            raise TemporaryError(obj)
+        except ftplib.error_perm, obj:
+            raise PermanentError(obj)
         except ftplib.all_errors:
             ftp_error = sys.exc_info()[1]
             raise FTPOSError(ftp_error)
@@ -515,7 +530,8 @@ class FTPHost:
             return self._parser(line)
         except (ValueError, IndexError):
             if fail:
-                raise FTPOSError("can't parse line '%s'" % line)
+                raise ParserError(
+                      "can't parse line '%s'" % line)
             else:
                 return None
         
@@ -537,8 +553,8 @@ class FTPHost:
             if (stat_result is not None) and \
               (stat_result.st_name == basename):
                 return stat_result
-        raise FTPOSError("no such file or directory: '%s'" %
-                         path)
+        raise PermanentError(
+              "550 %s: no such file or directory" % path)
 
     def stat(self, path):
         '''Return info from a stat call.'''
