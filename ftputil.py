@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.146 2003/12/30 20:41:45 schwa Exp $
+# $Id: ftputil.py,v 1.147 2004/01/31 21:24:32 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -78,6 +78,8 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 
 # TODO
 # - caching of `FTPHost.stat` results? policy?
+# - add `ftp_session` module containing session classes (i. e. for passive
+#   mode connections)
 #
 # Ideas for future development:
 # - handle connection timeouts
