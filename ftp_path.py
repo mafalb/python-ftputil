@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.8 2003/10/30 18:51:23 schwa Exp $
+# $Id: ftp_path.py,v 1.9 2003/10/30 19:25:57 schwa Exp $
 
 import posixpath
 import stat
@@ -72,13 +72,11 @@ class _Path:
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
 
-    def __lstat_result_or_None(self, path):
-        #XXX alas, this looks quite deep into `FTPHost`'s internals
-        return self._host._stat._lstat_result_or_None(path)
-
     def exists(self, path):
         try:
-            return (self.__lstat_result_or_None(path) is not None)
+            lstat_result = self._host.lstat(
+                           path, _exception_for_missing_path=False)
+            return lstat_result is not None
         except ftp_error.RootDirError:
             return True
 
@@ -90,31 +88,46 @@ class _Path:
 
     # check whether a path is a regular file/dir/link;
     #  for the first two cases follow links (like in `os.path`)
+    #
+    # Implementation note: The previous implementations simply called
+    # `stat` or `lstat` and returned `False` if they ended with
+    # raising a `PermanentError`. That exception usually used to
+    # signal a missing path. This approach has the problem, however,
+    # that exceptions caused by code earlier in `lstat` are obscured
+    # by the exception handling in `isfile`, `isdir` and `islink`.
+    # I assume it's better to let such "abnormal" exceptions through.
+
     def isfile(self, path):
         try:
-            stat_result = self._host.stat(path)
-            return stat.S_ISREG(stat_result.st_mode)
+            stat_result = self._host.stat(
+                          path, _exception_for_missing_path=False)
+            if stat_result is None:
+                return False
+            else:
+                return stat.S_ISREG(stat_result.st_mode)
         except ftp_error.RootDirError:
-            return False
-        except ftp_error.FTPOSError:
             return False
 
     def isdir(self, path):
         try:
-            stat_result = self._host.stat(path)
-            return stat.S_ISDIR(stat_result.st_mode)
+            stat_result = self._host.stat(
+                          path, _exception_for_missing_path=False)
+            if stat_result is None:
+                return False
+            else:
+                return stat.S_ISDIR(stat_result.st_mode)
         except ftp_error.RootDirError:
             return True
-        except ftp_error.FTPOSError:
-            return False
 
     def islink(self, path):
         try:
-            stat_result = self._host.lstat(path)
-            return stat.S_ISLNK(stat_result.st_mode)
+            lstat_result = self._host.lstat(
+                           path, _exception_for_missing_path=False)
+            if lstat_result is None:
+                return False
+            else:
+                return stat.S_ISLNK(lstat_result.st_mode)
         except ftp_error.RootDirError:
-            return False
-        except ftp_error.FTPOSError:
             return False
 
     def walk(self, top, func, arg):

@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_path.py,v 1.2 2003/10/30 18:51:23 schwa Exp $
+# $Id: _test_ftp_path.py,v 1.3 2003/10/30 19:25:57 schwa Exp $
 
 import unittest
 
@@ -45,8 +45,8 @@ class FailingFTPHost(ftputil.FTPHost):
 
 class TestPath(unittest.TestCase):
     """Test operations in `FTPHost.path`."""
-    def test_isdir_isfile_islink(self):
-        """Test `FTPHost._Path.isdir/isfile/islink`."""
+    def test_regular_isdir_isfile_islink(self):
+        """Test regular `FTPHost._Path.isdir/isfile/islink`."""
         testdir = '/home/sschwarzer'
         host = _test_base.ftp_host_factory()
         host.chdir(testdir)
@@ -69,6 +69,16 @@ class TestPath(unittest.TestCase):
         self.failIf( host.path.isfile(testlink) )
         self.failUnless( host.path.islink(testlink) )
 
+    def test_abnormal_isdir_isfile_islink(self):
+        """Test abnormal `FTPHost._Path.isdir/isfile/islink`."""
+        testdir = '/home/sschwarzer'
+        host = _test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
+        host.chdir(testdir)
+        # test a path which isn't there
+        self.assertRaises(ftp_error.FTPOSError, host.path.isdir, "index.html")
+        self.assertRaises(ftp_error.FTPOSError, host.path.isfile, "index.html")
+        self.assertRaises(ftp_error.FTPOSError, host.path.islink, "index.html")
+
     def test_exists(self):
         """Test if "abnormal" FTP errors come through `path.exists`."""
         # regular use of `exists`
@@ -77,7 +87,7 @@ class TestPath(unittest.TestCase):
         host.chdir(testdir)
         self.assertEqual(host.path.exists("index.html"), True)
         self.assertEqual(host.path.exists("notthere"), False)
-        # "abnormal" failure in `_lstat_result_or_None`
+        # "abnormal" failure
         host = _test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
         self.assertRaises(ftp_error.FTPOSError, host.path.exists, "index.html")
 

@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.27 2003/10/30 18:51:23 schwa Exp $
+# $Id: ftp_stat.py,v 1.28 2003/10/30 19:25:57 schwa Exp $
 
 import stat
 import sys
@@ -133,12 +133,14 @@ class _Stat:
         return [ line  for line in lines
                  if line.find(wanted_name) != -1 ]
 
-    def _lstat_result_or_None(self, path):
+    def lstat(self, path, _exception_for_missing_path=True):
         """
         Return an object similar to that returned by `os.lstat`.
 
-        This method isn't for public use but only for ftputil-
-        internal use.
+        If the `path` is not found, raise a `PermanentError`.
+
+        (`_exception_for_missing_path` is an implementation aid and
+        not intended for use by ftputil clients.)
         """
         # get output from FTP's `DIR` command
         lines = []
@@ -164,41 +166,41 @@ class _Stat:
                     return stat_result
             except ftp_error.ParserError:
                 pass
-        # be explicit
-        return None
-
-    def lstat(self, path):
-        """
-        Return an object similar to that returned by `os.lstat`.
-
-        If the `path` is not found, raise a `PermanentError`.
-
-        Server problems may cause other FTP errors to be raised,
-        though this should rarely happen (e. g. connection drops).
-        """
-        lstat_result = self._lstat_result_or_None(path)
-        if lstat_result is None:
+        # path was not found
+        if _exception_for_missing_path:
             raise ftp_error.PermanentError(
                   "550 %s: no such file or directory" % path)
         else:
-            return lstat_result
+            # be explicit; returning `None` is a signal for
+            #  `_Path.exists/isfile/isdir/islink` that the path was
+            #  not found; if we would raise an exception, there would
+            #  be no distinction between a missing path or a more
+            #  severe error in the code above
+            return None
 
-    def stat(self, path):
-        """Return info from a `stat` call."""
+    def stat(self, path, _exception_for_missing_path=True):
+        """
+        Return info from a `stat` call.
+        
+        (`_exception_for_missing_path` is an implementation aid and
+        not intended for use by ftputil clients.)
+        """
         # most code in this method is used to detect recursive
         #  link structures
         visited_paths = {}
         while True:
             # stat the link if it is one, else the file/directory
-            stat_result = self.lstat(path)
+            lstat_result = self.lstat(path, _exception_for_missing_path)
+            if lstat_result is None:
+                return None
             # if the file is not a link, the `stat` result is the
             #  same as the `lstat` result
-            if not stat.S_ISLNK(stat_result.st_mode):
-                return stat_result
+            if not stat.S_ISLNK(lstat_result.st_mode):
+                return lstat_result
             # if we stat'ed a link, calculate a normalized path for
             #  the file the link points to
             dirname, basename = self._path.split(path)
-            path = self._path.join(dirname, stat_result._st_target)
+            path = self._path.join(dirname, lstat_result._st_target)
             path = self._path.normpath(path)
             # check for cyclic structure
             if visited_paths.has_key(path):
