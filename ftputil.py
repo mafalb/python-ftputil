@@ -248,6 +248,28 @@ class _FTPFile:
 class FTPHost:
     '''FTP host class'''
 
+    # Implementation notes:
+    #
+    # Upon every request of a file (_FTPFile object) a
+    # new ftplib.FTP session is created ("cloned"), leading
+    # to a child session of the FTPHost object from which the
+    # file is requested.
+    #
+    # This is needed because opening an _FTPFile will make
+    # the local session object wait for the completion of the
+    # transfer. In fact, code like this would block
+    # indefinitely, if the RETR request would be made on the
+    # _session of the object host:
+    #
+    # host = FTPHost(ftp_server, user, password)
+    # f = host.file('index.html')
+    # host.getcwd()   # would block!
+    #
+    # On the other hand, the initially constructed host object
+    # will store references to already established _FTPFile
+    # objects and reuse an associated connection if the file
+    # has been closed.
+
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
         self._session = ftplib.FTP(*args, **kwargs)
