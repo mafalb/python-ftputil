@@ -76,7 +76,6 @@ Note: ftputil currently is not threadsafe. More specifically,
 # Ideas for future development:
 # - follow links in FTPHost.path.stat implementation!
 # - write documentation
-# - write unit test
 # - conditional upload/download (only when the source file
 #   is newer than the target file, depends on FTPHost.stat)
 # - caching of FTPHost.stat results??
@@ -163,6 +162,27 @@ _python_to_crlf_linesep = \
   lambda text: text.replace('\n', '\r\n')
 
 
+# helper class for xreadline protocol for ASCII transfers
+class _XReadlines:
+    '''Represents xreadline objects for ASCII transfers.'''
+
+    def __init__(self, ftp_file):
+        self._ftp_file = ftp_file
+        self._next_index = 0
+
+    def __getitem__(self, index):
+        '''Return next line with specified index.'''
+        if index != self._next_index:
+            raise RuntimeError( "_XReadline access index "
+                  "out of order (expected %s but got %s)" %
+                  (self._next_index, index) )
+        line = self._ftp_file.readline()
+        if not line:
+            raise IndexError("_XReadline object out of data")
+        self._next_index = self._next_index + 1
+        return line
+        
+
 class _FTPFile:
     '''Represents a file-like object connected to an
     FTP host. File and socket are closed appropriately if
@@ -224,8 +244,9 @@ class _FTPFile:
         # If the read data contains \r characters the number
         #  of read characters will be too little! Thus we
         #  (would) have to continue to read until we have
-        #  fetched the requested number of bytes.
-        #  The algorithm below avoids repetitive string
+        #  fetched the requested number of bytes (or run out
+        #  of source data).
+        # The algorithm below avoids repetitive string
         #  concatanations in the style of
         #      data = data + more_data
         #  and so should also work relatively well if there
@@ -274,9 +295,7 @@ class _FTPFile:
         built-in line separator conversion support.'''
         if self._binmode:
             return self._fo.xreadlines()
-        # we don't provide an xreadline-compatible class
-        #  right now, so fall back to readlines
-        return self.readlines()
+        return _XReadlines(self)
 
     def write(self, data):
         '''Write data to file. Do linesep conversion for
