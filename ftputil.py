@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.156 2004/07/09 21:51:24 schwa Exp $
+# $Id: ftputil.py,v 1.157 2004/07/12 21:13:03 schwa Exp $
 
 """
 ftputil - high-level FTP client library
@@ -266,7 +266,14 @@ class FTPHost:
             self._children.append(host)
             host._file = ftp_file._FTPFile(host)
         basedir = self.getcwd()
-        host.chdir(basedir)
+        try:
+            host.chdir(basedir)
+        except ftp_error.PermanentError:
+            # this might happen if we are in the login directory and
+            #  it's not accessible (otherwise, the current directory must
+            #  be accessible because we got there somehow)
+            raise ftp_error.FTPIOError("login directory '%s' not accessible" %
+                                       basedir)
         host._file._open(path, mode)
         return host._file
 

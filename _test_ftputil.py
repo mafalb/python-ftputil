@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.77 2004/02/27 23:34:52 schwa Exp $
+# $Id: _test_ftputil.py,v 1.78 2004/07/12 21:13:03 schwa Exp $
 
 import ftplib
 import operator
@@ -41,6 +41,7 @@ import unittest
 
 import _mock_ftplib
 import _test_base
+import ftp_error
 import ftp_file
 import ftputil
 
@@ -95,6 +96,17 @@ class TimeShiftMockSession(_mock_ftplib.MockSession):
     def delete(self, file_name):
         pass
 
+class InaccessibleDirSession(_mock_ftplib.MockSession):
+    _login_dir = '/inaccessible'
+
+    def pwd(self):
+        return self._login_dir
+        
+    def cwd(self, dir):
+        if dir in (self._login_dir, self._login_dir + '/'):
+            raise ftplib.error_perm
+        else:
+            _mock_ftplib.MockSession.cwd(self, dir)
 
 #
 # customized `FTPHost` class for conditional upload/download tests
@@ -141,6 +153,13 @@ class TestLogin(unittest.TestCase):
 
 class TestFileOperations(unittest.TestCase):
     """Test operations with file-like objects."""
+    def test_inaccessible_dir(self):
+        """Test whether opening a file at an invalid location fails."""
+        host = _test_base.ftp_host_factory(
+               session_factory=InaccessibleDirSession)
+        self.assertRaises(ftp_error.FTPIOError, host.file,
+                          '/inaccessible/new_file', 'w')
+        
     def test_caching(self):
         """Test whether `_FTPFile` cache of `FTPHost` object works."""
         host = _test_base.ftp_host_factory()
