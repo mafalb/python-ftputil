@@ -629,21 +629,24 @@ class _Path:
 
     def __init__(self, host):
         self._host = host
+        # delegate these to posixpath
+        pp = posixpath
+        self.dirname      = pp.dirname
+        self.basename     = pp.basename
+        self.isabs        = pp.isabs
+        self.commonprefix = pp.commonprefix
+        self.join         = pp.join
+        self.split        = pp.split
+        self.splitdrive   = pp.splitdrive
+        self.splitext     = pp.splitext
+        self.normcase     = pp.normcase
+        self.normpath     = pp.normpath
 
     def abspath(self, path):
         '''Return an absolute path.'''
         if not self.isabs(path):
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
-
-    def basename(self, path):
-        return posixpath.basename(path)
-
-    def commonprefix(self, path_list):
-        return posixpath.commonprefix(path_list)
-
-    def dirname(self, path):
-        return posixpath.dirname(path)
 
     def exists(self, path):
         try:
@@ -658,9 +661,6 @@ class _Path:
     def getsize(self, path):
         return self._host.lstat(path).st_size
 
-    def isabs(self, path):
-        return posixpath.isabs(path)
-
     def isfile(self, path):
         return stat.S_ISREG( self._host.lstat(path).st_mode )
 
@@ -670,29 +670,10 @@ class _Path:
     def islink(self, path):
         return stat.S_ISLNK( self._host.lstat(path).st_mode )
 
-    def join(self, *paths):
-        return posixpath.join(*paths)
-
-    def normcase(self, path):
-        # do (almost) nothing
-        return path
-
-    def normpath(self, path):
-        return posixpath.normpath(path)
-
-    def split(self, path):
-        return posixpath.split(path)
-
-    def splitdrive(self, path):
-        return posixpath.splitdrive(path)
-
-    def splitext(self, path):
-        return posixpath.splitext(path)
-
     def walk(self, top, func, arg):
         """Directory tree walk with callback function.
 
-        For each directory in the directory tree roote:sed at top
+        For each directory in the directory tree rooted at top
         (including top itself, but excluding '.' and '..'), call
         func(arg, dirname, fnames). dirname is the name of the
         directory, and fnames a list of the names of the files and
