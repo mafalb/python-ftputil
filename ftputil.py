@@ -92,7 +92,10 @@ class FTPOSError(OSError):
     def __init__(self, ftp_exception):
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
-        self.errno = int(self.strerror[:3])
+        try:
+            self.errno = int(self.strerror[:3])
+        except (TypeError, IndexError):
+            self.errno = None
         self.filename = None
         
     def __str__(self):
