@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.4 2003/06/09 15:50:47 schwa Exp $
+# $Id: ftp_path.py,v 1.5 2003/06/09 18:19:01 schwa Exp $
 
 import ftp_error
 import posixpath
@@ -59,6 +59,7 @@ class _Path:
         self.isabs        = pp.isabs
         self.commonprefix = pp.commonprefix
         self.join         = pp.join
+        self.split        = pp.split
         self.splitdrive   = pp.splitdrive
         self.splitext     = pp.splitext
         self.normcase     = pp.normcase
@@ -69,9 +70,6 @@ class _Path:
         if not self.isabs(path):
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
-
-    def split(self, path):
-        return posixpath.split(path)
 
     def exists(self, path):
         try:
