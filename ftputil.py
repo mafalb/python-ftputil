@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.128 2003/10/04 14:07:53 schwa Exp $
+# $Id: ftputil.py,v 1.129 2003/10/04 17:24:47 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -196,7 +196,7 @@ class FTPHost:
         return ftp_error._try_with_oserror(factory, *args, **kwargs)
 
     def _copy(self):
-        """Return a copy of this FTPHost object."""
+        """Return a copy of this `FTPHost` object."""
         # The copy includes a new session factory return value (aka
         #  session) but doesn't copy the state of `self.getcwd()`.
         return FTPHost(*self._args, **self._kwargs)
@@ -264,8 +264,13 @@ class FTPHost:
         client and server) for this `FTPHost` object. By (my)
         definition, the time shift value is positive if the local
         time of the server is greater than the local time of the
-        client (for the same physical time). The time shift is
-        measured in seconds.
+        client (for the same physical time), i. e.
+
+            time_shift =def= t_server - t_client
+        <=> t_server = t_client + time_shift
+        <=> t_client = t_server - time_shift
+
+        The time shift is measured in seconds.
         """
         self._time_shift = time_shift
 
