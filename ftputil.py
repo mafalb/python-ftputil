@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.154 2004/04/18 18:49:35 schwa Exp $
+# $Id: ftputil.py,v 1.155 2004/07/09 20:51:34 schwa Exp $
 
 """
 ftputil - high-level FTP client library
@@ -98,7 +98,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0.2'
+__version__ = '2.0.3b'
 
 
 #####################################################################
@@ -583,22 +583,26 @@ class FTPHost:
         # use `lines=lines` for Python versions which don't support
         #  "nested scopes"
         callback = lambda line, lines=lines: lines.append(line)
-        #XXX because of a bug in `ftplib` (or even in FTP servers?),
-        #  the straight-forward code
-        #    ftp_error._try_with_oserror(self._session.dir, path, callback)
-        #  fails if some of the path components but the last contain
-        #  whitespace; therefore, I change the current directory
-        #  before listing in the "last" directory
-        try:
-            # remember old working directory
-            old_dir = self.getcwd()
-            # invoke the listing in the "previous-to-last" directory
-            head, tail = self.path.split(path)
-            self.chdir(head)
-            ftp_error._try_with_oserror(self._session.dir, tail, callback)
-        finally:
-            # try to re-establish the old directory
-            self.chdir(old_dir)
+        if path.find(" ") == -1:
+            # use straight-forward approach, without changing directories
+            ftp_error._try_with_oserror(self._session.dir, path, callback)
+        else:
+            # because of a bug in `ftplib` (or even in FTP servers?),
+            #  the straight-forward code
+            #    ftp_error._try_with_oserror(self._session.dir, path, callback)
+            #  fails if some of the path components but the last contain
+            #  whitespace; therefore, I change the current directory
+            #  before listing in the "last" directory
+            try:
+                # remember old working directory
+                old_dir = self.getcwd()
+                # invoke the listing in the "previous-to-last" directory
+                head, tail = self.path.split(path)
+                self.chdir(head)
+                ftp_error._try_with_oserror(self._session.dir, tail, callback)
+            finally:
+                # try to re-establish the old directory
+                self.chdir(old_dir)
         return lines
 
     def listdir(self, path):
