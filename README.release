@@ -1,0 +1,13 @@
+Things to do for a new release:
+
+- update info on new version in README.txt
+
+- increase version number in
+  - VERSION
+  - ftputil.py (__version__)
+  - ftputil.txt
+
+- change date at top of ftputil.txt
+
+- make test && make dist
+
