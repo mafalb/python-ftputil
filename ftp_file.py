@@ -33,7 +33,7 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.7 2003/10/04 14:07:53 schwa Exp $
+# $Id: ftp_file.py,v 1.8 2003/10/30 19:56:59 schwa Exp $
 
 import ftp_error
 
@@ -204,7 +204,7 @@ class _FTPFile:
         #  `readlines` method; that would modify the original list,
         #  given as argument `lines`
         for line in lines:
-            self._fo.write( _python_to_crlf_linesep(line) )
+            self._fo.write(_python_to_crlf_linesep(line))
 
     #
     # other attributes
@@ -214,8 +214,8 @@ class _FTPFile:
         Handle requests for attributes unknown to `_FTPFile` objects:
         delegate the requests to the contained file object.
         """
-        if attr_name in ( 'flush isatty fileno seek tell '
-                          'truncate name softspace'.split() ):
+        if attr_name in ('flush isatty fileno seek tell '
+                         'truncate name softspace'.split()):
             return getattr(self._fo, attr_name)
         raise AttributeError(
               "'FTPFile' object has no attribute '%s'" % attr_name)
