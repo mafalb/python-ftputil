@@ -1,14 +1,19 @@
-ftputil documentation
-=====================
+``ftputil`` documentation
+=========================
+
+:Version:   2.0 beta 2
+:Date:      2003-10-05
+:Keywords:  FTP, ``ftplib`` substitute, virtual filesystem
+:Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
 
 .. contents::
 
 Introduction
 ------------
 
-The ftputil module is a high-level interface to the ftplib_ module. The
-`FTPHost objects`_ generated from it allow many operations similar to
-those of os_ and `os.path`_.
+The ``ftputil`` module is a high-level interface to the ftplib_
+module. The `FTPHost objects`_ generated from it allow many operations
+similar to those of os_ and `os.path`_.
 
 .. _ftplib: http://www.python.org/doc/current/lib/module-ftplib.html
 .. _os: http://www.python.org/doc/current/lib/module-os.html
@@ -44,8 +49,8 @@ results with Python versions 2.0 and 2.1.
 
 .. _stat: http://www.python.org/doc/current/lib/module-stat.html
 
-Exceptions
-----------
+Exception hierarchy
+-------------------
 
 The exceptions are in the namespace of the ``ftputil`` package (e. g.
 ``ftputil.TemporaryError``). They are organized as follows::
@@ -500,10 +505,10 @@ or times, look at the methods that deal with time zone differences
 
 ..
 
-  Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
-  a format commonly used by Unix servers is assumed. If you need to
-  parse output from another server type, please contact me under the
-  email address at the end of this text.
+  Currently, ``ftputil`` recognizes the MS Robin FTP server.
+  Otherwise, a format commonly used by Unix servers is assumed. If you
+  need to parse output from another server type, please contact me
+  under the email address at the end of this text.
 
 .. implement and document support for setting the directory parser
    "manually"
@@ -619,7 +624,7 @@ for you. :-)
 Bugs and limitations
 --------------------
 
-- ftputil needs at least Python 2.0 to work.
+- ``ftputil`` needs at least Python 2.0 to work.
 
 - Due to the implementation of ``lstat`` it can not return a sensible
   value for the root directory ``/``. If you know an implementation that
