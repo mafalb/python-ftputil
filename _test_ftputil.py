@@ -78,6 +78,23 @@ class TestDirectories(Base):
         self.assertEqual( host.getcwd(),
           host.path.join(self.rootdir, self.testdir) )
 
+    def test_mkdir(self):
+        '''Dirs must be constructed on the host.'''
+        host = self.host
+        # use invalid directory name (__test2 doesn't exist)
+        self.assertRaises( host.mkdir, host.path.join(
+          self.rootdir, '__test2', '__test3') )
+        # this is valid
+        host.mkdir( host.path.join(self.rootdir, self.testdir,
+                    '__test2') )
+        # repeat first mkdir (now valid)
+        host.mkdir( host.path.join(self.rootdir, '__test2',
+                    '__test3') )
+        # clean up for this test
+        host.rmdir( host.path.join(self.rootdir, '__test2',
+                    '__test3') )
+        host.rmdir( host.path.join(self.rootdir, '__test2') )
+
 
 class TestStat(Base):
     pass
