@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.106 2003/03/15 22:05:51 schwa Exp $
+# $Id: ftputil.py,v 1.107 2003/03/15 22:22:11 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -74,8 +74,6 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 """
 
 # Ideas for future development:
-# - allow to set an offset for the time difference of local
-#   and remote host
 # - handle connection timeouts
 # - caching of `FTPHost.stat` results??
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
@@ -561,7 +559,8 @@ class FTPHost:
         - The connection between server and client is established.
         - The client has write access to the directory that is
           current when `synchronize_time` is called.
-        - That directory isn't the root directory of the FTP server.
+        - That directory is _not_ the root directory of the FTP
+          server.
 
         The usual usage pattern of `synchronize_time` is to call it
         directly after the connection is established. (As can be
@@ -613,9 +612,8 @@ class FTPHost:
 
     def __copy_file(self, source, target, mode, source_open, target_open):
         """
-        Upload a file from the local source (name) to the remote
-        target (name). The argument mode is an empty string or 'a' for
-        text copies, or 'b' for binary copies.
+        Copy a file from source to target. Which of both is a local
+        or a remote file is determined by the arguments.
         """
         source_mode, target_mode = self.__get_modes(mode)
         source = source_open(source, source_mode)
@@ -640,6 +638,28 @@ class FTPHost:
         """
         self.__copy_file(source, target, mode, self.file, open)
 
+    def __copy_file_if_newer(self, source, target, mode,
+      source_mtime, target_mtime, target_exists, copy_method):
+        """
+        Copy a source file only if it's newer than the target. The
+        direction of the copy operation is determined by the
+        arguments. See methods `upload_if_newer` and
+        `download_if_newer` for examples.
+
+        If the copy was necessary, return `True`, else return `False`.
+        """
+        source_timestamp = source_mtime(source)
+        if target_exists(target):
+            target_timestamp = target_mtime(target)
+        else:
+            # every timestamp is newer than this one
+            target_timestamp = 0.0
+        if source_timestamp > target_timestamp:
+            copy_method(source, target, mode)
+            return True
+        else:
+            return False
+
     def __shifted_local_mtime(self, file_name):
         """
         Return last modification of a local file, corrected with
@@ -656,17 +676,9 @@ class FTPHost:
         If an upload was necessary, return `True`, else return
         `False`.
         """
-        source_timestamp = self.__shifted_local_mtime(source)
-        if self.path.exists(target):
-            target_timestamp = self.path.getmtime(target)
-        else:
-            # every timestamp is newer than this one
-            target_timestamp = 0.0
-        if source_timestamp > target_timestamp:
-            self.upload(source, target, mode)
-            return True
-        else:
-            return False
+        return self.__copy_file_if_newer(source, target, mode,
+          self.__shifted_local_mtime, self.path.getmtime,
+          self.path.exists, self.upload)
 
     def download_if_newer(self, source, target, mode=''):
         """
@@ -676,18 +688,9 @@ class FTPHost:
         If a download was necessary, return `True`, else return
         `False`.
         """
-        # get remote modification time
-        source_timestamp = self.path.getmtime(source)
-        if os.path.exists(target):
-            target_timestamp = self.__shifted_local_mtime(target)
-        else:
-            # every timestamp is newer than this one
-            target_timestamp = 0.0
-        if source_timestamp > target_timestamp:
-            self.download(source, target, mode)
-            return True
-        else:
-            return False
+        return self.__copy_file_if_newer(source, target, mode,
+          self.path.getmtime, self.__shifted_local_mtime,
+          os.path.exists, self.download)
 
     #
     # miscellaneous utility methods resembling those in `os`
