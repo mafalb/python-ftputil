@@ -6,7 +6,8 @@ Purpose
 
 ftputil is a high-level alternative to Python's ftplib module. With ftputil,
 you can (almost) access directories and files on remote FTP servers as if they
-were in your local file system.
+were in your local file system. This includes using file-like objects
+representing remote files.
 
 Documentation
 -------------
