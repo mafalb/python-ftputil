@@ -5,6 +5,10 @@ ftputil, you can access directories and files on remote FTP servers
 almost as if they were in your local file system. This includes using
 file-like objects representing remote files.
 
+You can download ftputil from
+http://www.sschwarzer.net/python/python_software.html
+http://www.sschwarzer.net/download/ftputil-2.0.tar.gz
+
 What's new?
 -----------
 
