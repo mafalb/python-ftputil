@@ -33,7 +33,7 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.5 2003/06/09 12:32:00 schwa Exp $
+# $Id: ftp_file.py,v 1.6 2003/06/09 12:34:09 schwa Exp $
 
 import ftp_error
 
@@ -196,6 +196,9 @@ class _FTPFile:
         if self._binmode:
             self._fo.writelines(lines)
             return
+        # we can't modify the list of lines in-place, as in the
+        #  `readlines` method; that would modify the original list,
+        #  given as argument `lines`
         for line in lines:
             self._fo.write( _python_to_crlf_linesep(line) )
 
