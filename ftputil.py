@@ -691,10 +691,10 @@ class _Path:
             return 0
 
     def getmtime(self, path):
-        return self._host.lstat(path).st_mtime
+        return self._host.stat(path).st_mtime
 
     def getsize(self, path):
-        return self._host.lstat(path).st_size
+        return self._host.stat(path).st_size
 
     # check whether a path is a regular file/dir/link;
     #  for the first two cases follow links (like in os.path)
