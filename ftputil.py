@@ -31,6 +31,7 @@
 
 import ftplib
 import os
+import sys
 import posixpath
 
 
@@ -53,8 +54,13 @@ class FTPIOError(IOError):
 
 class FTPOSError(OSError):
     def __init__(self, ftp_exception):
-        self.ftp_exception = ftp_exception
-        OSError( self, str(ftp_exception) )
+        self.args = (ftp_exception,)
+        self.strerror = str(ftp_exception)
+        self.errno = int(self.strerror[:3])
+        self.filename = None
+        
+    def __str__(self):
+        return str(self.ftp_exception)
 
 
 #####################################################################
@@ -206,7 +212,6 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        print 'New FTPHost'
         self._session = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
@@ -221,12 +226,13 @@ class FTPHost:
         '''Return a copy of this FTPHost object.'''
         # The copy includes a new ftplib.FTP instance
         #  (aka session) but doesn't copy the state of
-        #  self.getcwd()
+        #  self.getcwd().
         return FTPHost(*self._args, **self._kwargs)
         
     def _available_child(self):
-        '''Return a closed file object from the pool or
-        None if there aren't any.'''
+        '''Return an available (i. e. one whose _file object
+        is closed) child (FTPHost object) from the pool of
+        children or None if there aren't any.'''
         for host in self._children:
             if host._file.closed:
                 return host
@@ -234,7 +240,9 @@ class FTPHost:
         
     def file(self, path, mode='r'):
         '''Return an open file(-like) object which is
-        associated with this FTPHost object.'''
+        associated with this FTPHost object.
+        This method tries to reuse a child but will generate
+        a new if none is available.'''
         host = self._available_child()
         if host is None:
             host = self._copy()
@@ -248,7 +256,7 @@ class FTPHost:
     def close(self):
         '''Close host connection.'''
         if not self.closed:
-            # close associated clones
+            # close associated children
             for host in self._children:
                 # only children have _file attributes
                 host._file.close()
@@ -269,7 +277,8 @@ class FTPHost:
         try:
             return callee(*args)
         except ftplib.all_errors:
-            raise FTPOSError( sys.exc_info()[1] )
+            ftp_error = sys.exc_info()[1]
+            raise FTPOSError(ftp_error)
         
     def getcwd(self):
         '''Return the current path name.'''
