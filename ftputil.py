@@ -54,13 +54,13 @@ FTPHost objects
     host.close()
 
     There are also shortcuts for uploads and downloads:
-    
+
     host.upload(local_file, remote_file)
     host.download(remote_file, local_file)
-    
+
     Both accept an additional mode parameter. If it's 'b'
     the transfer mode will be for binary files.
-    
+
 FTPFile objects
     FTPFile objects are constructed via the file method of
     FTPHost objects. FTPFile objects support the usual file
@@ -109,7 +109,7 @@ class FTPError:
         except (TypeError, IndexError, ValueError):
             self.errno = None
         self.filename = None
-        
+
     def __str__(self):
         return self.strerror
 
@@ -133,7 +133,7 @@ def _try_with_oserror(callee, *args, **kwargs):
     except ftplib.all_errors:
         ftp_error = sys.exc_info()[1]
         raise FTPOSError(ftp_error)
-        
+
 class FTPIOError(FTPError, IOError): pass
 
 def _try_with_ioerror(callee, *args, **kwargs):
@@ -341,7 +341,7 @@ class FTPHost:
         #  (aka session) but doesn't copy the state of
         #  self.getcwd().
         return FTPHost(*self._args, **self._kwargs)
-        
+
     def _available_child(self):
         '''Return an available (i. e. one whose _file object
         is closed) child (FTPHost object) from the pool of
@@ -350,7 +350,7 @@ class FTPHost:
             if host._file.closed:
                 return host
         return None
-        
+
     def file(self, path, mode='r'):
         '''Return an open file(-like) object which is
         associated with this FTPHost object.
@@ -402,6 +402,9 @@ class FTPHost:
         '''Return a list with directories, files etc. in the
         directory named path.'''
         path = self.path.abspath(path)
+        if not self.path.isdir(path):
+            raise PermanentError(
+                  "550 %s: no such directory" % path)
         names = []
         def callback(line):
             stat_result = self._parse_line(line, fail=0)
@@ -436,7 +439,7 @@ class FTPHost:
         '''Return candidate lines for further analysis.'''
         return [line  for line in lines
                 if line.find(wanted_name) != -1]
-        
+
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
@@ -502,7 +505,7 @@ class FTPHost:
         return _Stat( (st_mode, st_ino, st_dev, st_nlink,
                        st_uid, st_gid, st_size, st_atime,
                        st_mtime, st_ctime, st_name) )
-    
+
     def _parse_robin_line(self, line):
         '''Return _Stat instance corresponding to the given
         text line from a MS ROBIN FTP server. Exceptions are
@@ -547,7 +550,7 @@ class FTPHost:
         return _Stat( (st_mode, st_ino, st_dev, st_nlink,
                        st_uid, st_gid, st_size, st_atime,
                        st_mtime, st_ctime, st_name) )
-          
+
     def _parse_line(self, line, fail=1):
         '''Return _Stat instance corresponding to the given
         text line.'''
@@ -640,8 +643,8 @@ class _Stat(tuple):
     '''Support class resembling a tuple like that which is
     returned from os.(l)stat. Deriving from the tuple type
     will only work in Python 2.2+'''
-    
-    _index_mapping = {'st_mode':  0, 'st_ino':   1, 
+
+    _index_mapping = {'st_mode':  0, 'st_ino':   1,
       'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
       'st_gid':   5,  'st_size':  6, 'st_atime': 7,
       'st_mtime': 8,  'st_ctime': 9, 'st_name': 10}
