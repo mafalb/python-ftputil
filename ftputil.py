@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.103 2003/03/15 21:22:31 schwa Exp $
+# $Id: ftputil.py,v 1.104 2003/03/15 21:54:05 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -353,7 +353,7 @@ class _FTPFile:
 # `FTPHost` class with several methods similar to those of `os`
 
 class FTPHost:
-    """FTP host class"""
+    """FTP host class."""
 
     # Implementation notes:
     #
@@ -493,8 +493,8 @@ class FTPHost:
         Set the time shift value (i. e. the time difference between
         client and server) for this `FTPHost` object. By definition,
         the time shift value is positive if the local time of the
-        server is greater than the local time of the client. The
-        time shift is measured in seconds.
+        server is greater than the local time of the client (for the
+        same physical time). The time shift is measured in seconds.
         """
         self._time_shift = time_shift
 
@@ -578,14 +578,14 @@ class FTPHost:
             file_.close()
             # get the modification time of the new file
             try:
-                modification_time = self.path.getmtime(helper_file_name)
+                remote_time = self.path.getmtime(helper_file_name)
             except RootDirError:
                 raise TimeShiftError("can't use root directory for temp file")
         finally:
             # remove the just written file
             self.unlink(helper_file_name)
         # calculate the difference between server and client
-        time_shift = modification_time - time.time()
+        time_shift = remote_time - time.time()
         # do some sanity checks
         self.__assert_valid_time_shift(time_shift)
         # if tests passed, store the time difference as time shift value
@@ -645,7 +645,12 @@ class FTPHost:
         If an upload was necessary, return `True`, else return
         `False`.
         """
+        # get local modification time
         source_timestamp = os.path.getmtime(source)
+        # consider time shift (local times difference between client
+        #  and server)
+        source_timestamp = source_timestamp + self.time_shift()
+        # get remote modification time
         if self.path.exists(target):
             target_timestamp = self.path.getmtime(target)
         else:
@@ -665,9 +670,14 @@ class FTPHost:
         If a download was necessary, return `True`, else return
         `False`.
         """
+        # get remote modification time
         source_timestamp = self.path.getmtime(source)
         if os.path.exists(target):
+            # get local modification time
             target_timestamp = os.path.getmtime(target)
+            # consider time shift (local times difference between
+            #  client and server)
+            target_timestamp = target_timestamp + self.time_shift()
         else:
             # every timestamp is newer than this one
             target_timestamp = 0.0
