@@ -30,10 +30,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-ftp_stat.py - stat result class and parsers for `ftputil`
+ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.11 2003/06/09 18:29:32 schwa Exp $
+# $Id: ftp_stat.py,v 1.12 2003/06/09 19:06:01 schwa Exp $
 
 import stat
 import sys
@@ -184,6 +184,7 @@ class _Stat:
 
 
 class _UnixStat(_Stat):
+    """`_Stat` class for Unix-specific directory format."""
     # map month abbreviations to month numbers
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
@@ -244,6 +245,8 @@ class _UnixStat(_Stat):
             hour, minute = year_or_time.split(':')
             year, hour, minute = None, int(hour), int(minute)
             # try the current year
+            #FIXME that doesn't work for some timezone combinations
+            #  of client and server
             year = time.localtime()[0]
             st_mtime = time.mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
@@ -267,6 +270,7 @@ class _UnixStat(_Stat):
 
 
 class _MSStat(_Stat):
+    """`_Stat` class for MS-specific directory format."""
     def parse_line(self, line):
         """
         Return `_Stat` instance corresponding to the given text line
