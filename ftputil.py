@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2004, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.147 2004/01/31 21:24:32 schwa Exp $
+# $Id: ftputil.py,v 1.148 2004/01/31 22:17:59 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -108,7 +108,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0b3'
+__version__ = '2.0'
 
 
 #####################################################################
