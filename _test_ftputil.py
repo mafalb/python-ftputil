@@ -74,11 +74,21 @@ class TestRemoveAndRename(Base):
     def test_remove(self):
         '''Test FTPHost.remove.'''
         host = self.host
-        # try to remove a directory
-        #host.mkdir( host.path.join(self.testdir, '__test2') )
-        
         # try to remove a file which is not there
+        self.assertRaises( ftputil.PermanentError, host.remove,
+          host.path.join(self.testdir, 'notthere') )
+        # remove a directory and check if it's removed
+        host.mkdir( host.path.join(self.testdir, '__test2') )
+        host.remove( host.path.join(self.testdir, '__test2') )
+        self.failIf( host.path.exists( host.path.join(
+                     self.testdir, '__test2') ) )
         # remove a file and check if it's removed
+        host.upload( 'ftputil.py', host.path.join(self.testdir,
+                     'ftputil2.py'), 'b' )
+        host.remove( host.path.join(self.testdir,
+                                    'ftputil2.py') )
+        self.failIf( host.path.exists( host.path.join(
+                     self.testdir, 'ftputil2.py') ) )
         
     def test_rename(self):
         '''Test FTPHost.rename.'''
@@ -89,7 +99,7 @@ class TestDirectories(Base):
     '''Getting, making, changing, deleting directories.'''
 
     def test_getcwd_and_change(self):
-        '''Test getcwd and chdir.'''
+        '''Test FTPHost.getcwd and FTPHost.chdir.'''
         host = self.host
         self.assertEqual( host.getcwd(), self.rootdir )
         host.chdir(self.testdir)
@@ -116,7 +126,7 @@ class TestDirectories(Base):
         host = self.host
         # try to remove nonexistent directory
         self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.rootdir, '__test2') )
+          host.path.join(self.testdir, '__test2') )
         # make two nested directories
         host.mkdir( host.path.join(self.testdir, '__test2') )
         host.mkdir( host.path.join(self.testdir, '__test2',
