@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.43 2002/03/30 18:45:55 schwa Exp $
+# $Id: _test_ftputil.py,v 1.44 2002/03/30 18:56:56 schwa Exp $
 
 import unittest
 import stat
@@ -363,57 +363,13 @@ class TestFileOperations(unittest.TestCase):
         # try to read beyond EOF
         self.assertRaises(IndexError, operator.__getitem__,
                           xrl_obj, 3)
-    
+
     def test_read_unknown_file(self):
         """Test whether reading a file which isn't there fails."""
         host = ftp_host_factory()
         self.assertRaises(ftputil.FTPIOError, host.file,
                           'notthere', 'r')
-#
-#     def test_read_from_host(self):
-#         """Test _FTPFile.read*"""
-#         host = self.host
-#         host.chdir(self.testdir)
-#         self.remote_name = '__test.dat'
-#         self.ascii_read()
-#         self.ascii_readline()
-#         self.binary_readline()
-#         self.ascii_readlines()
-#         self.ascii_xreadlines()
-#         # clean up
-#         host.remove(self.remote_name)
-#         host.chdir(self.rootdir)
-#
-#     def test_remote_copy(self):
-#         """Make a copy on the remote host."""
-#         host = self.host
-#         host.chdir(self.testdir)
-#         self.remote_name = '__test.dat'
-#         local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
-#         # write later source data
-#         self.write_test_data(local_data, 'wb')
-#         # build paths
-#         source_path = self.remote_name
-#         host.mkdir('__test2')
-#         target_path = host.path.join('__test2',
-#                                      self.remote_name)
-#         # make file objects
-#         source = host.file(source_path, 'rb')
-#         target = host.file(target_path, 'wb')
-#         # copy
-#         host.copyfileobj(source, target)
-#         source.close()
-#         target.close()
-#         # read copy and check against original data
-#         input_ = host.file(target_path, 'rb')
-#         data = input_.read()
-#         input_.close()
-#         self.assertEqual(local_data, data)
-#         # clean up
-#         host.remove(target_path)
-#         host.rmdir('__test2')
-#         host.unlink(source_path)
-#         host.chdir(self.rootdir)
+
 #
 #     def test_upload_download(self):
 #         """Test FTPHost.upload/download."""
