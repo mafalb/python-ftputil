@@ -73,6 +73,15 @@ Note: ftputil currently is not threadsafe. More specifically,
       different threads.
 '''
 
+# Ideas for future development:
+# - follow links in FTPHost.path.stat implementation!
+# - write documentation
+# - write unit test
+# - conditional upload/download (only when the source file
+#   is newer than the target file, depends on FTPHost.stat)
+# - caching of FTPHost.stat results??
+# - map FTP error numbers to os error numbers (ENOENT etc.)
+
 import ftplib
 import stat
 import time
@@ -86,7 +95,7 @@ __version__ = '1.0.4'
 
 
 #####################################################################
-# Exception classes
+# Exception classes and wrappers
 
 class FTPError:
     '''General error class'''
@@ -109,7 +118,32 @@ class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
 class ParserError(FTPOSError): pass
 
+#XXX Do you know better names for _try_with_oserror and
+#    _try_with_ioerror?
+def _try_with_oserror(callee, *args, **kwargs):
+    '''Try the callee with the given arguments and map resulting
+    exceptions from ftplib.all_errors to FTPOSError and its
+    derived classes.'''
+    try:
+        return callee(*args, **kwargs)
+    except ftplib.error_temp, obj:
+        raise TemporaryError(obj)
+    except ftplib.error_perm, obj:
+        raise PermanentError(obj)
+    except ftplib.all_errors:
+        ftp_error = sys.exc_info()[1]
+        raise FTPOSError(ftp_error)
+        
 class FTPIOError(FTPError, IOError): pass
+
+def _try_with_ioerror(callee, *args, **kwargs):
+    '''Try the callee with the given arguments and map resulting
+    exceptions from ftplib.all_errors to FTPIOError.'''
+    try:
+        return callee(*args, **kwargs)
+    except ftplib.all_errors:
+        ftp_error = sys.exc_info()[1]
+        raise FTPIOError(ftp_error)
 
 
 #####################################################################
@@ -153,21 +187,14 @@ class _FTPFile:
         # select ASCII or binary mode
         transfer_type = ('A', 'I')[self._binmode]
         command = 'TYPE %s' % transfer_type
-        try:
-            self._session.voidcmd(command)
-        except ftplib.all_errors:
-            ftp_error = sys.exc_info()[1]
-            raise FTPIOError(ftp_error)
+        _try_with_ioerror(self._session.voidcmd, command)
         # make transfer command
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
         self.closed = 0
-        try:
-            self._conn = self._session.transfercmd(command)
-        except ftplib.all_errors:
-            ftp_error = sys.exc_info()[1]
-            raise FTPIOError(ftp_error)
+        self._conn = _try_with_ioerror(
+                     self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
 
     #
@@ -211,10 +238,9 @@ class _FTPFile:
         built-in line separator conversion support.'''
         if self._binmode:
             return self._fo.xreadlines()
-        else:
-            # we don't provide an xreadline-compatible class
-            #  right now, so fall back to readlines
-            return self.readlines()
+        # we don't provide an xreadline-compatible class
+        #  right now, so fall back to readlines
+        return self.readlines()
 
     def write(self, data):
         '''Write data to file. Do linesep conversion for
@@ -248,8 +274,8 @@ class _FTPFile:
         '''Close the FTPFile.'''
         if not self.closed:
             self._fo.close()
-            self._conn.close()
-            self._session.voidresp()
+            _try_with_ioerror(self._conn.close)
+            _try_with_ioerror(self._session.voidresp)
             self.closed = 1
 
     def __del__(self):
@@ -286,7 +312,8 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        self._session = self._try(ftplib.FTP, *args, **kwargs)
+        self._session = _try_with_oserror(ftplib.FTP,
+                        *args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -301,7 +328,8 @@ class FTPHost:
         #  at least with Unix and Windows servers
         self.curdir, self.pardir, self.sep = '.', '..', '/'
         # check if we have a Microsoft ROBIN server
-        response = self._try(self._session.voidcmd, 'STAT')
+        response = _try_with_oserror(
+                   self._session.voidcmd, 'STAT')
         if response.find('ROBIN Microsoft') != -1:
             self._parser = self.__parse_robin_line
         else:
@@ -348,37 +376,27 @@ class FTPHost:
                 host._file.close()
                 host.close()
             # now deal with our-self
-            self._session.close()
+            _try_with_oserror(self._session.close)
             self._children = []
             self.closed = 1
 
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except:
+            # don't want warnings if constructor failed
+            pass
 
     #
     # miscellaneous utility methods resembling those in os
     #
-    def _try(self, callee, *args):
-        '''Try to execute the callee with the given args.
-        On an ftplib error raise an object of the wrapper
-        error class FTPOSError.'''
-        try:
-            return callee(*args)
-        except ftplib.error_temp, obj:
-            raise TemporaryError(obj)
-        except ftplib.error_perm, obj:
-            raise PermanentError(obj)
-        except ftplib.all_errors:
-            ftp_error = sys.exc_info()[1]
-            raise FTPOSError(ftp_error)
-        
     def getcwd(self):
         '''Return the current path name.'''
-        return self._try(self._session.pwd)
+        return _try_with_oserror(self._session.pwd)
 
     def chdir(self, path):
         '''Change the directory on the host.'''
-        self._try(self._session.cwd, path)
+        _try_with_oserror(self._session.cwd, path)
 
     def listdir(self, path):
         '''Return a list with directories, files etc. in the
@@ -389,22 +407,22 @@ class FTPHost:
             stat_result = self._parse_line(line, fail=0)
             if stat_result is not None:
                 names.append(stat_result.st_name)
-        self._try(self._session.dir, path, callback)
+        _try_with_oserror(self._session.dir, path, callback)
         return names
 
     def mkdir(self, path, mode=None):
         '''Make the directory path on the remote host. The
         argument mode is ignored and only "supported" for
         similarity with os.mkdir.'''
-        self._try(self._session.mkd, path)
+        _try_with_oserror(self._session.mkd, path)
 
     def rmdir(self, path):
         '''Remove the directory on the remote host.'''
-        self._try(self._session.rmd, path)
+        _try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
         '''Remove the given file.'''
-        self._try(self._session.delete, path)
+        _try_with_oserror(self._session.delete, path)
 
     def unlink(self, path):
         '''Remove the given file.'''
@@ -412,7 +430,7 @@ class FTPHost:
 
     def rename(self, src, dst):
         '''Rename the src on the FTP host to dst.'''
-        self._try(self._session.rename, src, dst)
+        _try_with_oserror(self._session.rename, src, dst)
 
     def _stat_candidates(self, lines, wanted_name):
         '''Return candidate lines for further analysis.'''
@@ -442,6 +460,9 @@ class FTPHost:
             st_mode = st_mode | stat.S_IFDIR
         elif metadata[0] == 'l':
             st_mode = st_mode | stat.S_IFLNK
+        #TODO check for other filetypes (c, what else?)
+        else:
+            st_mode = st_mode | stat.S_IFREG
         # st_ino, st_dev, st_nlink, st_uid, st_gid,
         # st_size, st_atime
         st_ino = None
@@ -492,6 +513,8 @@ class FTPHost:
                          #  in fact, we can't tell
         if dir_or_size == '<DIR>':
             st_mode = st_mode | stat.S_IFDIR
+        else:
+            st_mode = st_mode | stat.S_IFREG
         # st_ino, st_dev, st_nlink, st_uid, st_gid
         st_ino = None
         st_dev = None
@@ -545,8 +568,8 @@ class FTPHost:
         lines = []
         dirname, basename = self.path.split(path)
         dirname = self.path.abspath(dirname)
-        self._try( self._session.dir, dirname,
-                   lambda line: lines.append(line) )
+        _try_with_oserror( self._session.dir, dirname,
+                           lambda line: lines.append(line) )
         # search for name to be stat'ed without full parsing
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
