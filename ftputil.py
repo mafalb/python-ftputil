@@ -82,13 +82,13 @@ import posixpath
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'FTPHost']
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 
 #####################################################################
 # Exception classes
 
-class FTPError(Exception):
+class FTPError:
     '''General error class'''
 
     def __init__(self, ftp_exception):
