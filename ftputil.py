@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.122 2003/06/09 16:00:38 schwa Exp $
+# $Id: ftputil.py,v 1.123 2003/06/09 17:23:51 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -507,6 +507,28 @@ class FTPHost:
         """Rename the source on the FTP host to target."""
         ftp_error._try_with_oserror(self._session.rename, source, target)
 
+    def _dir(self, path):
+        """Return a directory listing as made by FTP's `DIR` command."""
+        # we can't use `self.path.isdir` in this method because that
+        #  would cause a call of `(l)stat` and thus a call to `_dir`,
+        #  so we would end up with an infinite recursion
+        lines = []
+        # use `name=name` for Python versions which don't support
+        #  "nested scopes"
+        callback = lambda line, lines=lines: lines.append(line)
+        ftp_error._try_with_oserror(self._session.dir, path, callback=callback)
+        return lines
+
+    def _parse_line(self, line, fail=True):
+        """Return `_Stat` instance corresponding to the given text line."""
+        try:
+            return self._parser.parse_line(line)
+        except ftp_error.ParserError:
+            if fail:
+                raise
+            else:
+                return None
+
     def listdir(self, path):
         """
         Return a list with directories, files etc. in the directory
@@ -515,28 +537,18 @@ class FTPHost:
         path = self.path.abspath(path)
         if not self.path.isdir(path):
             raise ftp_error.PermanentError("550 %s: no such directory" % path)
+        lines = self._dir(path)
         names = []
-        def callback(line):
+        for line in lines:
             stat_result = self._parse_line(line, fail=False)
             if stat_result is not None:
                 names.append(stat_result._st_name)
-        ftp_error._try_with_oserror(self._session.dir, path, callback=callback)
         return names
 
     def _stat_candidates(self, lines, wanted_name):
         """Return candidate lines for further analysis."""
         return [ line  for line in lines
                  if line.find(wanted_name) != -1 ]
-
-    def _parse_line(self, line, fail=True):
-        """Return `_Stat` instance corresponding to the given text line."""
-        try:
-            return self._parser.parse_line(line)
-        except (ValueError, IndexError):
-            if fail:
-                raise ftp_error.ParserError("can't parse line '%s'" % line)
-            else:
-                return None
 
     def lstat(self, path):
         """Return an object similar to that returned by `os.lstat`."""
@@ -550,8 +562,7 @@ class FTPHost:
             raise ftp_error.RootDirError(
                   "can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
-        ftp_error._try_with_oserror( self._session.dir, dirname,
-                                     lambda line: lines.append(line) )
+        lines = self._dir(dirname)
         # search for name to be stat'ed without parsing the whole
         #  directory listing
         candidates = self._stat_candidates(lines, basename)
