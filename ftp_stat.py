@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.15 2003/10/04 14:33:44 schwa Exp $
+# $Id: ftp_stat.py,v 1.16 2003/10/04 14:35:04 schwa Exp $
 
 import stat
 import sys
@@ -42,8 +42,9 @@ import time
 import ftp_error
 
 
-# set up the base class for the stat results, depending on the
-#  capabilities of the used Python version
+# Set up the base class for the stat results, depending on the
+#  capabilities of the used Python version. In older Python versions,
+#  classes can't inherit from builtin types.
 try:
     class __InheritanceTest(tuple):
         pass
