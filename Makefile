@@ -29,13 +29,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.6 2004/02/08 17:22:26 schwa Exp $
+# $Id: Makefile,v 1.7 2004/02/27 22:57:05 schwa Exp $
 
 
 SHELL=/bin/sh
 DOC_FILES=README.html ftputil.html
 
-.PHONY: dist test docs clean
+.PHONY: dist extdist test docs clean register
 .SUFFIXES: .txt .html
 
 test:
@@ -54,10 +54,16 @@ docs: ${DOC_FILES} README.txt ftputil.txt
 dist: clean docs
 	python setup.py sdist
 
-extdist: test dist
-	echo "Copying archive and documentation to local webspace"
+localcopy:
+	@echo "Copying archive and documentation to local webspace"
 	cp -p dist/ftputil-`cat VERSION`.tar.gz ${HOME}/www/download
 	cp -p ftputil.html ${HOME}/www/python
+
+register:
+	@echo "Registering new version with PyPI"
+	python setup.py register
+
+extdist: test dist localcopy register
 
 clean:
 	rm -f ${DOC_FILES}
