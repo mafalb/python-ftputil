@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.115 2003/03/16 19:21:26 schwa Exp $
+# $Id: ftputil.py,v 1.116 2003/06/08 19:05:38 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -82,11 +82,11 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 # for Python 2.1
 from __future__ import nested_scopes
 
-import ftplib
 import ftp_error
 import ftp_file
 import ftp_path
 import ftp_stat
+import ftplib
 import os
 import stat
 import sys
