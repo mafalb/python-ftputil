@@ -1,4 +1,25 @@
+ftputil 1.1 is released. You can find it at
+http://www.ndh.net/home/sschwarzer/python/python_software.html .
 
+ftputil provides a higher-level interface for FTP sessions than the
+ftplib module. FTP servers can be accessed via an interface similar to
+os and os.path. Remote files are accessible as file-like objects.
+
+New since version 1.0:
+
+- ftputil now runs under Python 2.1+ (not only 2.2+).
+- documentation
+- conditional upload/download (depending on local and remote file
+  timestamps)
+- FTPHost.stat follows links
+- a session factory other than the default, ftplib.FTP, can be given
+  in the FTPHost constructor; this allows to use classes like
+  ftpslib.FTP_TLS from the M2Crypto package
+- several bugfixes (mostly regarding byte count in text mode
+  transfers)
+- unit test
+
+Stefan
 ----------------------------------------------------------------------
 Hello Pythoneers :)
 
