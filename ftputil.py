@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.85 2002/04/01 17:41:55 schwa Exp $
+# $Id: ftputil.py,v 1.86 2002/04/01 19:02:07 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -92,12 +92,17 @@ import time
 import os
 import sys
 import posixpath
-import UserTuple
+
+if sys.version_info[:2] >= (2, 2):
+    _StatBase = tuple
+else:
+    import UserTuple
+    _StatBase = UserTuple.UserTuple
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'FTPHost']
-__version__ = '1.0.7rc1'
+__version__ = '1.1'
 
 
 #####################################################################
@@ -764,7 +769,7 @@ class FTPHost:
 # Helper classes _Stat and _Path to imitate behaviour of stat objects
 #  and os.path module contents.
 
-class _Stat(UserTuple.UserTuple):
+class _Stat(_StatBase):
     """
     Support class resembling a tuple like that which is returned
     from os.(l)stat.
