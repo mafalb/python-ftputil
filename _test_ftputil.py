@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.62 2002/10/22 21:01:30 schwa Exp $
+# $Id: _test_ftputil.py,v 1.63 2003/03/15 18:46:17 schwa Exp $
 
 import unittest
 import stat
@@ -77,7 +77,7 @@ def binary_data():
 
 
 #
-# several customized MockSession classes
+# several customized `MockSession` classes
 #
 class FailOnLoginSession(_mock_ftplib.MockSession):
     def __init__(self, host='', user='', password=''):
@@ -94,7 +94,7 @@ class BinaryDownloadMockSession(_mock_ftplib.MockSession):
 
 
 #
-# customized FTPHost class for conditional upload/download tests
+# customized `FTPHost` class for conditional upload/download tests
 #
 class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
     def upload(self, source, target, mode=''):
@@ -105,8 +105,8 @@ class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
 
 
 #
-# factory to produce FTPHost-like classes from a given FTPHost
-#  class and a given MockSession class
+# factory to produce `FTPHost`-like classes from a given `FTPHost`
+#  class and a given `MockSession` class
 #
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
                      ftp_host_class=ftputil.FTPHost):
@@ -442,7 +442,7 @@ class TestFileOperations(unittest.TestCase):
 
 
 class TestUploadAndDownload(unittest.TestCase):
-    """Test ascii upload and binary download as examples."""
+    """Test ASCII upload and binary download as examples."""
 
     def generate_ascii_file(self, data, filename):
         """Generate an ASCII data file."""
