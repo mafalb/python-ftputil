@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.21 2003/10/05 17:09:59 schwa Exp $
+# $Id: ftp_stat.py,v 1.22 2003/10/25 21:33:56 schwa Exp $
 
 import stat
 import sys
@@ -140,7 +140,7 @@ class _Stat:
         path = self._path.abspath(path)
         # Note: (l)stat works by going one directory up and parsing
         #  the output of an FTP `DIR` command. Unfortunately, it is
-        #  not possible to to this for the root directory `/`.
+        #  not possible to do this for the root directory `/`.
         if path == '/':
             raise ftp_error.RootDirError(
                   "can't invoke stat for remote root directory")
