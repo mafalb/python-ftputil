@@ -16,7 +16,7 @@ Ideas for future development:
 
 - handle connection timeouts (Antonio Beamud Montero)
 - merge with vpath project (Holger Krekel)
-- merge WebDAV support
+- merge in WebDAV support
 - what about thread safety? (also have a look at `ftplib`)
 - map FTP error numbers to os error numbers (ENOENT etc.)?
 
