@@ -1,6 +1,6 @@
 NAME
 
-ftputil - abstract Python interface for FTP sessions
+    ftputil - abstract Python interface for FTP sessions
 
 ----------------------------------------------------------------------
 DESCRIPTION
@@ -289,34 +289,67 @@ http://www.python.org/doc/current/lib/module-os.path.html
 FTPFile OBJECTS
 
 FTPFile objects as returned by a call to FTPHost.file (or
-FTPHost.open) have, like "normal" file objects, the following methods.
-Note that ftputil supports both binary and text mode (with the
-appropriate line ending conversions). The following methods - with the
-same arguments and semantics as for local files - can be used: close,
-read, readline, readlines, write, writelines, and xreadlines. See
+FTPHost.open) have the following methods - with the same arguments and
+semantics as for local files: close, read, readline, readlines, write,
+writelines, and xreadlines, and the attribute closed. For details, see
 the section "File objects" in the Library Reference,
 http://www.python.org/doc/current/lib/bltin-file-objects.html
+
+Note that ftputil supports both binary and text mode with the
+appropriate line ending conversions.
 
 ----------------------------------------------------------------------
 BUGS AND LIMITATIONS
 
-- ftputil needs at least Python 2.1 to run.
+- ftputil needs at least Python 2.1 to work. The only place where
+  Python 2.0 is not enough is in FTPHost.listdir. If you need Python
+  2.0, and, yet better, also have a patch, contact me under the
+  below-mentioned email address.
 
 - Depending on local time and/or daylight saving time settings
   different local hosts may interpret the modification times in the
-  FTP server output differently.
+  FTP server output differently. If there's a need for it, I would
+  provide a method to (manually) set a difference value for the
+  local/remote host pair.
 
-- Timeouts of individual child sessions currently are not handled.
+- Timeouts of individual child sessions currently are not handled yet.
+  This is only a problem if your FTPHost object or the generated
+  FTPFile objects are inactive for about ten minutes or longer.
 
 - Until now, I haven't paid attention to thread safety. In principle,
-  different FTPFile objects should be usable in different threads.
+  at least, different FTPFile objects should be usable in different
+  threads.
 
 - FTPFile objects in text mode _may not_ support charsets with more
   than one byte per character. Please email me your experiences
-  (address below), if you deal with multibyte text streams.
+  (address below), if you have to work with multibyte text streams in
+  FTP sessions.
+
+- The UserTuple class, provided in UserTuple.py, is not thoroughly
+  tested. If you encouter problems, please notify me.
+
+----------------------------------------------------------------------
+FILES
+
+ftputil.py
+    is the main module file.
+    
+UserTuple.py
+    may be used as the base class for _Stat. If you have at least
+    Python version 2.2 you can safely delete the UserTuple module.
+
+_test_ftputil.py
+_mock_ftplib.py
+    are needed for the unit tests of ftputil. If you don't want to
+    debug or modify ftputil, you can delete these files. _mock_ftplib
+    is a "mock" variant of the ftplib module. See below for details.
 
 ----------------------------------------------------------------------
 SEE ALSO
+
+Mackinnon T, Freeman S, Craig P. 2000.
+    Endo-Testing: Unit Testing with Mock Objects
+    http://www.mockobjects.com/misc/mockobjects.pdf
 
 Postel J, Reynolds J. 1985.
     RFC 959 - File Transfer Protocol (FTP).
@@ -329,5 +362,6 @@ Van Rossum G, Drake Jr FL. 2001.
 ----------------------------------------------------------------------
 AUTHOR
 
-Stefan Schwarzer <s.schwarzer@ndh.net>
+ftputil is written by Stefan Schwarzer <s.schwarzer@ndh.net>.
+Feedback is appreciated.
 
