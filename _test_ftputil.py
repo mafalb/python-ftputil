@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.26 2002/03/29 23:04:52 schwa Exp $
+# $Id: _test_ftputil.py,v 1.27 2002/03/29 23:18:10 schwa Exp $
 
 # Ideas for future development:
 #   - Rewrite tests to use mock FTP sessions
@@ -62,38 +62,44 @@ class TestLogin(unittest.TestCase):
 class TestStat(unittest.TestCase):
     """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir."""
 
+    def test_lstat(self):
+        """Test FTPHost.lstat."""
+        # check if stat results are correct
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        stat_result = host.lstat('/absolute/path/index.html')
+        self.assertEqual( oct(stat_result.st_mode), '0100644' )
+        self.assertEqual(stat_result.st_size, 4604)
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        stat_result = host.lstat('/absolute/path/scios2')
+        self.assertEqual( oct(stat_result.st_mode), '042755' )
+        self.assertEqual(stat_result.st_size, 512)
+        self.assertEqual(stat_result.st_mtime, 937785600.0)
+        # test status indirectly via stat module
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        stat_result = host.lstat('/absolute/path')
+        self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
+
     def test_listdir(self):
         """Test FTPHost.listdir."""
         # try to list a path which isn't there
-        host = FTPHostWrapper(_mock_ftplib.ListdirTest)
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
         self.assertRaises(ftputil.PermanentError,
                           host.listdir, 'notthere')
         # do we have all expected "files"?
-        host = FTPHostWrapper(_mock_ftplib.ListdirTest)
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
         self.assertEqual( len(host.listdir(host.curdir)), 9 )
         # have they the expected names?
-        host = FTPHostWrapper(_mock_ftplib.ListdirTest)
+        host = FTPHostWrapper(_mock_ftplib.StatTest)
         expected = ('chemeng download image index.html os2 '
                     'osup publications python scios2').split()
         remote_file_list = host.listdir(host.curdir)
         for file in expected:
             self.failUnless(file in remote_file_list)
 
-#     def test_lstat(self):
-#         """Test FTPHost.lstat."""
-#         host = self.host
-#         # test status of __test2
-#         stat_result = host.lstat('__test2')
-#         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
-#         # check if local and remote sizes are equal
-#         local_size = os.path.getsize('ftputil.py')
-#         remote_size = host.lstat('ftputil2.py').st_size
-#         self.assertEqual(local_size, remote_size)
-
 
 # class TestPath(Base):
 #     """Test operations in FTPHost.path."""
-# 
+#
 #     def test_isdir_isfile_islink(self):
 #         """Test FTPHost._Path.isdir/isfile/islink."""
 #         host = self.host
@@ -114,7 +120,7 @@ class TestStat(unittest.TestCase):
 #         # clean up
 #         host.remove('ftputil2.py')
 #         host.chdir(self.rootdir)
-# 
+#
 #     def test_getmtime(self):
 #         """Test FTPHost._Path.getmtime."""
 #         host = self.host
@@ -135,7 +141,7 @@ class TestStat(unittest.TestCase):
 #         host.rmdir('__test2')
 #         host.remove('ftputil2.py')
 #         host.chdir(self.rootdir)
-# 
+#
 #     def test_getsize(self):
 #         """Test FTPHost._Path.getsize."""
 #         host = self.host
@@ -154,14 +160,14 @@ class TestStat(unittest.TestCase):
 #         host.rmdir('__test2')
 #         host.remove('ftputil2.py')
 #         host.chdir(self.rootdir)
-# 
-# 
+#
+#
 # class TestFileOperations(Base):
 #     """
 #     Test operations with file-like objects (including
 #     uploads and downloads).
 #     """
-# 
+#
 #     def test_caching(self):
 #         """Test if _FTPFile cache of FTPHost object works."""
 #         host = FTPHostWrapper(host_name, user, password)
@@ -196,13 +202,13 @@ class TestStat(unittest.TestCase):
 #         # clean up
 #         host.remove(path1)
 #         host.remove(path2)
-# 
+#
 #     def write_test_data(self, data, mode):
 #         """Write test data to the remote host."""
 #         output = self.host.file(self.remote_name, mode)
 #         output.write(data)
 #         output.close()
-# 
+#
 #     def binary_write(self):
 #         """Write binary data to the host and read it back."""
 #         host = self.host
@@ -217,7 +223,7 @@ class TestStat(unittest.TestCase):
 #         remote_data = input_.read()
 #         input_.close()
 #         self.assertEqual(local_data, remote_data)
-# 
+#
 #     def ascii_write(self):
 #         """Write an ASCII to the host and check the written file."""
 #         host = self.host
@@ -231,7 +237,7 @@ class TestStat(unittest.TestCase):
 #         # expect the same data as above if we have a
 #         #  Unix FTP server
 #         self.assertEqual(local_data, remote_data)
-# 
+#
 #     def ascii_writelines(self):
 #         """Write data via writelines and read it back."""
 #         host = self.host
@@ -246,7 +252,7 @@ class TestStat(unittest.TestCase):
 #         input_.close()
 #         # check data
 #         self.assertEqual( ''.join(local_data), remote_data )
-# 
+#
 #     def test_write_to_host(self):
 #         """Test _FTPFile.write*"""
 #         host = self.host
@@ -261,7 +267,7 @@ class TestStat(unittest.TestCase):
 #         # clean up
 #         host.remove(self.remote_name)
 #         host.chdir(self.rootdir)
-# 
+#
 #     def ascii_read(self):
 #         """Write some ASCII data to the host and use plain
 #         read operations to get it back.
@@ -292,7 +298,7 @@ class TestStat(unittest.TestCase):
 #         input_ = host.file(self.remote_name, 'r')
 #         data = input_.read( len(local_data) )
 #         self.assertEqual(data, local_data)
-# 
+#
 #     def ascii_readline(self):
 #         """Write some ASCII data to the host and use readline
 #         operations to get it back.
@@ -314,7 +320,7 @@ class TestStat(unittest.TestCase):
 #         data = input_.readline()
 #         self.assertEqual(data, '')
 #         input_.close()
-# 
+#
 #     def binary_readline(self):
 #         """Write some ASCII data to the host and use binary
 #         readline operations to get it back.
@@ -339,7 +345,7 @@ class TestStat(unittest.TestCase):
 #         data = input_.readline()
 #         self.assertEqual(data, '')
 #         input_.close()
-# 
+#
 #     def ascii_readlines(self):
 #         """Write some ASCII data to the host and use readline
 #         operations to get it back.
@@ -355,7 +361,7 @@ class TestStat(unittest.TestCase):
 #         self.assertEqual(data, ['e 1\n', 'another line\n',
 #                                 'yet another line'])
 #         input_.close()
-# 
+#
 #     def ascii_xreadlines(self):
 #         """Write some ASCII data to the host and use an
 #         xreadline-like object to retrieve it.
@@ -385,7 +391,7 @@ class TestStat(unittest.TestCase):
 #         # try to read beyond EOF
 #         self.assertRaises(IndexError, operator.__getitem__,
 #                           xrl_obj, 3)
-# 
+#
 #     def test_read_from_host(self):
 #         """Test _FTPFile.read*"""
 #         host = self.host
@@ -402,7 +408,7 @@ class TestStat(unittest.TestCase):
 #         # clean up
 #         host.remove(self.remote_name)
 #         host.chdir(self.rootdir)
-# 
+#
 #     def test_remote_copy(self):
 #         """Make a copy on the remote host."""
 #         host = self.host
@@ -433,7 +439,7 @@ class TestStat(unittest.TestCase):
 #         host.rmdir('__test2')
 #         host.unlink(source_path)
 #         host.chdir(self.rootdir)
-# 
+#
 #     def test_upload_download(self):
 #         """Test FTPHost.upload/download."""
 #         host = self.host
