@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.3 2003/06/08 19:42:06 schwa Exp $
+# $Id: ftp_path.py,v 1.4 2003/06/09 15:50:47 schwa Exp $
 
 import ftp_error
 import posixpath
@@ -50,10 +50,9 @@ class _Path:
 
     Hint: substitute `os` with the `FTPHost` object.
     """
-
     def __init__(self, host):
         self._host = host
-        # delegate these to posixpath
+        # delegate these to the `posixpath` module
         pp = posixpath
         self.dirname      = pp.dirname
         self.basename     = pp.basename
