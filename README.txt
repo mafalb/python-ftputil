@@ -14,19 +14,26 @@ What's new?
 
 From version 1.1 to 2.0, the following has changed:
 
-- ftputil has been re-organized and is now a Python package
+- ftputil has been re-organized and is now a Python package (the
+  import statement is still the same)
+
 - installation via Python distutils
-- stat, upload_if_newer, download_if_newer etc. work if the server is
-  in another time zone than the client running ftputil (with help
-  from Andrew Ittner); see section "Time zone correction" in the
+
+- stat, upload_if_newer, download_if_newer etc. work correctly if the
+  server is in another time zone than the client running ftputil (with
+  help from Andrew Ittner); see section "Time zone correction" in the
   documentation
-- it's possible to set the directory listing format "manually"
-  (though in most cases it's recognized automatically); see section
-  "Stat'ing files and directories"
+
+- it's possible to set the directory listing format "manually" (though
+  in most cases it's recognized automatically); see section "Stat'ing
+  files and directories"
+
 - added a workaround regarding whitespace in directory names (thanks
   to Tommy Sundström and H. Y. Chu)
-- extended documentation and converted it to HTML format (generated
-  from reStructured Text)
+
+- extended documentation and converted it to HTML format (now
+  generated from reStructured Text)
+
 - some more bugfixes
 
 Documentation
