@@ -29,7 +29,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.20 2002/03/29 16:29:26 schwa Exp $
+# $Id: _test_ftputil.py,v 1.21 2002/03/29 18:18:27 schwa Exp $
+
+# Ideas for future development:
+#   - Rewrite tests to use mock FTP sessions
+#     (see http://www.mockobjects.com)
 
 import unittest
 import ftputil
@@ -39,11 +43,18 @@ import os
 import time
 import operator
 
+class FTPHostWrapper(ftputil.FTPHost):
+    def __init__(self, *args, **kwargs):
+        import ftplib
+        #kwargs['session_factory'] = ftplib.FTP
+        ftputil.FTPHost.__init__(self, *args, **kwargs)
+
+        
 class Base(unittest.TestCase):
     """Base class for some test classes."""
 
     def setUp(self):
-        self.host = ftputil.FTPHost(host_name, user, password)
+        self.host = FTPHostWrapper(host_name, user, password)
         self.rootdir = self.host.getcwd()
         self.testdir = self.host.path.join(
                        self.rootdir, '__test1')
@@ -62,10 +73,10 @@ class TestLogin(unittest.TestCase):
     def test_invalid_login(self):
         """Login to invalid host must fail."""
         # plain FTPOSError, no derived class
-        self.assertRaises(ftputil.FTPOSError, ftputil.FTPHost,
+        self.assertRaises(ftputil.FTPOSError, FTPHostWrapper,
           'nonexistent.ho.st.na.me', 'me', 'password')
         try:
-            ftputil.FTPHost('nonexistent.ho.st.na.me')
+            FTPHostWrapper('nonexistent.ho.st.na.me')
         except ftputil.FTPOSError, obj:
             pass
         self.failUnless(obj.__class__ is ftputil.FTPOSError)
@@ -281,7 +292,7 @@ class TestFileOperations(Base):
 
     def test_caching(self):
         """Test if _FTPFile cache of FTPHost object works."""
-        host = ftputil.FTPHost(host_name, user, password)
+        host = FTPHostWrapper(host_name, user, password)
         self.assertEqual( len(host._children), 0 )
         path1 = host.path.join(self.testdir, '__test1.dat')
         path2 = host.path.join(self.testdir, '__test2.dat')
