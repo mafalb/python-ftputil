@@ -640,11 +640,14 @@ Files
 -----
 
 If not overwritten via installation options, the ``ftputil`` files
-reside in the ``ftputil`` package. The package directory contains a
-``doc`` subdirectory which in turn contains this documentation in
-`reStructured Text`_ and in HTML format.
+reside in the ``ftputil`` package. The documentation (in
+`reStructured Text`_ and in HTML format) is in the same directory.
 
 .. _`reStructured Text`: http://docutils.sourceforge.net/rst.html
+
+The files ``_test_*.py`` and ``_mock_ftplib.py`` are for unit-testing.
+If you only *use* ``ftputil`` (and not modifying it), you can delete
+these files.
 
 References
 ----------
