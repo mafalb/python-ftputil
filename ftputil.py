@@ -331,9 +331,9 @@ class FTPHost:
         response = _try_with_oserror(
                    self._session.voidcmd, 'STAT')
         if response.find('ROBIN Microsoft') != -1:
-            self._parser = self.__parse_robin_line
+            self._parser = self._parse_robin_line
         else:
-            self._parser = self.__parse_unix_line
+            self._parser = self._parse_unix_line
 
     def _copy(self):
         '''Return a copy of this FTPHost object.'''
@@ -442,7 +442,7 @@ class FTPHost:
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
-    def __parse_unix_line(self, line):
+    def _parse_unix_line(self, line):
         '''Return _Stat instance corresponding to the given
         text line. Exceptions are caught in _parse_line.'''
         metadata, nlink, user, group, size, month, day, \
@@ -503,7 +503,7 @@ class FTPHost:
                        st_uid, st_gid, st_size, st_atime,
                        st_mtime, st_ctime, st_name) )
     
-    def __parse_robin_line(self, line):
+    def _parse_robin_line(self, line):
         '''Return _Stat instance corresponding to the given
         text line from a MS ROBIN FTP server. Exceptions are
         caught in _parse_line.'''
