@@ -7,8 +7,6 @@ Things to do for a new release:
   - `ftputil.py` (`__version__`)
   - `ftputil.txt`
 
-- change date at top of `ftputil.txt`
-
 - `make test && make dist`
 
 - copy distribution file to download directory (`~/www/download`)
