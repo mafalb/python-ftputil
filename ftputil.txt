@@ -227,6 +227,9 @@ wrapper class::
 ``FTPHost`` attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+Attributes
+,,,,,,,,,,
+
 - ``curdir``, ``pardir``, ``sep``
 
   are strings which denote the current and the parent directory on
@@ -236,6 +239,9 @@ wrapper class::
   even for non-Unix servers.
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
+
+Files and directories
+,,,,,,,,,,,,,,,,,,,,,
 
 - ``file(path, mode='r')``
 
@@ -338,6 +344,9 @@ wrapper class::
   returns a list containing the names of the files and directories
   in the given path; similar to ``os.listdir``.
 
+Stat'ing files and directories
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
 .. _`FTPHost.lstat`:
 
 - ``lstat(path)``
@@ -391,6 +400,9 @@ wrapper class::
   link. This method follows multiple links until a regular file or
   directory is found. If an infinite link chain is encountered, a
   ``PermanentError`` is raised.
+
+Time shift correction
+,,,,,,,,,,,,,,,,,,,,,
 
 .. _`time shift`:
 .. _`set_time_shift`:
