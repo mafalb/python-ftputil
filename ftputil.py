@@ -351,8 +351,9 @@ class FTPHost:
         '''Return a list with directories, files etc. in the
         directory named path.'''
         names = []
-        self._session.dir( dirname, lambda line: names.append(
-                           self._parse_line(line).st_name ) )
+        callback = lambda line: names.append(
+                   self._parse_line(line).st_name )
+        self._try(self._session.dir, dirname, callback)
         return names
 
     def mkdir(self, path, mode=None):
