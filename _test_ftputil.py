@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.59 2002/04/01 16:24:05 schwa Exp $
+# $Id: _test_ftputil.py,v 1.60 2002/04/03 21:50:24 schwa Exp $
 
 import unittest
 import stat
@@ -144,6 +144,19 @@ class TestStat(unittest.TestCase):
         self.assertRaises(ftputil.PermanentError, host.lstat,
                           '/home/sschwarzer/notthere')
 
+    def test_lstat_for_root(self):
+        """Test lstat for / .
+        Note: (l)stat works by going one directory up and parsing
+        the output of an FTP DIR command. Unfortunately, it is not
+        possible to to this for the root directory / .
+        """
+        host = ftp_host_factory()
+        self.assertRaises(ftputil.RootDirError, host.lstat, '/')
+        try:
+            host.lstat('/')
+        except ftputil.RootDirError, exc_obj:
+            self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
+        
     def test_lstat_one_file(self):
         """Test lstat for a file."""
         host = ftp_host_factory()
