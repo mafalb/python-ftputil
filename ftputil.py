@@ -45,8 +45,7 @@ FTPHost objects
     host.mkdir('newdir')
     host.chdir('newdir')
     target = host.file('targetfile', 'w')
-    for line in source.xreadlines():
-        target.writeline(line)
+    host.copyfileobj(source, target)
     source.close()
     target.close()
     host.remove('targetfile')
@@ -354,7 +353,9 @@ class FTPHost:
     # miscellaneous utility methods resembling those in os
     #
     def _try(self, callee, *args):
-        '''Try to execute the callee with the given args.'''
+        '''Try to execute the callee with the given args.
+        On an ftplib error raise an object of the wrapper
+        error class FTPOSError.'''
         try:
             return callee(*args)
         except ftplib.all_errors:
@@ -383,7 +384,7 @@ class FTPHost:
 
     def mkdir(self, path, mode=None):
         '''Make the directory path on the remote host. The
-        argument mode is ignored and only supported for
+        argument mode is ignored and only "supported" for
         similarity with os.mkdir.'''
         self._try(self._session.mkd, path)
 
@@ -703,8 +704,8 @@ class _Path:
         beyond that arg is always passed to func.  It can be used,
         e.g., to pass a filename pattern, or a mutable object designed
         to accumulate statistics.  Passing None for arg is common."""
-        # This code is taken from posixpath.py, with slight
-        #  modifications
+        # This code (and the above documentation) is taken from
+        #  posixpath.py, with slight modifications
         try:
             names = self._host.listdir(top)
         except OSError:
@@ -727,12 +728,9 @@ class _Path:
 # -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
 # drwxr-sr-x   2 45854    200           512 May 29  2000 os2
 # lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2
-# drwxr-sr-x   2 45854    200           512 Feb 26  2000 private
 # drwxr-sr-x   2 45854    200           512 May 25  2000 publications
 # drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
 # drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2
-# drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp
-# -rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz
 
 # Microsoft ROBIN FTP server
 # 07-04-01  12:57PM       <DIR>          SharePoint_Launch
