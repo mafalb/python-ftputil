@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.123 2003/06/09 17:23:51 schwa Exp $
+# $Id: ftputil.py,v 1.124 2003/06/09 17:42:43 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -513,40 +513,38 @@ class FTPHost:
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
         lines = []
-        # use `name=name` for Python versions which don't support
+        # use `lines=lines` for Python versions which don't support
         #  "nested scopes"
         callback = lambda line, lines=lines: lines.append(line)
-        ftp_error._try_with_oserror(self._session.dir, path, callback=callback)
+        ftp_error._try_with_oserror(self._session.dir, path, callback)
         return lines
-
-    def _parse_line(self, line, fail=True):
-        """Return `_Stat` instance corresponding to the given text line."""
-        try:
-            return self._parser.parse_line(line)
-        except ftp_error.ParserError:
-            if fail:
-                raise
-            else:
-                return None
 
     def listdir(self, path):
         """
         Return a list with directories, files etc. in the directory
         named path.
         """
+        # we _can't_ put this check into `_dir`, s. a.
         path = self.path.abspath(path)
         if not self.path.isdir(path):
             raise ftp_error.PermanentError("550 %s: no such directory" % path)
         lines = self._dir(path)
         names = []
         for line in lines:
-            stat_result = self._parse_line(line, fail=False)
-            if stat_result is not None:
+            try:
+                stat_result = self._parser.parse_line(line)
+            except ftp_error.ParserError:
+                pass
+            else:
                 names.append(stat_result._st_name)
         return names
 
     def _stat_candidates(self, lines, wanted_name):
         """Return candidate lines for further analysis."""
+        # return only lines that contain the name of the file to stat
+        #  (however, the string may be _anywhere_ on the line but not
+        #  necessarily the file's basename; e. g. the string could
+        #  occur as the name of the file's group)
         return [ line  for line in lines
                  if line.find(wanted_name) != -1 ]
 
@@ -566,12 +564,19 @@ class FTPHost:
         # search for name to be stat'ed without parsing the whole
         #  directory listing
         candidates = self._stat_candidates(lines, basename)
-        # parse candidates
+        # parse candidates; return the first stat result where the
+        #  calculated name matches the previously determined
+        #  basename
         for line in candidates:
-            stat_result = self._parse_line(line, fail=False)
-            if (stat_result is not None) and \
-              (stat_result._st_name == basename):
-                return stat_result
+            try:
+                stat_result = self._parser.parse_line(line)
+            except ftp_error.ParserError:
+                pass
+            else:
+                if stat_result._st_name == basename:
+                    return stat_result
+        # if the basename wasn't found in any line, raise an
+        #  exception
         raise ftp_error.PermanentError(
               "550 %s: no such file or directory" % path)
 
