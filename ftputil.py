@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.101 2003/03/15 18:55:45 schwa Exp $
+# $Id: ftputil.py,v 1.102 2003/03/15 18:57:22 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -489,10 +489,10 @@ class FTPHost:
         # inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
         while True:
-            buf = source.read(length)
-            if not buf:
+            buffer = source.read(length)
+            if not buffer:
                 break
-            target.write(buf)
+            target.write(buffer)
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""
