@@ -487,6 +487,15 @@ class FTPHost:
         raise FTPOSError("no such file or directory: '%s'" %
                          path)
 
+    def stat(self, path):
+        '''Return info from a stat call.'''
+        stat_ = self.lstat(path)
+        if stat_.islink():
+            raise NotImplementedError("how should links be "
+                  "handled in ftputil._Path.stat?")
+        else:
+            return stat_
+
 
 class _Stat(tuple):
     '''Support class resembling a tuple like that which is
@@ -530,22 +539,29 @@ class _Path:
         return posixpath.dirname(path)
 
     def exists(self, path):
-        pass
+        try:
+            self._host.lstat(path)
+            return 1
+        except FTPOSError:
+            return 0
 
     def getmtime(self, path):
-        pass
+        return self._host.lstat(path).st_mtime
 
     def getsize(self, path):
-        pass
+        return self._host.lstat(path).st_size
 
     def isabs(self, path):
         return posixpath.isabs(path)
 
     def isfile(self, path):
-        pass
+        return stat.S_ISREG( self._host.lstat(path).st_mode )
 
     def isdir(self, path):
-        pass
+        return stat.S_ISDIR( self._host.lstat(path).st_mode )
+
+    def islink(self, path):
+        return stat.S_ISLNK( self._host.lstat(path).st_mode )
 
     def join(self, *paths):
         return posixpath.join(*paths)
