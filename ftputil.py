@@ -121,7 +121,7 @@ class _FTPFile:
     def read(self, *args, **kwargs):
         '''Return read bytes, normalized if in text
         transfer mode.'''
-        data = apply(self._fp.read, args, kwargs)
+        data = self._fp.read(*args, **kwargs)
         if self._binary:
             return data
         return _native_to_python_linesep(data)
@@ -129,7 +129,7 @@ class _FTPFile:
     def readline(self, *args, **kwargs):
         '''Return one read line, normalized if in text
         transfer mode.'''
-        data = apply(self._fp.readline, args, kwargs)
+        data = self._fp.readline(*args, **kwargs)
         if self._binary:
             return data
         return _native_to_python_linesep(data)
@@ -137,7 +137,7 @@ class _FTPFile:
     def readlines(self, *args, **kwargs):
         '''Return read lines, normalized if in text
         transfer mode.'''
-        lines = apply(self._fp.readlines, args, kwargs)
+        lines = self._fp.readlines(*args, **kwargs)
         if self._binary:
             return lines
         # more memory-friendly than
@@ -152,7 +152,7 @@ class _FTPFile:
         if self._binary:
             return self._fp.xreadlines()
         raise NotImplementedError(
-              "xreadlines not yet supported")
+              "xreadlines in ASCII mode not yet supported")
 
     def write(self, data):
         '''Write data to file. Do linesep conversion for
