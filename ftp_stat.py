@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.5 2003/06/09 15:56:59 schwa Exp $
+# $Id: ftp_stat.py,v 1.6 2003/06/09 16:04:49 schwa Exp $
 
 import stat
 import sys
@@ -157,11 +157,11 @@ class _UnixStatParser(_StatParser):
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None
-        result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
-                         st_gid, st_size, st_atime, st_mtime, st_ctime) )
-        result._st_name = st_name
-        result._st_target = st_target
-        return result
+        stat_result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                              st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        stat_result._st_name = st_name
+        stat_result._st_target = st_target
+        return stat_result
 
 
 class _MSStatParser(_StatParser):
@@ -206,12 +206,12 @@ class _MSStatParser(_StatParser):
                    minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
-        result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
-                         st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        stat_result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                              st_gid, st_size, st_atime, st_mtime, st_ctime) )
         # _st_name and _st_target
-        result._st_name = name
-        result._st_target = None
-        return result
+        stat_result._st_name = name
+        stat_result._st_target = None
+        return stat_result
 
 
 # Unix format
