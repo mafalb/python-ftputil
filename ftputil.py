@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.136 2003/10/05 17:55:57 schwa Exp $
+# $Id: ftputil.py,v 1.137 2003/10/05 17:57:28 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -545,7 +545,8 @@ class FTPHost:
 
     #XXX one could argue to put this method into the `_Stat` class, but
     #  I refrained from that because then `_Stat` would have to know
-    #  about `FTPHost`'s `_session` attribute and its `dir` method
+    #  about `FTPHost`'s `_session` attribute and in turn about
+    #  `_session`'s `dir` method
     def _dir(self, path):
         """Return a directory listing as made by FTP's `DIR` command."""
         # we can't use `self.path.isdir` in this method because that
