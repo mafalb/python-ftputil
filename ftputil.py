@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.141 2003/10/25 18:11:59 schwa Exp $
+# $Id: ftputil.py,v 1.142 2003/10/25 18:13:12 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -77,7 +77,7 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 """
 
 # TODO
-# - fix Bugzilla bug #2 (workaround for whitespace in path)
+# (currently nothing)
 #
 # Ideas for future development:
 # - handle connection timeouts
