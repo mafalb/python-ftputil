@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.53 2002/03/30 22:48:53 schwa Exp $
+# $Id: _test_ftputil.py,v 1.54 2002/03/31 20:36:28 schwa Exp $
 
 import unittest
 import stat
@@ -257,7 +257,7 @@ class TestFileOperations(unittest.TestCase):
                           '/home/sschwarzer', 'w')
 
     def test_binary_write(self):
-        """Write binary data to the host and read it back."""
+        """Write binary data with 'write'."""
         host = ftp_host_factory()
         data = '\000a\001b\r\n\002c\003\n\004\r\005'
         output = host.file('dummy', 'wb')
@@ -268,7 +268,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(child_data, expected_data)
 
     def test_ascii_write(self):
-        """Write an ASCII text to the host and check the written file."""
+        """Write ASCII text with 'write'."""
         host = ftp_host_factory()
         data = ' \nline 2\nline 3'
         output = host.file('dummy', 'w')
@@ -279,7 +279,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(child_data, expected_data)
 
     def test_ascii_writelines(self):
-        """Write ASCII data via writelines and check it."""
+        """Write ASCII text with 'writelines'."""
         host = ftp_host_factory()
         data = [' \n', 'line 2\n', 'line 3']
         backup_data = data[:]
@@ -293,7 +293,7 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, backup_data)
 
     def test_ascii_read(self):
-        """Use plain ASCII read operations to get data."""
+        """Read ASCII text with plain 'read'."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'r')
         data = input_.read(0)
@@ -316,24 +316,8 @@ class TestFileOperations(unittest.TestCase):
         data = input_.read( len(expected_data) )
         self.assertEqual(data, expected_data)
 
-    def test_ascii_readline(self):
-        """Use ASCII readline operations to get data."""
-        host = ftp_host_factory(session_factory=ReadMockSession)
-        input_ = host.file('dummy', 'r')
-        data = input_.readline(3)
-        self.assertEqual(data, 'lin')
-        data = input_.readline(10)
-        self.assertEqual(data, 'e 1\n')
-        data = input_.readline(13)
-        self.assertEqual(data, 'another line\n')
-        data = input_.readline()
-        self.assertEqual(data, 'yet another line')
-        data = input_.readline()
-        self.assertEqual(data, '')
-        input_.close()
-
     def test_binary_readline(self):
-        """Use binary readline operations to get data."""
+        """Read binary data with 'readline'."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'rb')
         data = input_.readline(3)
@@ -350,8 +334,24 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, '')
         input_.close()
 
+    def test_ascii_readline(self):
+        """Read ASCII text with 'readline'."""
+        host = ftp_host_factory(session_factory=ReadMockSession)
+        input_ = host.file('dummy', 'r')
+        data = input_.readline(3)
+        self.assertEqual(data, 'lin')
+        data = input_.readline(10)
+        self.assertEqual(data, 'e 1\n')
+        data = input_.readline(13)
+        self.assertEqual(data, 'another line\n')
+        data = input_.readline()
+        self.assertEqual(data, 'yet another line')
+        data = input_.readline()
+        self.assertEqual(data, '')
+        input_.close()
+
     def test_ascii_readlines(self):
-        """Use ASCII readline operations to get data."""
+        """Read ASCII text with 'readlines'."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         input_ = host.file('dummy', 'r')
         data = input_.read(3)
@@ -362,7 +362,7 @@ class TestFileOperations(unittest.TestCase):
         input_.close()
 
     def test_ascii_xreadlines(self):
-        """Use an xreadline-like object to retrieve ASCII data."""
+        """Read ASCII text with 'xreadlines'."""
         host = ftp_host_factory(session_factory=ReadMockSession)
         # open file, skip some bytes
         input_ = host.file('dummy', 'r')
