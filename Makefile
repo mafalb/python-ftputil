@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.2 2003/10/10 18:23:19 schwa Exp $
+# $Id: Makefile,v 1.3 2004/01/31 22:17:39 schwa Exp $
 
 
 SHELL=/bin/sh
@@ -45,8 +45,8 @@ test:
 	done
 
 .txt.html:
-	rst2html.sh \
-	--stylesheet-path=/usr/opt/share/docutils/tools/stylesheets/default.css \
+	rst2html.py \
+	--stylesheet-path=/usr/opt/docutils/stylesheets/default.css \
 	--embed-stylesheet $< $@
 
 docs: ${DOC_FILES} README.txt ftputil.txt
