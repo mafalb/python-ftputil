@@ -459,13 +459,14 @@ class FTPHost:
             st_mode = st_mode | stat.S_ISUID
         if metadata[6] == 's':
             st_mode = st_mode | stat.S_ISGID
-        if metadata[0] == 'd':
-            st_mode = st_mode | stat.S_IFDIR
-        elif metadata[0] == 'l':
-            st_mode = st_mode | stat.S_IFLNK
-        #TODO check for other filetypes (c, what else?)
+        char_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
+                        'c': stat.S_IFCHR, '-': stat.S_IFREG}
+        file_type = metadata[0]
+        if char_to_mode.has_key(file_type):
+            st_mode = st_mode | char_to_mode[file_type]
         else:
-            st_mode = st_mode | stat.S_IFREG
+            raise ParserError("unknown file type "
+                  "character '%s'" % file_type)
         # st_ino, st_dev, st_nlink, st_uid, st_gid,
         # st_size, st_atime
         st_ino = None
