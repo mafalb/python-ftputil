@@ -423,7 +423,7 @@ semantics as for local files::
     writelines(string_sequence)
     xreadlines()
 
-and the attribute closed. For details, see the section `File objects`_
+and the attribute ``closed``. For details, see the section `File objects`_
 in the Library Reference.
 
 .. _`file objects`:
