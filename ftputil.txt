@@ -1,7 +1,7 @@
 ``ftputil`` documentation
 =========================
 
-:Version:   2.0 beta 2
+:Version:   2.0 beta 3
 :Date:      2003-10-10
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
