@@ -273,7 +273,7 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        self._session = ftplib.FTP(*args, **kwargs)
+        self._session = self._try(ftplib.FTP, *args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -287,6 +287,12 @@ class FTPHost:
         #  dependent on the server OS but it seems to work
         #  at least with Unix and Windows servers
         self.curdir, self.pardir, self.sep = '.', '..', '/'
+        # check if we have a Microsoft ROBIN server
+        response = self._try(self._session.voidcmd, 'STAT')
+        if response.find('ROBIN Microsoft') != -1:
+            self._parser = self.__parse_robin_line
+        else:
+            self._parser = self.__parse_unix_line
 
     def _copy(self):
         '''Return a copy of this FTPHost object.'''
@@ -358,10 +364,13 @@ class FTPHost:
     def listdir(self, path):
         '''Return a list with directories, files etc. in the
         directory named path.'''
+        path = self.path.abspath(path)
         names = []
-        callback = lambda line: names.append(
-                   self._parse_line(line).st_name )
-        self._try(self._session.dir, dirname, callback)
+        def callback(line):
+            stat_data = self._parse_line(line, fail=0)
+            if stat_data is not None:
+                names.append(stat_data.st_name)
+        self._try(self._session.dir, path, callback)
         return names
 
     def mkdir(self, path, mode=None):
@@ -396,7 +405,7 @@ class FTPHost:
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
-    def __parse_line(self, line):
+    def __parse_unix_line(self, line):
         '''Return _Stat instance corresponding to the given
         text line. Exceptions are caught in _parse_line.'''
         metadata, nlink, user, group, size, month, day, \
@@ -453,16 +462,61 @@ class FTPHost:
         return _Stat( (st_mode, st_ino, st_dev, st_nlink,
                        st_uid, st_gid, st_size, st_atime,
                        st_mtime, st_ctime, st_name) )
+    
+    def __parse_robin_line(self, line):
+        '''Return _Stat instance corresponding to the given
+        text line from a MS ROBIN FTP server. Exceptions are
+        caught in _parse_line.'''
+        date, time_, dir_or_size, name = line.split(None, 3)
+        # st_mode
+        st_mode = 0400   # default to read access only;
+                         #  in fact, we can't tell
+        if dir_or_size == '<DIR>':
+            st_mode = st_mode | stat.S_IFDIR
+        # st_ino, st_dev, st_nlink, st_uid, st_gid
+        st_ino = None
+        st_dev = None
+        st_nlink = None
+        st_uid = None
+        st_gid = None
+        # st_size
+        if dir_or_size != '<DIR>':
+            st_size = int(dir_or_size)
+        else:
+            st_size = None
+        # st_atime
+        st_atime = None
+        # st_mtime
+        month, day, year = map( int, date.split('-') )
+        if year >= 70:
+            year = 1900 + year
+        else:
+            year = 2000 + year
+        hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
+        hour, minute = int(hour), int(minute)
+        if am_pm == 'P':
+            hour = 12 + hour
+        st_mtime = time.mktime( (year, month, day, hour,
+                   minute, 0, 0, 0, 0) )
+        # st_ctime
+        st_ctime = None
+        # st_name
+        st_name = name
+        return _Stat( (st_mode, st_ino, st_dev, st_nlink,
+                       st_uid, st_gid, st_size, st_atime,
+                       st_mtime, st_ctime, st_name) )
           
-    def _parse_line(self, line):
+    def _parse_line(self, line, fail=1):
         '''Return _Stat instance corresponding to the given
         text line.'''
         try:
-            return self.__parse_line(line)
-        except ValueError:
-            # problems with list unpacking or invalid string
-            #  arguments for int()
-            raise FTPOSError("can't parse line '%s'" % line)
+            return self._parser(line)
+        except (ValueError, IndexError):
+            if fail:
+                raise FTPOSError("can't parse line '%s'" % line)
+            else:
+                return None
+        
         
     def lstat(self, path):
         '''Return an object similar to that returned
@@ -470,31 +524,17 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._try( self._session.dir( dirname,
-                   lambda line: lines.append(line) ) )
+        dirname = self.path.abspath(dirname)
+        self._try( self._session.dir, dirname,
+                   lambda line: lines.append(line) )
 #        # example for testing
-        lines = ['total 14',
-'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
-'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
-'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
-'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
-'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
-'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
-'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
-'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
-'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
-'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
-'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
-'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
-        # remove "total" line
-        if lines and lines[0].startswith('total'):
-            lines = lines[1:]
         # search for name to be stat'ed
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
-            stat_data = self._parse_line(line)
-            if stat_data.st_name == basename:
+            stat_data = self._parse_line(line, fail=0)
+            if (stat_data is not None) and \
+              (stat_data.st_name == basename):
                 return stat_data
         raise FTPOSError("no such file or directory: '%s'" %
                          path)
@@ -502,12 +542,16 @@ class FTPHost:
     def stat(self, path):
         '''Return info from a stat call.'''
         stat_ = self.lstat(path)
-        if stat_.islink():
+        if stat.S_ISLNK(stat_.st_mode):
             raise NotImplementedError("how should links be "
                   "handled in ftputil.FTPHost.stat?")
         else:
             return stat_
 
+
+#####################################################################
+# Helper classes _Stat and _Path to imitate behaviour of stat objects
+#  and os.path module contents.
 
 class _Stat(tuple):
     '''Support class resembling a tuple like that which is
@@ -597,4 +641,31 @@ class _Path:
     def walk(self, visit, arg):
         raise NotImplementedError(
              "ftputil._Path.walk is not yet implemented")
+
+# Unix format
+# total 14
+# drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
+# drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
+# drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
+# -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
+# drwxr-sr-x   2 45854    200           512 May 29  2000 os2
+# lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2
+# drwxr-sr-x   2 45854    200           512 Feb 26  2000 private
+# drwxr-sr-x   2 45854    200           512 May 25  2000 publications
+# drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
+# drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2
+# drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp
+# -rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz
+
+# Microsoft ROBIN FTP server
+# 07-04-01  12:57PM       <DIR>          SharePoint_Launch
+# 11-12-01  04:38PM       <DIR>          Solution Sales
+# 06-27-01  01:53PM       <DIR>          SPPS
+# 01-08-02  01:32PM       <DIR>          technet
+# 07-27-01  11:16AM       <DIR>          Test
+# 10-23-01  06:49PM       <DIR>          Wernerd
+# 10-23-01  03:25PM       <DIR>          WindowsXP
+# 12-07-01  02:05PM       <DIR>          XPLaunch
+# 07-17-00  02:08PM             12266720 digidash.exe
+# 07-17-00  02:08PM                89264 O2KKeys.exe
 
