@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.10 2003/06/09 18:16:45 schwa Exp $
+# $Id: ftp_stat.py,v 1.11 2003/06/09 18:29:32 schwa Exp $
 
 import stat
 import sys
@@ -89,6 +89,31 @@ class _Stat:
         stat_results = [ self.parse_line(line) for line in lines ]
         return stat_results
 
+    def _host_dir(self, path):
+        """Return a list of lines, as fetched by FTP's `DIR` command."""
+        return self._host._dir(path)
+
+    def listdir(self, path):
+        """
+        Return a list with directories, files etc. in the directory
+        named path.
+        """
+        host_path = self._host.path
+        # we _can't_ put this check into `_dir`, s. a.
+        path = host_path.abspath(path)
+        if not host_path.isdir(path):
+            raise ftp_error.PermanentError("550 %s: no such directory" % path)
+        lines = self._host_dir(path)
+        names = []
+        for line in lines:
+            try:
+                stat_result = self.parse_line(line)
+            except ftp_error.ParserError:
+                pass
+            else:
+                names.append(stat_result._st_name)
+        return names
+
     def _stat_candidates(self, lines, wanted_name):
         """Return candidate lines for further analysis."""
         # return only lines that contain the name of the file to stat
@@ -111,7 +136,7 @@ class _Stat:
             raise ftp_error.RootDirError(
                   "can't invoke stat for remote root directory")
         dirname, basename = host_path.split(path)
-        lines = self._host._dir(dirname)
+        lines = self._host_dir(dirname)
         # search for name to be stat'ed without parsing the whole
         #  directory listing
         candidates = self._stat_candidates(lines, basename)

@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.125 2003/06/09 18:16:45 schwa Exp $
+# $Id: ftputil.py,v 1.126 2003/06/09 18:29:32 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -520,24 +520,7 @@ class FTPHost:
         return lines
 
     def listdir(self, path):
-        """
-        Return a list with directories, files etc. in the directory
-        named path.
-        """
-        # we _can't_ put this check into `_dir`, s. a.
-        path = self.path.abspath(path)
-        if not self.path.isdir(path):
-            raise ftp_error.PermanentError("550 %s: no such directory" % path)
-        lines = self._dir(path)
-        names = []
-        for line in lines:
-            try:
-                stat_result = self._stat.parse_line(line)
-            except ftp_error.ParserError:
-                pass
-            else:
-                names.append(stat_result._st_name)
-        return names
+        return self._stat.listdir(path)
 
     def lstat(self, path):
         return self._stat.lstat(path)
