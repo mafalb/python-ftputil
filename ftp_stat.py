@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.6 2003/06/09 16:04:49 schwa Exp $
+# $Id: ftp_stat.py,v 1.7 2003/06/09 16:52:57 schwa Exp $
 
 import stat
 import sys
@@ -103,10 +103,16 @@ class _UnixStatParser(_StatParser):
         Return `_Stat` instance corresponding to the given text line.
         If the line can't be parsed, raise a `ParserError`.
         """
-        metadata, nlink, user, group, size, month, day, \
-          year_or_time, name = line.split(None, 8)
+        try:
+            metadata, nlink, user, group, size, month, day, \
+              year_or_time, name = line.split(None, 8)
+        except ValueError:
+            # "unpack list of wrong size"
+            raise ftp_error.ParserError("line '%s' can't be parsed" % line )
         # st_mode
         st_mode = 0
+        if len(metadata) != 10:
+            raise ftp_error.ParserError("invalid metadata '%s'" % metadata)
         for bit in metadata[1:10]:
             bit = (bit != '-')
             st_mode = (st_mode << 1) + bit
@@ -131,7 +137,10 @@ class _UnixStatParser(_StatParser):
         st_size = int(size)
         st_atime = None
         # st_mtime
-        month = self._month_numbers[ month.lower() ]
+        try:
+            month = self._month_numbers[ month.lower() ]
+        except KeyError:
+            raise ftp_error.ParserError("invalid month name '%s'" % month)
         day = int(day)
         if year_or_time.find(':') == -1:
             # `year_or_time` is really a year
@@ -171,7 +180,11 @@ class _MSStatParser(_StatParser):
         from a MS ROBIN FTP server. If the line can't be parsed,
         raise a `ParserError`.
         """
-        date, time_, dir_or_size, name = line.split(None, 3)
+        try:
+            date, time_, dir_or_size, name = line.split(None, 3)
+        except ValueError:
+            # "unpack list of wrong size"
+            raise ftp_error.ParserError("line '%s' can't be parsed" % line )
         # st_mode
         st_mode = 0400   # default to read access only;
                          #  in fact, we can't tell
@@ -187,19 +200,25 @@ class _MSStatParser(_StatParser):
         st_gid = None
         # st_size
         if dir_or_size != '<DIR>':
-            st_size = int(dir_or_size)
+            try:
+                st_size = int(dir_or_size)
+            except ValueError:
+                raise ftp_error.ParserError("invalid size %s" % dir_or_size)
         else:
             st_size = None
         # st_atime
         st_atime = None
         # st_mtime
-        month, day, year = map( int, date.split('-') )
-        if year >= 70:
-            year = 1900 + year
-        else:
-            year = 2000 + year
-        hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
-        hour, minute = int(hour), int(minute)
+        try:
+            month, day, year = map( int, date.split('-') )
+            if year >= 70:
+                year = 1900 + year
+            else:
+                year = 2000 + year
+            hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
+            hour, minute = int(hour), int(minute)
+        except (ValueError, IndexError):
+            raise ftp_error.ParserError("invalid time string '%s'" % time_)
         if am_pm == 'P':
             hour = 12 + hour
         st_mtime = time.mktime( (year, month, day, hour,
