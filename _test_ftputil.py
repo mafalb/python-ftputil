@@ -32,6 +32,8 @@
 import unittest
 import ftputil
 import getpass
+import stat
+import os
 
 
 class Base(unittest.TestCase):
@@ -64,6 +66,18 @@ class TestLoginAndClose(unittest.TestCase):
             pass
         self.failUnless(obj.__class__ is ftputil.FTPOSError)
 
+
+class TestRemoveAndRename(Base):
+    '''Removing and renaming files.'''
+
+    def test_remove(self):
+        '''Test FTPHost.remove.'''
+        pass
+        
+    def test_rename(self):
+        '''Test FTPHost.rename.'''
+        pass
+        
 
 class TestDirectories(Base):
     '''Getting, making, changing, deleting directories.'''
@@ -123,8 +137,43 @@ class TestDirectories(Base):
 
 
 class TestStat(Base):
-    '''Test FTPHost.lstat and FTPHost.stat.'''
-    pass
+    '''Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.'''
+    
+    def setUp(self):
+        Base.setUp(self)
+        host = self.host
+        host.chdir(self.testdir)
+        host.mkdir('__test2')
+        host.upload('ftputil.py', 'ftputil2.py', 'b')
+
+    def tearDown(self):
+        host = self.host
+        host.rmdir('__test2')
+        host.remove('ftputil2.py')
+        Base.tearDown(self)
+        
+    def test_listdir(self):
+        '''Test FTPHost.listdir.'''
+        host = self.host
+        # do we have two files?
+        self.assertEqual( len(host.listdir(host.curdir)), 2 )
+        # have they the expected names?
+        self.failUnless( '__test2' in
+                         host.listdir(host.curdir) )
+        self.failUnless( 'ftputil2.py' in
+                         host.listdir(host.curdir) )
+
+    def test_lstat(self):
+        '''Test FTPHost.lstat.'''
+        host = self.host
+        # test status of __test2
+        stat_result = host.lstat('__test2')
+        self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
+        # check if local and remote sizes are equal
+        local_size = os.path.getsize('ftputil.py')
+        remote_size = host.lstat('ftputil2.py').st_size
+        self.assertEqual(local_size, remote_size)
+        
 
 class TestPath(Base):
     pass
