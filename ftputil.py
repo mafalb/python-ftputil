@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.129 2003/10/04 17:24:47 schwa Exp $
+# $Id: ftputil.py,v 1.130 2003/10/04 17:27:21 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -360,7 +360,7 @@ class FTPHost:
             file_.close()
             # get the modification time of the new file
             try:
-                remote_time = self.path.getmtime(helper_file_name)
+                server_time = self.path.getmtime(helper_file_name)
             except ftp_error.RootDirError:
                 raise ftp_error.TimeShiftError(
                       "can't use root directory for temp file")
@@ -368,7 +368,7 @@ class FTPHost:
             # remove the just written file
             self.unlink(helper_file_name)
         # calculate the difference between server and client
-        time_shift = remote_time - time.time()
+        time_shift = server_time - time.time()
         # do some sanity checks
         self.__assert_valid_time_shift(time_shift)
         # if tests passed, store the time difference as time shift value
