@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.144 2003/10/30 20:00:23 schwa Exp $
+# $Id: ftputil.py,v 1.145 2003/12/28 19:17:29 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -77,12 +77,11 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 """
 
 # TODO
-# (currently nothing)
+# - caching of `FTPHost.stat` results? policy?
 #
 # Ideas for future development:
 # - handle connection timeouts
 # - what about thread safety? (also have a look at `ftplib`)
-# - caching of `FTPHost.stat` results? policy?
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
 # for Python 2.1
@@ -542,8 +541,29 @@ class FTPHost:
         """
         ftp_error._try_with_oserror(self._session.mkd, path)
 
-    def rmdir(self, path):
-        """Remove the directory on the remote host."""
+    def rmdir(self, path, remove_only_empty=True):
+        """
+        Remove the _empty_ directory `path` on the remote host.
+
+        Compatibility note:
+        
+        Previous versions of ftputil simply delegated the `rmdir`
+        call to the FTP server's `RMD` command, thus often allowing
+        to delete non-empty directories. By default, that's no
+        longer possible and should be avoided.
+
+        If you really need the old behaviour, pass in an argument
+        `remove_only_empty=False` and `rmdir` will delegate to the
+        FTP server, as before. Note, however, that deleting non-empty
+        directories may be disallowed in future versions of ftputil.
+        """
+        #XXX Though in a local file system it's forbidden to remove
+        # non-empty directories with `rmdir`, some (most?) FTP servers
+        # allow to delete non-empty directories via their `RMD`
+        # command. See the compatibilty note in the docstring.
+        if remove_only_empty and self.listdir(path):
+            path = self.path.abspath(path)
+            raise ftp_error.PermanentError("directory '%s' not empty" % path)
         ftp_error._try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
