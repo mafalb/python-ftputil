@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.48 2002/03/30 22:11:59 schwa Exp $
+# $Id: _test_ftputil.py,v 1.49 2002/03/30 22:14:53 schwa Exp $
 
 import unittest
 import stat
@@ -193,10 +193,8 @@ class TestPath(unittest.TestCase):
 
 
 class TestFileOperations(unittest.TestCase):
-    """
-    Test operations with file-like objects (including
-    uploads and downloads).
-    """
+    """Test operations with file-like objects."""
+
     def test_caching(self):
         """Test if _FTPFile cache of FTPHost object works."""
         host = ftp_host_factory()
@@ -370,6 +368,10 @@ class TestFileOperations(unittest.TestCase):
         host = ftp_host_factory()
         self.assertRaises(ftputil.FTPIOError, host.file,
                           'notthere', 'r')
+
+
+class TestUploadAndDownload(unittest.TestCase):
+    """Test ascii upload and binary download as examples."""
 
     def test_ascii_upload(self):
         """Test ASCII mode upload."""
