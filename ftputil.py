@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.135 2003/10/04 21:50:13 schwa Exp $
+# $Id: ftputil.py,v 1.136 2003/10/05 17:55:57 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -543,6 +543,9 @@ class FTPHost:
         """Rename the source on the FTP host to target."""
         ftp_error._try_with_oserror(self._session.rename, source, target)
 
+    #XXX one could argue to put this method into the `_Stat` class, but
+    #  I refrained from that because then `_Stat` would have to know
+    #  about `FTPHost`'s `_session` attribute and its `dir` method
     def _dir(self, path):
         """Return a directory listing as made by FTP's `DIR` command."""
         # we can't use `self.path.isdir` in this method because that
@@ -552,7 +555,22 @@ class FTPHost:
         # use `lines=lines` for Python versions which don't support
         #  "nested scopes"
         callback = lambda line, lines=lines: lines.append(line)
-        ftp_error._try_with_oserror(self._session.dir, path, callback)
+        #XXX because of a bug in `ftplib` (or even in FTP servers?),
+        #  the straight-forward code
+        #    ftp_error._try_with_oserror(self._session.dir, path, callback)
+        #  fails if some of the path components but the last contain
+        #  whitespace; therefore, I change the current directory
+        #  before listing in the "last" directory
+        try:
+            # remember old working directory
+            old_dir = self.getcwd()
+            # invoke the listing in the "previous-to-last" directory
+            head, tail = self.path.split(path)
+            self.chdir(head)
+            ftp_error._try_with_oserror(self._session.dir, tail, callback)
+        finally:
+            # try to re-establish the old directory
+            self.chdir(old_dir)
         return lines
 
     def listdir(self, path):
