@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.36 2002/03/30 17:44:11 schwa Exp $
+# $Id: _test_ftputil.py,v 1.37 2002/03/30 17:51:53 schwa Exp $
 
 import unittest
 import stat
@@ -234,40 +234,39 @@ class TestFileOperations(unittest.TestCase):
         """Write binary data to the host and read it back."""
         host = ftp_host_factory()
         data = '\000a\001b\r\n\002c\003\n\004\r\005'
-        expected_data = data
-        file = host.file('dummy', 'wb')
-        file.write(data)
+        output = host.file('dummy', 'wb')
+        output.write(data)
         # must be checked _before_ close
         child_data = host.file_content_for_child(0)
-        file.close()
+        output.close()
+        expected_data = data
         self.assertEqual(child_data, expected_data)
 
     def test_ascii_write(self):
         """Write an ASCII text to the host and check the written file."""
         host = ftp_host_factory()
         data = ' \nline 2\nline 3'
-        expected_data = ' \r\nline 2\r\nline 3'
-        file = host.file('dummy', 'w')
-        file.write(data)
+        output = host.file('dummy', 'w')
+        output.write(data)
         child_data = host.file_content_for_child(0)
-        file.close()
+        output.close()
+        expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
 
-#     def ascii_writelines(self):
-#         """Write data via writelines and read it back."""
-#         host = self.host
-#         local_data = [' \n', 'line 2\n', 'line 3']
-#         # write data in ASCII mode
-#         output = host.file(self.remote_name, 'w')
-#         output.writelines(local_data)
-#         output.close()
-#         # read data back in ASCII mode
-#         input_ = host.file(self.remote_name, 'r')
-#         remote_data = input_.read()
-#         input_.close()
-#         # check data
-#         self.assertEqual( ''.join(local_data), remote_data )
-#
+    def test_ascii_writelines(self):
+        """Write data via writelines and check it."""
+        host = ftp_host_factory()
+        data = [' \n', 'line 2\n', 'line 3']
+        backup_data = data[:]
+        output = host.file('dummy', 'w')
+        output.writelines(data)
+        child_data = host.file_content_for_child(0)
+        output.close()
+        expected_data = ' \r\nline 2\r\nline 3'
+        self.assertEqual(child_data, expected_data)
+        # ensure that the original data was not modified
+        self.assertEqual(data, backup_data)
+
 #
 #     def ascii_read(self):
 #         """Write some ASCII data to the host and use plain
