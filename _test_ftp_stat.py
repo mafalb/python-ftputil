@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.5 2003/06/09 19:25:11 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.6 2003/06/09 19:31:11 schwa Exp $
 
 import stat
 import unittest
@@ -48,15 +48,13 @@ def test_stat():
 
 class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
-        # no `FTPHost` is needed for these tests, so set it to `None`
-        parser = parser_class(None)
+        parser = parser_class( _test_base.ftp_host_factory() )
         for line, expected_stat_result in zip(lines, expected_stat_results):
             stat_result = parser.parse_line(line)
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
-        # no `FTPHost` is needed for these tests, so set it to `None`
-        parser = parser_class(None)
+        parser = parser_class( _test_base.ftp_host_factory() )
         for line in lines:
             self.assertRaises(ftp_error.ParserError, parser.parse_line, line)
 
