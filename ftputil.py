@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.80 2002/04/01 14:31:38 schwa Exp $
+# $Id: ftputil.py,v 1.81 2002/04/01 15:07:39 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -750,11 +750,17 @@ class FTPHost:
 
     def stat(self, path):
         """Return info from a stat call."""
-        stat_result = self.lstat(path)
-        if stat.S_ISLNK(stat_result.st_mode):
-            raise NotImplementedError("following links is not yet implemented")
-        else:
-            return stat_result
+        visited_paths = {}
+        while 1:
+            stat_result = self.lstat(path)
+            if not stat.S_ISLNK(stat_result.st_mode):
+                return stat_result
+            dirname, basename = self.path.split(path)
+            path = self.path.join(dirname, stat_result._st_target)
+            path = self.path.normpath(path)
+            if visited_paths.has_key(path):
+                raise PermanentError("recursive link structure detected")
+            visited_paths[path] = 1
 
 
 #####################################################################
@@ -808,7 +814,7 @@ class _Path:
         return self.normpath(path)
 
     def split(self, path):
-        if path.endswith('/'):
+        if path != '/' and path.endswith('/'):
             path = path[:-1]
         return posixpath.split(path)
 
