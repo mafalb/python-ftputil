@@ -38,8 +38,6 @@ class Base(unittest.TestCase):
     '''Base class for some test classes.'''
 
     def setUp(self):
-        host_name = 'ftp.ndh.net'
-        user = 'sschwarzer'
         self.host = ftputil.FTPHost(host_name, user, password)
         self.testdir = '__test1'
         self.host.mkdir(self.testdir)
@@ -71,7 +69,7 @@ class TestDirectories(Base):
     '''Getting, making, changing, deleting directories.'''
 
     def test_get_change(self):
-        '''Change directory and get the value.'''
+        '''Test getcwd and chdir.'''
         host = self.host
         self.assertEqual( host.getcwd(), self.rootdir )
         host.chdir(self.testdir)
@@ -110,14 +108,22 @@ class TestDirectories(Base):
         # try to remove non-empty directory
         self.assertRaises( ftputil.PermanentError, host.rmdir,
           host.path.join(self.rootdir, '__test2') )
-        # clean up
+        # remove leaf dir __test3
         host.rmdir( host.path.join(self.rootdir, self.testdir,
                     '__test2', '__test3') )
+        # try to remove a dir we are in
+        host.chdir(self.testdir)
+        host.chdir('./__test2')
+        self.assertRaises( ftputil.PermanentError, host.rmdir,
+          host.path.join(self.rootdir, '__test2') )
+        # finally remove __test2
+        host.chdir(self.rootdir)
         host.rmdir( host.path.join(self.rootdir, self.testdir,
                     '__test2') )
 
 
 class TestStat(Base):
+    '''Test FTPHost.lstat and FTPHost.stat.'''
     pass
 
 class TestPath(Base):
@@ -128,7 +134,9 @@ class TestFiles(Base):
 
 
 if __name__ == '__main__':
-    password = getpass.getpass(
-               'Password for sschwarzer@ftp.ndh.net: ')
+    host_name = 'ftp.ndh.net'
+    user = 'sschwarzer'
+    password = getpass.getpass('Password for %s@%s: ' % 
+                               (user, host_name) )
     unittest.main()
 
