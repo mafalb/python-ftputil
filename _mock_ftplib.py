@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.11 2002/03/30 18:46:59 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.12 2002/03/30 21:20:28 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -311,15 +311,25 @@ class MockSession:
 
 DEBUG = 0
 
-# class MockFileObject(StringIO.StringIO):
-#     """
-#     Mock class for the file objects _contained in_ _FTPFile
-#     objects (not for _FTPFile objects themselves!).
-#     """
-#     contents = ''
-# 
-#     def __init__(self, contents, mode='r'):
-        
+class MockFile(StringIO.StringIO):
+    """
+    Mock class for the file objects _contained in_ _FTPFile
+    objects (not for _FTPFile objects themselves!).
+    """
+    def __init__(self, content=''):
+        StringIO.StringIO.__init__(self, content)
+
+    def getvalue(self):
+        if not self.closed:
+            return StringIO.StringIO.getvalue(self)
+        else:
+            return self._value_after_close
+
+    def close(self):
+        if not self.closed:
+            self._value_after_close = StringIO.StringIO.getvalue(self)
+        StringIO.StringIO.close(self)
+            
     
 class MockSocket:
     """
@@ -332,7 +342,7 @@ class MockSocket:
         self.mock_file_content = mock_file_content
 
     def makefile(self, mode):
-        return StringIO.StringIO(self.mock_file_content)
+        return MockFile(self.mock_file_content)
 
     def close(self):
         pass
