@@ -13,8 +13,8 @@ New since version 1.0:
   timestamps)
 - FTPHost.stat follows links
 - a session factory other than the default, ftplib.FTP, can be given
-  in the FTPHost constructor; this allows to use classes like
-  ftpslib.FTP_TLS from the M2Crypto package
+  in the FTPHost constructor; this allows to use classes derived from
+  ftplib.FTP (like ftpslib.FTP_TLS from the M2Crypto package)
 - several bugfixes (mostly regarding byte count in text mode
   transfers)
 - unit test
