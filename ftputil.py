@@ -1,4 +1,4 @@
-# Copyright (C) 2002, Stefan Schwarzer
+# Copyright (C) 2002, Stefan Schwarzer <s.schwarzer@ndh.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -81,6 +81,7 @@ import sys
 import posixpath
 
 __all__ = ['FTPOSError', 'FTPIOError', 'FTPHost']
+__version__ = '1.0'
 
 
 #####################################################################
