@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.34 2004/02/27 23:34:52 schwa Exp $
+# $Id$
 
 import stat
 import sys
