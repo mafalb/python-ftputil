@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.54 2002/03/31 20:36:28 schwa Exp $
+# $Id: _test_ftputil.py,v 1.55 2002/03/31 23:18:06 schwa Exp $
 
 import unittest
 import stat
@@ -88,6 +88,17 @@ class BinaryDownloadMockSession(_mock_ftplib.MockSession):
 
 
 #
+# customized FTPHost class for conditional upload/download tests
+#
+class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
+    def upload(self, source, target, mode=''):
+        assert 0, "FTPHost.upload should not have been called"
+    
+    def download(self, source, target, mode=''):
+        assert 0, "FTPHost.download should not have been called"
+
+
+#
 # factory to produce FTPHost-like classes from a given FTPHost
 #  class and a given MockSession class
 #
@@ -134,14 +145,14 @@ class TestStat(unittest.TestCase):
                           '/home/sschwarzer/notthere')
 
     def test_lstat_one_file(self):
-        """Test FTPHost.lstat with a file."""
+        """Test FTPHost.lstat for a file."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
 
     def test_lstat_one_dir(self):
-        """Test FTPHost.lstat with a directory."""
+        """Test FTPHost.lstat for a directory."""
         # some directory
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/scios2')
@@ -219,7 +230,7 @@ class TestFileOperations(unittest.TestCase):
     """Test operations with file-like objects."""
 
     def test_caching(self):
-        """Test if _FTPFile cache of FTPHost object works."""
+        """Test whether _FTPFile cache of FTPHost object works."""
         host = ftp_host_factory()
         self.assertEqual( len(host._children), 0 )
         path1 = 'path1'
@@ -391,14 +402,17 @@ class TestFileOperations(unittest.TestCase):
 class TestUploadAndDownload(unittest.TestCase):
     """Test ascii upload and binary download as examples."""
 
+    def generate_ascii_file(self, data, filename):
+        """Generate an ASCII data file."""
+        source_file = open(filename, 'w')
+        source_file.write(data)
+        source_file.close()
+        
     def test_ascii_upload(self):
         """Test ASCII mode upload."""
         local_source = '__test_source'
-        # generate file
         data = ascii_data()
-        source_file = open(local_source, 'w')
-        source_file.write(data)
-        source_file.close()
+        self.generate_ascii_file(data, local_source)
         # upload
         host = ftp_host_factory()
         host.upload(local_source, 'dummy')
@@ -422,6 +436,73 @@ class TestUploadAndDownload(unittest.TestCase):
         remote_file_content = _mock_ftplib.content_of('dummy')
         self.assertEqual(data, remote_file_content)
         # clean up
+        os.unlink(local_target)
+
+    def test_conditional_upload(self):
+        """Test conditional ASCII mode upload."""
+        local_source = '__test_source'
+        data = ascii_data()
+        self.generate_ascii_file(data, local_source)
+        # target is newer, so don't upload
+        host = ftp_host_factory(
+               ftp_host_class=FailingUploadAndDownloadFTPHost)
+        host.upload_if_newer(local_source, '/home/newer')
+        # target is older, so upload
+        host = ftp_host_factory()
+        host.upload_if_newer(local_source, '/home/older')
+        # check uploaded content
+        # the data which was uploaded has its line endings converted
+        #  so the conversion must also be applied to 'data'
+        data = data.replace('\n', '\r\n')
+        remote_file_content = _mock_ftplib.content_of('/home/older')
+        self.assertEqual(data, remote_file_content)
+        # target doesn't exist, so upload
+        host = ftp_host_factory()
+        host.upload_if_newer(local_source, '/home/notthere')
+        remote_file_content = _mock_ftplib.content_of('/home/notthere')
+        self.assertEqual(data, remote_file_content)
+        # clean up
+        os.unlink(local_source)
+        
+    def compare_and_delete_downloaded_data(self, filename):
+        """Compare content of downloaded file with its source, then
+        delete the local target file."""
+        data = open(filename, 'rb').read()
+        remote_file_content = _mock_ftplib.content_of('/home/newer')
+        self.assertEqual(data, remote_file_content)
+        # clean up
+        os.unlink(filename)
+
+    def test_conditional_download_without_target(self):
+        "Test conditional binary mode download when no target file exists."
+        local_target = '__test_target'
+        # target does not exist, so download
+        host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
+        host.download_if_newer('/home/newer', local_target, 'b')
+        self.compare_and_delete_downloaded_data(local_target)
+
+    def test_conditional_download_with_older_target(self):
+        """Test conditional binary mode download with newer source file."""
+        local_target = '__test_target'
+        # make target file
+        open(local_target, 'w').close()
+        # source is newer, so download
+        host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
+        host.download_if_newer('/home/newer', local_target, 'b')
+        self.compare_and_delete_downloaded_data(local_target)
+
+    def test_conditional_download_with_newer_target(self):
+        """Test conditional binary mode download with older source file."""
+        local_target = '__test_target'
+        # make target file
+        open(local_target, 'w').close()
+        # source is older, so don't download
+        host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
+        host = ftp_host_factory(
+               ftp_host_class=FailingUploadAndDownloadFTPHost,
+               session_factory=BinaryDownloadMockSession)
+        host.download_if_newer('/home/older', local_target, 'b')
+        # remove target file
         os.unlink(local_target)
 
 
