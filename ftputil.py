@@ -29,9 +29,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#TODO FTPHost.copyfileobj, FTPHost.upload, FTPHost.download
-#TODO _Path.walk
-
 '''
 ftputil - higher level support for FTP sessions
 
@@ -57,6 +54,14 @@ FTPHost objects
     host.rmdir('newdir')
     host.close()
 
+    There are also shortcuts for uploads and downloads:
+    
+    host.upload(local_file, remote_file)
+    host.download(remote_file, local_file)
+    
+    Both accept an additional mode parameter. If it's 'b'
+    the transfer mode will be for binary files.
+    
 FTPFile objects
     FTPFile objects are constructed via the file method of
     FTPHost objects. FTPFile objects support the usual file
@@ -550,7 +555,7 @@ class FTPHost:
         else:
             return stat_
 
-    def copyfileobj(source, target, length=8*1024):
+    def copyfileobj(self, source, target, length=8*1024):
         '''Copy data from file-like object source to file-like
         object target.'''
         # inspired by shutil.copyfileobj (I don't use the
@@ -568,7 +573,7 @@ class FTPHost:
         else:
             return 'r', 'w'
 
-    def upload(self, source, target, mode):
+    def upload(self, source, target, mode=''):
         '''Upload a file from the local source (name) to the
         remote target (name). The argument mode is an empty
         string or 'a' for text copies, or 'b' for binary
@@ -580,7 +585,7 @@ class FTPHost:
         source.close()
         target.close()
 
-    def download(self, source, target, mode):
+    def download(self, source, target, mode=''):
         '''Download a file from the remote source (name) to
         the local target (name). The argument mode is an empty
         string or 'a' for text copies, or 'b' for binary
@@ -682,9 +687,37 @@ class _Path:
     def splitext(self, path):
         return posixpath.splitext(path)
 
-    def walk(self, visit, arg):
-        raise NotImplementedError(
-             "ftputil._Path.walk is not yet implemented")
+    def walk(self, top, func, arg):
+        """Directory tree walk with callback function.
+
+        For each directory in the directory tree roote:sed at top
+        (including top itself, but excluding '.' and '..'), call
+        func(arg, dirname, fnames). dirname is the name of the
+        directory, and fnames a list of the names of the files and
+        subdirectories in dirname (excluding '.' and '..').  func may
+        modify the fnames list in-place (e.g. via del or slice
+        assignment), and walk will only recurse into the
+        subdirectories whose names remain in fnames; this can be used
+        to implement a filter, or to impose a specific order of
+        visiting.  No semantics are defined for, or required of, arg,
+        beyond that arg is always passed to func.  It can be used,
+        e.g., to pass a filename pattern, or a mutable object designed
+        to accumulate statistics.  Passing None for arg is common."""
+        # This code is taken from posixpath.py, with slight
+        #  modifications
+        try:
+            names = self._host.listdir(top)
+        except OSError:
+            return
+        func(arg, top, names)
+        for name in names:
+            name = self.join(top, name)
+            try:
+                st = self._host.lstat(name)
+            except OSError:
+                continue
+            if stat.S_ISDIR(st[stat.ST_MODE]):
+                self.walk(name, func, arg)
 
 # Unix format
 # total 14
