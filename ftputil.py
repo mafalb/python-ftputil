@@ -80,20 +80,6 @@ import posixpath
 
 
 #####################################################################
-# OS-dependent strings, currently not used! (defaulting to Posix)
-
-_unix_strings = ('.', '..', '/', '\n')
-_dos_strings = ('.', '..', '\\', '\r\n')
-_mac_strings = (':', '::', ':', '\r')
-_strings_dict = {'msdos': _dos_strings,
-                 'pcdos': _dos_strings,
-                 'os/2': _dos_strings,
-                 'win32': _dos_strings,
-                 'windows_nt': _dos_strings,
-                 'macos': _mac_strings}
-
-
-#####################################################################
 # Exception class
 
 class FTPOSError(OSError):
@@ -284,7 +270,7 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        #self._session = ftplib.FTP(*args, **kwargs)
+        self._session = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -293,15 +279,11 @@ class FTPHost:
         # associated FTPHost objects for data transfer
         self._children = []
         self.closed = 0
-        # set curdir, pardir etc. for the remote OS
-        self._set_os_strings()
-
-    def _set_os_strings(self):
-        '''Set strings like curdir, pardir etc.'''
-        # system_string = self._try(
-        #                 self._session.voidcmd, 'SYST')
-        # system_string = system_string.split()[1].lower()
-        self.curdir, self.pardir, self.sep = _unix_strings[:3]
+        # set curdir, pardir etc. for the remote host
+        #  RFC 959 states that this is, strictly spoken,
+        #  dependent on the server OS but it seems to work
+        #  at least with Unix and Windows servers
+        self.curdir, self.pardir, self.sep = '.', '..', '/'
 
     def _copy(self):
         '''Return a copy of this FTPHost object.'''
@@ -488,22 +470,22 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        #self._session.dir( dirname,
-        #                   lambda line: lines.append(line) )
-        # example for testing
-        lines = ['total 14',
-'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
-'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
-'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
-'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
-'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
-'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
-'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
-'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
-'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
-'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
-'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
-'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
+        self._session.dir( dirname,
+                           lambda line: lines.append(line) )
+#        # example for testing
+#        lines = ['total 14',
+#'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
+#'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
+#'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
+#'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
+#'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
+#'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
+#'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
+#'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
+#'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
+#'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
+#'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
+#'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
         # remove "total" line
         if lines and lines[0].startswith('total'):
             lines = lines[1:]
