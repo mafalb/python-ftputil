@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.24 2002/03/29 21:51:52 schwa Exp $
+# $Id: _test_ftputil.py,v 1.25 2002/03/29 21:52:43 schwa Exp $
 
 # Ideas for future development:
 #   - Rewrite tests to use mock FTP sessions
@@ -76,58 +76,6 @@ class TestLogin(unittest.TestCase):
         # plain FTPOSError, no derived class
         self.assertRaises(ftputil.FTPOSError, FTPHostWrapper,
                           _mock_ftplib.FailOnLoginSession)
-
-
-class TestDirectories(Base):
-    """Getting, making, changing, deleting directories."""
-
-    def test_getcwd_and_change(self):
-        """Test FTPHost.getcwd and FTPHost.chdir."""
-        host = self.host
-        self.assertEqual( host.getcwd(), self.rootdir )
-        host.chdir(self.testdir)
-        self.assertEqual( host.getcwd(), self.testdir )
-
-    def test_mkdir(self):
-        """Test FTPHost.mkdir."""
-        host = self.host
-        # use invalid directory name (__test2 doesn't exist)
-        self.assertRaises( ftputil.PermanentError, host.mkdir,
-          host.path.join(self.rootdir, '__test2', '__test3') )
-        # this is valid
-        host.mkdir( host.path.join(self.testdir, '__test2') )
-        # repeat first mkdir (now valid)
-        host.mkdir( host.path.join(self.testdir, '__test2',
-                                   '__test3') )
-        # clean up for this test
-        host.rmdir( host.path.join(self.testdir, '__test2',
-                                   '__test3') )
-        host.rmdir( host.path.join(self.testdir, '__test2') )
-
-    def test_rmdir(self):
-        """Test FTPHost.rmdir."""
-        host = self.host
-        # try to remove nonexistent directory
-        self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.testdir, '__test2') )
-        # make two nested directories
-        host.mkdir( host.path.join(self.testdir, '__test2') )
-        host.mkdir( host.path.join(self.testdir, '__test2',
-                                   '__test3') )
-        # try to remove non-empty directory
-        self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.testdir, '__test2') )
-        # remove leaf dir __test3
-        host.rmdir( host.path.join(self.testdir, '__test2',
-                                   '__test3') )
-        # try to remove a dir we are in
-        host.chdir(self.testdir)
-        host.chdir('./__test2')
-        self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.testdir, '__test2') )
-        # finally remove __test2
-        host.chdir(self.rootdir)
-        host.rmdir( host.path.join(self.testdir, '__test2') )
 
 
 class TestStat(Base):
