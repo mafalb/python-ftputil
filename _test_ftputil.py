@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.42 2002/03/30 18:40:23 schwa Exp $
+# $Id: _test_ftputil.py,v 1.43 2002/03/30 18:45:55 schwa Exp $
 
 import unittest
 import stat
@@ -363,15 +363,18 @@ class TestFileOperations(unittest.TestCase):
         # try to read beyond EOF
         self.assertRaises(IndexError, operator.__getitem__,
                           xrl_obj, 3)
+    
+    def test_read_unknown_file(self):
+        """Test whether reading a file which isn't there fails."""
+        host = ftp_host_factory()
+        self.assertRaises(ftputil.FTPIOError, host.file,
+                          'notthere', 'r')
 #
 #     def test_read_from_host(self):
 #         """Test _FTPFile.read*"""
 #         host = self.host
 #         host.chdir(self.testdir)
 #         self.remote_name = '__test.dat'
-#         # try to read a file which isn't there
-#         self.assertRaises(ftputil.FTPIOError, host.file,
-#                           'notthere', 'r')
 #         self.ascii_read()
 #         self.ascii_readline()
 #         self.binary_readline()
