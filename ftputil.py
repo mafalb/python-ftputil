@@ -226,6 +226,8 @@ class FTPHost:
         # copy directory status
         current_dir = self.getcwd()
         host_copy.chdir(current_dir)
+        # we don't need to copy the _file_pool because nobody
+        #  will call the anonymous new host's method file
         return host_copy
         
     def file(self, path, mode='r'):
