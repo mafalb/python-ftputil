@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.93 2002/05/29 11:42:12 schwa Exp $
+# $Id: ftputil.py,v 1.94 2002/05/29 11:50:17 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -397,6 +397,8 @@ class FTPHost:
             response = _try_with_oserror(self._session.voidcmd, 'STAT')
         except PermanentError:
             response = ''
+        #XXX If these servers can be configured to change their directory
+        # output format, we'll need a more sophisticated test.
         if response.find('ROBIN Microsoft') != -1 or \
            response.find('Bliss_Server Microsoft') != -1:
             self._parser = self._parse_ms_line
