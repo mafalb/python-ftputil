@@ -332,11 +332,7 @@ class _FTPFile:
             self.closed = 1
 
     def __del__(self):
-        try:
-            self.close()
-        except:
-            # don't want warnings if constructor had failed
-            pass
+        self.close()
 
 
 ############################################################
@@ -388,7 +384,7 @@ class FTPHost:
         try:
             response = _try_with_oserror(
                        self._session.voidcmd, 'STAT')
-        except FTPOSError:
+        except PermanentError:
             response = ''
         if response.find('ROBIN Microsoft') != -1:
             self._parser = self._parse_robin_line
@@ -458,21 +454,6 @@ class FTPHost:
         '''Change the directory on the host.'''
         _try_with_oserror(self._session.cwd, path)
 
-    def listdir(self, path):
-        '''Return a list with directories, files etc. in the
-        directory named path.'''
-        path = self.path.abspath(path)
-        if not self.path.isdir(path):
-            raise PermanentError(
-                  "550 %s: no such directory" % path)
-        names = []
-        def callback(line):
-            stat_result = self._parse_line(line, fail=0)
-            if stat_result is not None:
-                names.append(stat_result.st_name)
-        _try_with_oserror(self._session.dir, path, callback)
-        return names
-
     def mkdir(self, path, mode=None):
         '''Make the directory path on the remote host. The
         argument mode is ignored and only "supported" for
@@ -495,6 +476,21 @@ class FTPHost:
         '''Rename the src on the FTP host to dst.'''
         _try_with_oserror(self._session.rename, src, dst)
 
+    def listdir(self, path):
+        '''Return a list with directories, files etc. in the
+        directory named path.'''
+        path = self.path.abspath(path)
+        if not self.path.isdir(path):
+            raise PermanentError(
+                  "550 %s: no such directory" % path)
+        names = []
+        def callback(line):
+            stat_result = self._parse_line(line, fail=0)
+            if stat_result is not None:
+                names.append(stat_result.st_name)
+        _try_with_oserror(self._session.dir, path, callback)
+        return names
+
     def _stat_candidates(self, lines, wanted_name):
         '''Return candidate lines for further analysis.'''
         return [line  for line in lines
@@ -514,7 +510,7 @@ class FTPHost:
         st_mode = 0
         for bit in metadata[1:10]:
             bit = (bit != '-')
-            st_mode = 2 * st_mode + bit
+            st_mode = (st_mode << 1) + bit
         if metadata[3] == 's':
             st_mode = st_mode | stat.S_ISUID
         if metadata[6] == 's':
@@ -664,6 +660,22 @@ class FTPHost:
                 break
             target.write(buf)
 
+    #XXX Test this
+    def copyfile(self, src, dst):
+        '''Copy data from src to dst (adapted from
+        shutil.copyfile).'''
+        fsrc = None
+        fdst = None
+        try:
+            fsrc = self.file(src, 'rb')
+            fdst = self.file(dst, 'wb')
+            self.copyfileobj(fsrc, fdst)
+        finally:
+            if fdst:
+                fdst.close()
+            if fsrc:
+                fsrc.close()
+
     def __get_modes(self, mode):
         '''Return modes for source and target file.'''
         if mode == 'b':
@@ -714,7 +726,7 @@ class _Stat(tuple):
         if attr_name in self._index_mapping:
             return self[ self._index_mapping[attr_name] ]
         else:
-            raise AttributeError("'ftputil._Stat' object has "
+            raise AttributeError("'_Stat' object has "
                   "no attribute '%s'" % attr_name)
 
 
