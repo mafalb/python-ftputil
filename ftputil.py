@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.96 2002/10/22 21:01:30 schwa Exp $
+# $Id: ftputil.py,v 1.97 2002/10/22 21:07:53 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -214,7 +214,7 @@ class _FTPFile:
         """Construct the file(-like) object."""
         self._host = host
         self._session = host._session
-        self.closed = 1   # yet closed
+        self.closed = True   # yet closed
 
     def _open(self, path, mode):
         """Open the remote file with given pathname and mode."""
@@ -243,7 +243,7 @@ class _FTPFile:
         # this comes last so that close does not try to
         #  close _FTPFile objects without _conn and _fo
         #  attributes
-        self.closed = 0
+        self.closed = False
 
     #
     # Read and write operations with support for
@@ -347,7 +347,7 @@ class _FTPFile:
             self._fo.close()
             _try_with_ioerror(self._conn.close)
             _try_with_ioerror(self._session.voidresp)
-            self.closed = 1
+            self.closed = True
 
     def __del__(self):
         self.close()
@@ -392,7 +392,7 @@ class FTPHost:
         self.path = _Path(self)
         # associated FTPHost objects for data transfer
         self._children = []
-        self.closed = 0
+        self.closed = False
         # set curdir, pardir etc. for the remote host;
         #  RFC 959 states that this is, strictly spoken,
         #  dependent on the server OS but it seems to work
@@ -560,7 +560,7 @@ class FTPHost:
             # now deal with our-self
             _try_with_oserror(self._session.close)
             self._children = []
-            self.closed = 1
+            self.closed = True
 
     def __del__(self):
         try:
@@ -621,8 +621,8 @@ class FTPHost:
 
     def _stat_candidates(self, lines, wanted_name):
         """Return candidate lines for further analysis."""
-        return [line  for line in lines
-                if line.find(wanted_name) != -1]
+        return [ line  for line in lines
+                 if line.find(wanted_name) != -1 ]
 
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
@@ -848,11 +848,11 @@ class _Path:
     def exists(self, path):
         try:
             self._host.lstat(path)
-            return 1
+            return True
         except RootDirError:
-            return 1
+            return True
         except FTPOSError:
-            return 0
+            return False
 
     def getmtime(self, path):
         return self._host.stat(path).st_mtime
@@ -866,27 +866,27 @@ class _Path:
         try:
             stat_result = self._host.stat(path)
         except RootDirError:
-            return 0
+            return False
         except FTPOSError:
-            return 0
+            return False
         return stat.S_ISREG(stat_result.st_mode)
 
     def isdir(self, path):
         try:
             stat_result = self._host.stat(path)
         except RootDirError:
-            return 1
+            return True
         except FTPOSError:
-            return 0
+            return False
         return stat.S_ISDIR(stat_result.st_mode)
 
     def islink(self, path):
         try:
             stat_result = self._host.lstat(path)
         except RootDirError:
-            return 0
+            return False
         except FTPOSError:
-            return 0
+            return False
         return stat.S_ISLNK(stat_result.st_mode)
 
     def walk(self, top, func, arg):
