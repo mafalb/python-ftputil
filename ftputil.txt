@@ -43,8 +43,8 @@ UserTuple_ class to provide stat_ results with Python 2.1.
 Module contents
 ---------------
 
-Exception hierarchy
-~~~~~~~~~~~~~~~~~~~
+Exceptions
+~~~~~~~~~~
 
 The exceptions are organized as follows::
 
@@ -56,21 +56,27 @@ The exceptions are organized as follows::
         FTPIOError(FTPError)
         RootDirError(FTPError)
 
-**FTPError** is the root of the exception hierarchy of the module.
+and are described here:
 
-**FTPOSError** is derived from ``OSError``. This is for similarity between the
-os module and ``FTPHost`` objects. Compare
+- ``FTPError``
 
-::
+  is the root of the exception hierarchy of the module.
+
+- ``FTPOSError``
+
+  is derived from ``OSError``. This is for similarity between the
+  os module and ``FTPHost`` objects. Compare
+
+  ::
 
     try:
         os.chdir('nonexisting_directory')
     except OSError:
         ...
 
-with
+  with
 
-::
+  ::
 
     host = ftputil.FTPHost('host', 'user', 'password')
     try:
@@ -78,49 +84,57 @@ with
     except OSError:
         ...
 
-Imagine a function
+  Imagine a function
 
-::
+  ::
 
     def func(path, file):
         ...
 
-which works on the local file system and catches ``OSErrors``. If you
-change the parameter list to
+  which works on the local file system and catches ``OSErrors``. If you
+  change the parameter list to
 
-::
+  ::
 
     def func(path, file, os=os):
         ...
 
-where ``os`` denotes the ``os`` module, you can call the function also as
+  where ``os`` denotes the ``os`` module, you can call the function also as
 
-::
+  ::
 
     host = ftputil.FTPHost('host', 'user', 'password')
     func(path, file, os=host)
 
-to use the same code for a local and remote file system. Another
-similarity between ``OSError`` and ``FTPOSError`` is that the latter holds the
-FTP server return code in the errno attribute of the exception object
-and the error text in strerror.
+  to use the same code for a local and remote file system. Another
+  similarity between ``OSError`` and ``FTPOSError`` is that the latter
+  holds the FTP server return code in the ``errno`` attribute of the
+  exception object and the error text in ``strerror``.
 
-**TemporaryError** is raised for FTP return codes from the 4xx category.
-This corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
-``ftplib.error_temp`` are *not* identical).
+- ``TemporaryError``
 
-**PermanentError** is raised for 5xx return codes from the FTP server
-(again, that's similar but *not* identical to ``ftplib.error_perm``).
+  is raised for FTP return codes from the 4xx category. This
+  corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
+  ``ftplib.error_temp`` are *not* identical).
 
-**ParserError** is used for errors during the parsing of directory
-listings from the server. This exception is used by the ``FTPHost``
-methods ``stat``, ``lstat``, and ``listdir``.
+- ``PermanentError``
 
-**FTPIOError** denotes an I/O error on the remote host. This appears
-mainly with file-like objects which are retrieved by invoking
-``FTPHost.file`` (``FTPHost.open`` is an alias). Compare
+  is raised for 5xx return codes from the FTP server
+  (again, that's similar but *not* identical to ``ftplib.error_perm``).
 
-::
+- ``ParserError``
+
+  is used for errors during the parsing of directory
+  listings from the server. This exception is used by the ``FTPHost``
+  methods ``stat``, ``lstat``, and ``listdir``.
+
+- ``FTPIOError``
+
+  denotes an I/O error on the remote host. This appears
+  mainly with file-like objects which are retrieved by invoking
+  ``FTPHost.file`` (``FTPHost.open`` is an alias). Compare
+
+  ::
 
     >>> try:
     ...     f = open('notthere')
@@ -131,9 +145,9 @@ mainly with file-like objects which are retrieved by invoking
     2
     No such file or directory
 
-with
+  with
 
-::
+  ::
 
     >>> host = ftputil.FTPHost('host', 'user', 'password')
     >>> try:
@@ -145,12 +159,14 @@ with
     550
     550 notthere: No such file or directory.
 
-As you can see, both code snippets are similar. (However, the error
-codes aren't the same.)
+  As you can see, both code snippets are similar. (However, the error
+  codes aren't the same.)
 
-**RootDirError** is a special case. Due to the implementation of the
-lstat method it is not possible to do a ``stat`` call  on the root directory
-``/``. If you know *any* way to do it, please let me know. :-)
+- ``RootDirError``
+
+  is a special case. Due to the implementation of the lstat method it
+  is not possible to do a ``stat`` call  on the root directory ``/``. If
+  you know *any* way to do it, please let me know. :-)
 
 ``FTPHost`` objects
 -------------------
@@ -211,6 +227,8 @@ wrapper class::
   959`_ (File Transfer Protocol) notes that these values may be server
   dependent, the Unix counterparts seem to work well in practice,
   even for non-Unix servers.
+
+.. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
 - ``file(path, mode='r')``
 
@@ -342,8 +360,6 @@ wrapper class::
     this case, a ``RootDirError`` is raised. This has to do with the
     algorithm used by ``(l)stat`` and I know of no approach which solves
     this problem.
-
-.. _`RFC 959`: http://www.ietf.org/rfc/rfc959.txt
 
 .. update for other servers
 
