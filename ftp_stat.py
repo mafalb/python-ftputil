@@ -33,9 +33,13 @@
 ftp_stat.py - stat result class for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.3 2003/06/09 12:47:29 schwa Exp $
+# $Id: ftp_stat.py,v 1.4 2003/06/09 15:52:02 schwa Exp $
 
+import stat
 import sys
+import time
+
+import ftp_error
 
 
 if sys.version_info[:2] >= (2, 2):
@@ -86,6 +90,128 @@ class _StatParser:
                          for line in lines ]
         return stat_results
 
+
+class _UnixStatParser(_StatParser):
+    # map month abbreviations to month numbers
+    _month_numbers = {
+      'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
+      'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
+      'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
+
+    def parse_line(self, line):
+        """
+        Return `_Stat` instance corresponding to the given text line.
+        If the line can't be parsed, raise a `ParserError`.
+        """
+        metadata, nlink, user, group, size, month, day, \
+          year_or_time, name = line.split(None, 8)
+        # st_mode
+        st_mode = 0
+        for bit in metadata[1:10]:
+            bit = (bit != '-')
+            st_mode = (st_mode << 1) + bit
+        if metadata[3] == 's':
+            st_mode = st_mode | stat.S_ISUID
+        if metadata[6] == 's':
+            st_mode = st_mode | stat.S_ISGID
+        char_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
+                        'c': stat.S_IFCHR, '-': stat.S_IFREG}
+        file_type = metadata[0]
+        if char_to_mode.has_key(file_type):
+            st_mode = st_mode | char_to_mode[file_type]
+        else:
+            raise ftp_error.ParserError(
+                  "unknown file type character '%s'" % file_type)
+        # st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime
+        st_ino = None
+        st_dev = None
+        st_nlink = int(nlink)
+        st_uid = user
+        st_gid = group
+        st_size = int(size)
+        st_atime = None
+        # st_mtime
+        month = self._month_numbers[ month.lower() ]
+        day = int(day)
+        if year_or_time.find(':') == -1:
+            # `year_or_time` is really a year
+            year, hour, minute = int(year_or_time), 0, 0
+            st_mtime = time.mktime( (year, month, day, hour,
+                       minute, 0, 0, 0, -1) )
+        else:
+            # `year_or_time` is a time hh:mm
+            hour, minute = year_or_time.split(':')
+            year, hour, minute = None, int(hour), int(minute)
+            # try the current year
+            year = time.localtime()[0]
+            st_mtime = time.mktime( (year, month, day, hour,
+                       minute, 0, 0, 0, -1) )
+            if st_mtime > time.time():
+                # if it's in the future, use previous year
+                st_mtime = time.mktime( (year-1, month, day,
+                           hour, minute, 0, 0, 0, -1) )
+        # st_ctime
+        st_ctime = None
+        # st_name
+        if name.find(' -> ') != -1:
+            st_name, st_target = name.split(' -> ')
+        else:
+            st_name, st_target = name, None
+        result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                         st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        result._st_name = st_name
+        result._st_target = st_target
+        return result
+
+
+class _MSStatParser(_StatParser):
+    def parse_line(self, line):
+        """
+        Return `_Stat` instance corresponding to the given text line
+        from a MS ROBIN FTP server. If the line can't be parsed,
+        raise a `ParserError`.
+        """
+        date, time_, dir_or_size, name = line.split(None, 3)
+        # st_mode
+        st_mode = 0400   # default to read access only;
+                         #  in fact, we can't tell
+        if dir_or_size == '<DIR>':
+            st_mode = st_mode | stat.S_IFDIR
+        else:
+            st_mode = st_mode | stat.S_IFREG
+        # st_ino, st_dev, st_nlink, st_uid, st_gid
+        st_ino = None
+        st_dev = None
+        st_nlink = None
+        st_uid = None
+        st_gid = None
+        # st_size
+        if dir_or_size != '<DIR>':
+            st_size = int(dir_or_size)
+        else:
+            st_size = None
+        # st_atime
+        st_atime = None
+        # st_mtime
+        month, day, year = map( int, date.split('-') )
+        if year >= 70:
+            year = 1900 + year
+        else:
+            year = 2000 + year
+        hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
+        hour, minute = int(hour), int(minute)
+        if am_pm == 'P':
+            hour = 12 + hour
+        st_mtime = time.mktime( (year, month, day, hour,
+                   minute, 0, 0, 0, -1) )
+        # st_ctime
+        st_ctime = None
+        result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                         st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        # _st_name and _st_target
+        result._st_name = name
+        result._st_target = None
+        return result
 
 
 # Unix format
