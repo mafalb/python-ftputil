@@ -41,9 +41,10 @@ class Base(unittest.TestCase):
 
     def setUp(self):
         self.host = ftputil.FTPHost(host_name, user, password)
-        self.testdir = '__test1'
-        self.host.mkdir(self.testdir)
         self.rootdir = self.host.getcwd()
+        self.testdir = self.host.path.join(
+                       self.rootdir, '__test1')
+        self.host.mkdir(self.testdir)
 
     def tearDown(self):
         host = self.host
@@ -52,7 +53,7 @@ class Base(unittest.TestCase):
         host.close()
 
 
-class TestLoginAndClose(unittest.TestCase):
+class TestLogin(unittest.TestCase):
     '''Test invalid logins.'''
     
     def test_invalid_login(self):
@@ -72,7 +73,12 @@ class TestRemoveAndRename(Base):
 
     def test_remove(self):
         '''Test FTPHost.remove.'''
-        pass
+        host = self.host
+        # try to remove a directory
+        #host.mkdir( host.path.join(self.testdir, '__test2') )
+        
+        # try to remove a file which is not there
+        # remove a file and check if it's removed
         
     def test_rename(self):
         '''Test FTPHost.rename.'''
@@ -82,13 +88,12 @@ class TestRemoveAndRename(Base):
 class TestDirectories(Base):
     '''Getting, making, changing, deleting directories.'''
 
-    def test_get_change(self):
+    def test_getcwd_and_change(self):
         '''Test getcwd and chdir.'''
         host = self.host
         self.assertEqual( host.getcwd(), self.rootdir )
         host.chdir(self.testdir)
-        self.assertEqual( host.getcwd(),
-          host.path.join(self.rootdir, self.testdir) )
+        self.assertEqual( host.getcwd(), self.testdir )
 
     def test_mkdir(self):
         '''Test FTPHost.mkdir.'''
@@ -97,16 +102,14 @@ class TestDirectories(Base):
         self.assertRaises( ftputil.PermanentError, host.mkdir,
           host.path.join(self.rootdir, '__test2', '__test3') )
         # this is valid
-        host.mkdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2') )
+        host.mkdir( host.path.join(self.testdir, '__test2') )
         # repeat first mkdir (now valid)
-        host.mkdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2', '__test3') )
+        host.mkdir( host.path.join(self.testdir, '__test2',
+                                   '__test3') )
         # clean up for this test
-        host.rmdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2', '__test3') )
-        host.rmdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2') )
+        host.rmdir( host.path.join(self.testdir, '__test2',
+                                   '__test3') )
+        host.rmdir( host.path.join(self.testdir, '__test2') )
 
     def test_rmdir(self):
         '''Test FTPHost.rmdir.'''
@@ -115,25 +118,23 @@ class TestDirectories(Base):
         self.assertRaises( ftputil.PermanentError, host.rmdir,
           host.path.join(self.rootdir, '__test2') )
         # make two nested directories
-        host.mkdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2') )
-        host.mkdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2', '__test3') )
+        host.mkdir( host.path.join(self.testdir, '__test2') )
+        host.mkdir( host.path.join(self.testdir, '__test2',
+                                   '__test3') )
         # try to remove non-empty directory
         self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.rootdir, '__test2') )
+          host.path.join(self.testdir, '__test2') )
         # remove leaf dir __test3
-        host.rmdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2', '__test3') )
+        host.rmdir( host.path.join(self.testdir, '__test2',
+                                   '__test3') )
         # try to remove a dir we are in
         host.chdir(self.testdir)
         host.chdir('./__test2')
         self.assertRaises( ftputil.PermanentError, host.rmdir,
-          host.path.join(self.rootdir, '__test2') )
+          host.path.join(self.testdir, '__test2') )
         # finally remove __test2
         host.chdir(self.rootdir)
-        host.rmdir( host.path.join(self.rootdir, self.testdir,
-                    '__test2') )
+        host.rmdir( host.path.join(self.testdir, '__test2') )
 
 
 class TestStat(Base):
