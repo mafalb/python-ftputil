@@ -74,7 +74,6 @@ Note: ftputil currently is not threadsafe. More specifically,
 '''
 
 import ftplib
-import os
 import stat
 import time
 import sys
@@ -91,7 +90,7 @@ class FTPOSError(OSError):
     '''Error class resembling OSError.'''
 
     def __init__(self, ftp_exception):
-        OSError.__init__( self, str(ftp_exception) )
+        OSError.__init__(self, ftp_exception)
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
@@ -111,25 +110,15 @@ class FTPIOError(IOError):
 #####################################################################
 # Support for file-like objects
 
-# converters for native line ends to normalized ones in Python
-_linesep = os.linesep
-if _linesep == '\n':        # Posix
-    _native_to_python_linesep = \
-                        lambda text: text
-elif _linesep == '\r\n':    # DOS and relatives
-    _native_to_python_linesep = \
-                        lambda text: text.replace('\r', '')
-elif _linesep == '\r':      # Mac
-    _native_to_python_linesep = \
-                        lambda text: text.replace('\r', '\n')
-else:
-    def _native_to_python_linesep(text):
-        raise NotImplementedError("Can't do line ending "
-              "conversion for %s" % _linesep)
+# converter for native line ends to normalized ones in Python;
+#  RFC 959 states that the server will send \r\n on text mode
+#  transfers, so this conversion should be safe
+_native_to_python_linesep = \
+  lambda text: text.replace('\r', '')
 
 # converter for Python line ends into native ones
 _python_to_native_linesep = \
-  lambda text: text.replace('\n', _linesep)
+  lambda text: text.replace('\n', '\r\n')
 
 
 class _FTPFile:
