@@ -33,9 +33,16 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.1 2003/03/16 18:39:33 schwa Exp $
+# $Id: ftp_file.py,v 1.2 2003/03/16 18:46:34 schwa Exp $
 
 import ftp_error
+
+
+# define `True` and `False` if necessary
+try:
+    True, False
+except NameError:
+    True, False = (1 == 1), (1 == 0)
 
 
 # converter for `\r\n` line ends to normalized ones in Python.
