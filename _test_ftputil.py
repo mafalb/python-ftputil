@@ -31,23 +31,44 @@
 
 import unittest
 import ftputil
+import getpass
 
-class TestDirectories(unittest.TestCase):
+
+class Base(unittest.TestCase):
+    '''Base class for some test classes.'''
+
     def setUp(self):
-        self.host_name = 'ftp.ndh.net'
-        self.user = 'sschwarzer'
-        self.password = getpass.getpass(
-                       'Password for sschwarzer@ftp.ndh.net: ')
+        host_name = 'ftp.ndh.net'
+        user = 'sschwarzer'
         self.host = ftputil.FTPHost(host_name, user, password)
         self.testdir = '__test1'
         self.host.mkdir(self.testdir)
-        self.rootdir = host.getcwd()
+        self.rootdir = self.host.getcwd()
 
     def tearDown(self):
         host = self.host
         host.chdir(self.rootdir)
         host.rmdir(self.testdir)
         host.close()
+
+
+class TestLoginAndClose(unittest.TestCase):
+    '''Test invalid logins.'''
+    
+    def test_invalid_login(self):
+        '''Login to invalid host must fail.'''
+        # plain FTPOSError, no derived class
+        self.assertRaises(ftputil.FTPOSError, ftputil.FTPHost,
+          'nonexistent.ho.st.na.me', 'me', 'password')
+        try:
+            ftputil.FTPHost('nonexistent.ho.st.na.me')
+        except ftputil.FTPOSError, obj:
+            pass
+        self.failUnless(obj.__class__ is ftputil.FTPOSError)
+
+
+class TestDirectories(Base):
+    '''Getting, making, changing, deleting directories.'''
 
     def test_get_change(self):
         '''Change directory and get the value.'''
@@ -57,10 +78,11 @@ class TestDirectories(unittest.TestCase):
         self.assertEqual( host.getcwd(),
           host.path.join(self.rootdir, self.testdir) )
 
-class TestStat(unittest.TestCase):
+
+class TestStat(Base):
     pass
 
-class TestPath(unittest.TestCase):
+class TestPath(Base):
     pass
 
 class TestFiles(unittest.TestCase):
@@ -68,5 +90,7 @@ class TestFiles(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    password = getpass.getpass(
+               'Password for sschwarzer@ftp.ndh.net: ')
     unittest.main()
 
