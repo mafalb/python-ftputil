@@ -86,15 +86,29 @@ class _FTPFile:
     FTP host. File and socket are closed appropriately if
     the close operation is requested.'''
 
-    def __init__(self, host, conn, mode):
+    def __init__(self, host, path, mode):
         '''Construct the file(-like) object.'''
-        self._host = host
-        self._conn = conn
-        self._mode = mode
+        # we need only the ftplib.FTP object
+        self._ftplib_host = host._ftplib_host
+        # check mode
+        if '+' in mode:
+            raise FTPIOError("append modes not supported")
+        if mode not in ('r', 'rb', 'w', 'wb'):
+            raise FTPIOError("invalid mode '%s'" % mode)
+        # remember convenience variables instead of mode
         self._binary = 'b' in mode
-        self._writemode = 'w' in mode
+        self._readmode = 'r' in mode
+        # select ASCII or binary mode
+        transfer_type = ('A', 'I')[self._binary]
+        command = 'TYPE %s' % transfer_type
+        self._ftplib_host.voidcmd(command)
+        # make transfer command
+        command_type = ('STOR', 'RETR')[self._readmode]
+        command = '%s %s' % (command_type, path)
+        # get connection and file object
+        self._conn = self._ftplib_host.transfercmd(command)
+        self._fp = self._conn.makefile(mode)
         self.closed = 0
-        self._fp = conn.makefile(mode)
 
     #
     # Read and write operations with support for
@@ -145,7 +159,6 @@ class _FTPFile:
         text mode.'''
         if not self._binary:
             data = _python_to_native_linesep(data)
-        #self._conn.send(data)
         self._fp.write(data)
 
     def writelines(self, lines):
@@ -171,12 +184,11 @@ class _FTPFile:
 
     def close(self):
         '''Close the FTPFile.'''
-        if self.closed:
-            return
-        self._fp.close()
-        self._conn.close()
-        self._host.voidresp()
-        self.closed = 1
+        if not self.closed:
+            self._fp.close()
+            self._conn.close()
+            self._ftplib_host.voidresp()
+            self.closed = 1
 
     def __del__(self):
         # not strictly necessary; file and socket are
@@ -194,7 +206,7 @@ class FTPHost:
         '''Abstract initialization of FTPHost object. At this
         stage I don't know if I need a new FTP connection for
         each file transfer.'''
-        self._host = apply(ftplib.FTP, args, kwargs)
+        self._ftplib_host = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -205,7 +217,7 @@ class FTPHost:
         '''Return a copy of this FTPHost object. This includes
         opening an additional FTP control connection and
         changing to the path which is currently set in self.'''
-        copy = FTPHost(self._args, self._kwargs)
+        copy = FTPHost(*self._args, **self._kwargs)
         current_dir = self.getcwd()
         copy.chdir(current_dir)
         return copy
@@ -213,42 +225,24 @@ class FTPHost:
     def file(self, path, mode='r'):
         '''Return a file(-like) object that is connected to an
         FTP host.'''
-        if '+' in mode:
-            raise FTPIOError("append modes not supported")
-        if mode not in ('r', 'rb', 'w', 'wb'):
-            raise FTPIOError("invalid mode '%s'" % mode)
-        # select ASCII or binary mode
-        transfer_type = ('A', 'I')['b' in mode]
-        command = 'TYPE %s' % transfer_type
-        # this logic taken from ftplib;
-        #  why this strange distinction?
-        if mode == 'r':
-            self._host.voidcmd(command)
-        else:  # rb, w, wb
-            self._host.voidcmd(command)
-        # make transfer command
-        command_type = ('STOR', 'RETR')['r' in mode]
-        command = '%s %s' % (command_type, path)
-        # get connection and file object
-        conn = self._host.transfercmd(command)
-        ftp_file = _FTPFile(self._host, conn, mode)
-        return ftp_file
+        host_copy = self._copy()
+        return _FTPFile(host_copy, path, mode)
 
     def close(self):
         '''Close host connection.'''
-        return self._host.close()
+        return self._ftplib_host.close()
 
     #
     # miscellaneous utility methods resembling those in os
     #
     def getcwd(self):
         '''Return the current path name.'''
-        return self._host.pwd()
+        return self._ftplib_host.pwd()
 
     def chdir(self, path):
         '''Change the directory on the host.'''
         try:
-            self._host.cwd(path)
+            self._ftplib_host.cwd(path)
         except ftplib.error_perm, obj:
             raise FTPOSError(obj)
 
@@ -261,15 +255,15 @@ class FTPHost:
         '''Make the directory path on the remote host. The
         argument mode is ignored and only supported for
         similarity with os.mkdir.'''
-        self._host.mkd(path)
+        self._ftplib_host.mkd(path)
 
     def rmdir(self, path):
         '''Remove the directory on the remote host.'''
-        self._host.rmd(self, path)
+        self._ftplib_host.rmd(self, path)
 
     def remove(self, path):
         '''Remove the given file.'''
-        self._host.delete(path)
+        self._ftplib_host.delete(path)
 
     def unlink(self, path):
         '''Remove the given file.'''
@@ -277,7 +271,7 @@ class FTPHost:
 
     def rename(self, src, dst):
         '''Rename the src on the FTP host to dst.'''
-        self._host.rename(src, dst)
+        self._ftplib_host.rename(src, dst)
 
     def _stat_candidates(self, lines, wanted_name):
         '''Return candidate lines for further analysis.
@@ -305,8 +299,8 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._host.dir( dirname,
-                        lambda line: lines.append(line) )
+        self._ftplib_host.dir(
+          dirname, lambda line: lines.append(line) )
         # search for name to be stat'ed
         candidates = self._stat_candidates(lines, basename)
         # scan candidates
