@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.56 2002/03/31 23:20:35 schwa Exp $
+# $Id: _test_ftputil.py,v 1.57 2002/04/01 13:58:28 schwa Exp $
 
 import unittest
 import stat
@@ -93,7 +93,7 @@ class BinaryDownloadMockSession(_mock_ftplib.MockSession):
 class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
     def upload(self, source, target, mode=''):
         assert 0, "FTPHost.upload should not have been called"
-    
+
     def download(self, source, target, mode=''):
         assert 0, "FTPHost.download should not have been called"
 
@@ -120,10 +120,10 @@ class TestOpenAndClose(unittest.TestCase):
         host.close()
         self.assertEqual(host.closed, 1)
         self.assertEqual(host._children, [])
-    
+
 
 class TestLogin(unittest.TestCase):
-    
+
     def test_invalid_login(self):
         """Login to invalid host must fail."""
         self.assertRaises(ftputil.FTPOSError, ftp_host_factory,
@@ -145,15 +145,16 @@ class TestStat(unittest.TestCase):
                           '/home/sschwarzer/notthere')
 
     def test_lstat_one_file(self):
-        """Test FTPHost.lstat for a file."""
+        """Test lstat for a file."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
+        self.assertEqual(stat_result.st_name, 'index.html')
+        self.assertEqual(stat_result.st_target, None)
 
     def test_lstat_one_dir(self):
-        """Test FTPHost.lstat for a directory."""
-        # some directory
+        """Test lstat for a directory."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
@@ -167,13 +168,19 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         self.assertEqual(stat_result.st_ctime, None)
         self.assertEqual(stat_result.st_name, 'scios2')
+        self.assertEqual(stat_result.st_target, None)
 
     def test_lstat_via_stat_module(self):
-        """Test FTPHost.lstat indirectly via stat module."""
+        """Test lstat indirectly via stat module."""
         host = ftp_host_factory()
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
+#     def test_stat_following_link(self):
+#         """Test stat when invoked on a link."""
+#         host = ftp_host_factory()
+#         stat_result = host.lstat('/home/a_link')
+#         self.failUnless(stat_result.st_name, 
 
 class TestListdir(unittest.TestCase):
     """Test FTPHost.listdir."""
@@ -407,7 +414,7 @@ class TestUploadAndDownload(unittest.TestCase):
         source_file = open(filename, 'w')
         source_file.write(data)
         source_file.close()
-        
+
     def test_ascii_upload(self):
         """Test ASCII mode upload."""
         local_source = '__test_source'
@@ -463,7 +470,7 @@ class TestUploadAndDownload(unittest.TestCase):
         self.assertEqual(data, remote_file_content)
         # clean up
         os.unlink(local_source)
-        
+
     def compare_and_delete_downloaded_data(self, filename):
         """Compare content of downloaded file with its source, then
         delete the local target file."""
