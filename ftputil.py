@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.118 2003/06/08 19:44:32 schwa Exp $
+# $Id: ftputil.py,v 1.119 2003/06/08 19:47:13 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -76,6 +76,11 @@ Note: ftputil currently is not threadsafe. More specifically, you can
       using a single `FTPHost` object in different threads.
 """
 
+# TODO
+# - move "stat stuff" into an own module `ftp_stat.py`
+# - fix defects regarding timeshift/stat calculations
+# - package ftputil for distutils
+#
 # Ideas for future development:
 # - handle connection timeouts
 # - what about thread safety? (also have a look at `ftplib`)
