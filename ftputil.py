@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.158 2004/07/12 21:15:34 schwa Exp $
+# $Id: ftputil.py,v 1.159 2004/07/12 22:01:46 schwa Exp $
 
 """
 ftputil - high-level FTP client library
@@ -266,17 +266,22 @@ class FTPHost:
             self._children.append(host)
             host._file = ftp_file._FTPFile(host)
         basedir = self.getcwd()
+        # prepare for changing the directory (see whitespace workaround
+        #  in method `_dir`)
+        if host.path.isabs(path):
+            effective_path = path
+        else:
+            effective_path = host.path.join(basedir, path)
+        effective_dir, effective_file = host.path.split(effective_path)
         try:
-            host.chdir(basedir)
+            # this will fail if we can't access the directory at all
+            host.chdir(effective_dir)
         except ftp_error.PermanentError:
-            # this might happen if we are in the login directory and
-            #  it's not accessible (otherwise, the current directory must
-            #  be accessible because we got there somehow)
             # similarly to a failed `file` in a local filesystem, we
             #  raise an `IOError`, not an `OSError`
-            raise ftp_error.FTPIOError("login directory '%s' not accessible" %
-                                       basedir)
-        host._file._open(path, mode)
+            raise ftp_error.FTPIOError("directory '%s' is not accessible" %
+                                       effective_dir)
+        host._file._open(effective_file, mode)
         return host._file
 
     def open(self, path, mode='r'):
