@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.20 2003/10/04 21:45:06 schwa Exp $
+# $Id: ftp_stat.py,v 1.21 2003/10/05 17:09:59 schwa Exp $
 
 import stat
 import sys
@@ -259,8 +259,15 @@ class _UnixStat(_Stat):
             # rhs of comparison: transform client time to server time
             #  (as on the lhs), so both can be compared with respect
             #  to the set time shift (see the definition of the time
-            #  shift in `FTPHost.set_time_shift`'s docstring)
-            if st_mtime > time.time() + self._host.time_shift():
+            #  shift in `FTPHost.set_time_shift`'s docstring); the
+            #  last addend allows for small deviations between the
+            #  supposed (rounded) and the actual time shift
+            # #XXX the downside of this "correction" is that there is
+            #  a one-minute time interval excatly one year ago that
+            #  may cause that datetime to be recognized as the current
+            #  datetime, but after all the datetime from the server
+            #  can only be exact up a minute
+            if st_mtime > time.time() + self._host.time_shift() + 60.0:
                 # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, -1) )
