@@ -177,8 +177,8 @@ class _FTPFile:
     def _open(self, path, mode):
         '''Open the remote file with given pathname and mode.'''
         # check mode
-        if '+' in mode:
-            raise FTPIOError("append modes not supported")
+        if 'a' in mode:
+            raise FTPIOError("append mode not supported")
         if mode not in ('r', 'rb', 'w', 'wb'):
             raise FTPIOError("invalid mode '%s'" % mode)
         # remember convenience variables instead of mode
@@ -191,6 +191,10 @@ class _FTPFile:
         # make transfer command
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
+        # ensure we can process the raw line separators;
+        #  force to binary regardless of transfer type
+        if not 'b' in mode:
+            mode = mode + 'b'
         # get connection and file object
         self._conn = _try_with_ioerror(
                      self._session.transfercmd, command)
@@ -233,6 +237,8 @@ class _FTPFile:
             # print 'not enough bytes (now %s, wanting %s)' % \
             #       (current_size, wanted_size)
             more_data = self._fo.read(wanted_size-current_size)
+            if not more_data:
+                break
             more_data = _crlf_to_python_linesep(more_data)
             # print '-> new (normalized) data:', \
             #       repr(more_data)
@@ -246,6 +252,9 @@ class _FTPFile:
         data = self._fo.readline(*args)
         if self._binmode:
             return data
+        # eventually complete begun newline
+        if data and data[-1] == '\r':
+            data = data + self.read(1)
         return _crlf_to_python_linesep(data)
 
     def readlines(self, *args):
