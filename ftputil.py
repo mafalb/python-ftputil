@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.88 2002/04/02 09:10:51 schwa Exp $
+# $Id: ftputil.py,v 1.89 2002/04/03 21:49:42 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -122,6 +122,7 @@ class FTPError:
     def __str__(self):
         return self.strerror
 
+class RootDirError(FTPError): pass
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
@@ -732,11 +733,16 @@ class FTPHost:
                 return None
 
     def lstat(self, path):
-        """Return an object similar to that returned by os.stat."""
+        """Return an object similar to that returned by os.lstat."""
         # get output from DIR
         lines = []
+        path = self.path.abspath(path)
+        # Note: (l)stat works by going one directory up and parsing
+        #  the output of an FTP DIR command. Unfortunately, it is not
+        #  possible to to this for the root directory / .
+        if path == '/':
+            raise RootDirError("can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
-        dirname = self.path.abspath(dirname)
         _try_with_oserror( self._session.dir, dirname,
                            lambda line: lines.append(line) )
         # search for name to be stat'ed without full parsing
@@ -815,13 +821,13 @@ class _Path:
         return self.normpath(path)
 
     def split(self, path):
-        if path != '/' and path.endswith('/'):
-            path = path[:-1]
         return posixpath.split(path)
 
     def exists(self, path):
         try:
             self._host.lstat(path)
+            return 1
+        except RootDirError:
             return 1
         except FTPOSError:
             return 0
@@ -837,6 +843,8 @@ class _Path:
     def isfile(self, path):
         try:
             stat_result = self._host.stat(path)
+        except RootDirError:
+            return 0
         except FTPOSError:
             return 0
         return stat.S_ISREG(stat_result.st_mode)
@@ -844,6 +852,8 @@ class _Path:
     def isdir(self, path):
         try:
             stat_result = self._host.stat(path)
+        except RootDirError:
+            return 1
         except FTPOSError:
             return 0
         return stat.S_ISDIR(stat_result.st_mode)
@@ -851,6 +861,8 @@ class _Path:
     def islink(self, path):
         try:
             stat_result = self._host.lstat(path)
+        except RootDirError:
+            return 0
         except FTPOSError:
             return 0
         return stat.S_ISLNK(stat_result.st_mode)
