@@ -29,10 +29,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.153 2004/03/08 21:20:25 schwa Exp $
+# $Id: ftputil.py,v 1.154 2004/04/18 18:49:35 schwa Exp $
 
 """
-ftputil - higher level support for FTP sessions
+ftputil - high-level FTP client library
 
 FTPHost objects
     This class resembles the `os` module's interface to ordinary file
@@ -98,7 +98,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0.1'
+__version__ = '2.0.2'
 
 
 #####################################################################
