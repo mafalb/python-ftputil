@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.29 2003/10/30 19:49:53 schwa Exp $
+# $Id: ftp_stat.py,v 1.30 2003/10/30 19:51:09 schwa Exp $
 
 import stat
 import sys
@@ -93,8 +93,7 @@ class _Stat:
         line in the list `lines`. The order of the returned list
         corresponds to the order in the `lines` argument.
         """
-        stat_results = [ self.parse_line(line) for line in lines ]
-        return stat_results
+        return [self.parse_line(line) for line in lines]
 
     def _host_dir(self, path):
         """
@@ -291,7 +290,7 @@ class _UnixStat(_Stat):
             #  a one-minute time interval excatly one year ago that
             #  may cause that datetime to be recognized as the current
             #  datetime, but after all the datetime from the server
-            #  can only be exact up a minute
+            #  can only be exact up to a minute
             if st_mtime > time.time() + self._host.time_shift() + 60.0:
                 # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
