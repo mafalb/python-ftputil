@@ -47,7 +47,8 @@ results with Python versions 2.0 and 2.1.
 Exceptions
 ----------
 
-The exceptions are organized as follows::
+The exceptions are in the namespace of the ``ftputil`` package (e. g.
+``ftputil.TemporaryError``). They are organized as follows::
 
     FTPError
         FTPOSError(FTPError, OSError)
