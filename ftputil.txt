@@ -249,13 +249,15 @@ Attributes
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
+.. _`time shift`:
+
 Time zone correction
 ,,,,,,,,,,,,,,,,,,,,
 
-.. _`time shift`:
 .. _`set_time_shift`:
 
 - ``set_time_shift(time_shift)``
+
   sets the so-called time shift value (measured in seconds). The time
   shift is the difference between the local time of the server and the
   local time of the client at a given moment, i. e. by definition
@@ -277,12 +279,14 @@ Time zone correction
   simple method call.
 
 - ``time_shift()``
+
   return the currently-set time shift value. See ``set_time_shift``
   (above) for its definition.
 
 .. _`synchronize_times`:
 
 - ``synchronize_times()``
+
   synchronizes the local times of the server and the client, so that
   `upload_if_newer`_ and `download_if_newer`_ work as expected, even
   if the client and the server are in different time zones. For this
@@ -441,7 +445,7 @@ format, which mostly succeeds. However, if you get strange results
       -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
 
   use "unix" as the argument.
-  
+
   If the output looks like
 
   ::
@@ -579,17 +583,22 @@ section `FTPHost construction`_.
 You can use the same approach to connect in active or passive mode, as
 you like.
 
-Conditional upload and download to/from a server in a different time zone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Using active or passive connections
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please see the previous tip.
+
+Conditional upload/download to/from a server in a different time zone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You may find that ``ftputil`` uploads or downloads files
-unnecessarily. This can occur when the FTP server is in a different
-time zone than the client on which ``ftputil`` runs. Please see the
-the section on setting the `time shift`_. It may even be sufficient to
-call `synchronize_times`_.
+unnecessarily, or not when it should. This can occur when the FTP
+server is in a different time zone than the client on which
+``ftputil`` runs. Please see the the section on setting the
+`time shift`_. It may even be sufficient to call `synchronize_times`_.
 
-Wrong dates or times when stat'ing on a server in a different time zone
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Wrong dates or times when stat'ing on a server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Please see the previous and the next tip.
 
@@ -617,7 +626,7 @@ Bugs and limitations
   can do this, please let me know. The root directory is handled
   appropriately in ``FTPHost.path.exists/isfile/isdir/islink``, though.
 
-- Timeouts of individual child sessions currently are not handled yet.
+- Timeouts of individual child sessions currently are not handled.
   This is only a problem if your ``FTPHost`` object or the generated
   ``FTPFile`` objects are inactive for about ten minutes or longer.
 
@@ -627,8 +636,8 @@ Bugs and limitations
 
 - ``FTPFile`` objects in text mode *may not* support charsets with more
   than one byte per character. Please email me your experiences
-  (address below), if you have to work with multibyte text streams in
-  FTP sessions.
+  (address below), if you work with multibyte text streams in FTP
+  sessions.
 
 - Currently, it is not possible to continue an interrupted upload or
   download. Contact me if you have problems with that.
@@ -646,8 +655,8 @@ reside in the ``ftputil`` package. The documentation (in
 .. _`reStructured Text`: http://docutils.sourceforge.net/rst.html
 
 The files ``_test_*.py`` and ``_mock_ftplib.py`` are for unit-testing.
-If you only *use* ``ftputil`` (and not modifying it), you can delete
-these files.
+If you only *use* ``ftputil`` (i. e. *not* modifying it), you can
+delete these files.
 
 References
 ----------
