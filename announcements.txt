@@ -6,7 +6,7 @@ almost as if they were in your local file system. This includes using
 file-like objects representing remote files.
 
 For future releases see
-http://www.sschwarzer.net/python/python_software.html#ftputil
+http://www.sschwarzer.net/python/python_software.html
 or subscribe to the mailing list at
 http://codespeak.net/mailman/listinfo/ftputil
 
