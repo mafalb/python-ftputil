@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.13 2003/12/30 21:05:09 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.14 2004/01/01 21:31:56 schwa Exp $
 
 from __future__ import division
 
@@ -48,23 +48,26 @@ def test_stat():
     stat = ftp_stat._UnixStat(host)
     return stat
 
-def time_offset():
+def stat_tuple_to_seconds(t):
     """
-    Return the difference between local time and GMT as a number
-    of seconds, rounded to full hours.
+    Return a float number representing the local time associated with
+    the six-element tuple `t`.
     """
-    local_time, gm_time = time.localtime(), time.gmtime()
-    offset = time.mktime(local_time) - time.mktime(gm_time)
-    # round to full hours
-    hour = 60 * 60
-    return (offset + hour//2) // hour * hour
-        
+    assert len(t) == 6, \
+           "need a six-element tuple (year, month, day, hour, min, sec)"
+    return time.mktime(t + (0, 0, -1))
+
 
 class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
         parser = parser_class(_test_base.ftp_host_factory())
         for line, expected_stat_result in zip(lines, expected_stat_results):
-            stat_result = parser.parse_line(line)
+            # convert to list to compare with the list expected_stat_results
+            stat_result = list(parser.parse_line(line))
+            # convert time tuple to seconds
+            expected_stat_result[8] = \
+              stat_tuple_to_seconds(expected_stat_result[8])
+            # compare both lists
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
@@ -81,13 +84,15 @@ class TestStatParsers(unittest.TestCase):
           "lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> "
                                                                   "../os2"
           ]
-        o = time_offset()
         expected_stat_results = [
-          (17901, None, None, 2, '45854', '200', 512, None, 957387600+o, None),
-          (33188, None, None, 1, '45854', '200', 4604, None, 1071868260+o,
-           None),
-          (17901, None, None, 2, '45854', '200', 512, None, 959547600+o, None),
-          (41471, None, None, 2, '45854', '200', 512, None, 959547600+o, None)
+          [17901, None, None, 2, '45854', '200', 512, None,
+           (2000, 5, 4, 0, 0, 0), None],
+          [33188, None, None, 1, '45854', '200', 4604, None,
+           (2003, 12, 19, 23, 11, 0), None],
+          [17901, None, None, 2, '45854', '200', 512, None,
+           (2000, 5, 29, 0, 0, 0), None],
+          [41471, None, None, 2, '45854', '200', 512, None,
+           (2000, 5, 29, 0, 0, 0), None]
           ]
         self._test_valid_lines(ftp_stat._UnixStat, lines, expected_stat_results)
 
@@ -107,12 +112,13 @@ class TestStatParsers(unittest.TestCase):
           "10-23-95  03:25PM       <DIR>          WindowsXP",
           "07-17-00  02:08PM             12266720 test.exe"
           ]
-        o = time_offset()
         expected_stat_results = [
-          (16640, None, None, None, None, None, None, None, 996221760+o, None),
-          (16640, None, None, None, None, None, None, None, 814454700+o, None),
-          (33024, None, None, None, None, None, 12266720, None, 963832080+o,
-           None)
+          [16640, None, None, None, None, None, None, None,
+           (2001, 7, 27, 11, 16, 0), None],
+          [16640, None, None, None, None, None, None, None,
+           (1995, 10, 23, 15, 25, 0), None],
+          [33024, None, None, None, None, None, 12266720, None,
+           (2000, 7, 17, 14, 8, 0), None]
           ]
         self._test_valid_lines(ftp_stat._MSStat, lines, expected_stat_results)
 
@@ -242,11 +248,12 @@ class TestLstatAndStat(unittest.TestCase):
         self.assertEqual(stat_result.st_gid, '200')
         self.assertEqual(stat_result.st_size, 512)
         self.assertEqual(stat_result.st_atime, None)
-        o = time_offset()
-        self.failUnless(stat_result.st_mtime == 937774800+o)
+        self.failUnless(stat_result.st_mtime ==
+                        stat_tuple_to_seconds((1999, 9, 20, 0, 0, 0)))
         self.assertEqual(stat_result.st_ctime, None)
-        self.failUnless(stat_result == (17901, None, None, 6, '45854', '200',
-                                        512, None, 937774800+o, None))
+        self.failUnless(stat_result ==
+          (17901, None, None, 6, '45854', '200', 512, None,
+           stat_tuple_to_seconds((1999, 9, 20, 0, 0, 0)), None))
 
     def test_lstat_via_stat_module(self):
         """Test `lstat` indirectly via `stat` module."""
