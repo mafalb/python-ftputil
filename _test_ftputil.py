@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.35 2002/03/30 17:37:29 schwa Exp $
+# $Id: _test_ftputil.py,v 1.36 2002/03/30 17:44:11 schwa Exp $
 
 import unittest
 import stat
@@ -240,22 +240,19 @@ class TestFileOperations(unittest.TestCase):
         # must be checked _before_ close
         child_data = host.file_content_for_child(0)
         file.close()
-        self.assertEqual(data, expected_data)
+        self.assertEqual(child_data, expected_data)
 
-#     def ascii_write(self):
-#         """Write an ASCII text to the host and check the written file."""
-#         host = self.host
-#         local_data = ' \nline 2\nline 3'
-#         # write data in ASCII mode
-#         self.write_test_data(local_data, 'w')
-#         # read data back in binary mode
-#         input_ = host.file(self.remote_name, 'rb')
-#         remote_data = input_.read()
-#         input_.close()
-#         # expect the same data as above if we have a
-#         #  Unix FTP server
-#         self.assertEqual(local_data, remote_data)
-#
+    def test_ascii_write(self):
+        """Write an ASCII text to the host and check the written file."""
+        host = ftp_host_factory()
+        data = ' \nline 2\nline 3'
+        expected_data = ' \r\nline 2\r\nline 3'
+        file = host.file('dummy', 'w')
+        file.write(data)
+        child_data = host.file_content_for_child(0)
+        file.close()
+        self.assertEqual(child_data, expected_data)
+
 #     def ascii_writelines(self):
 #         """Write data via writelines and read it back."""
 #         host = self.host
