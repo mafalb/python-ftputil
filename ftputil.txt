@@ -359,8 +359,17 @@ Files and directories
 
 - ``rmdir(path)``
 
-  removes the given remote directory. Currently, "intermediate"
-  directories can't be deleted (as with ``os.rmdir``).
+  removes the given remote directory.
+
+  In previous versions of ``ftputil``, it depended on the remote
+  server whether non-empty directories could be deleted. ``ftputil``
+  version 2.0 and up by default allow only to delete empty
+  directories.
+
+  If you want to update to ``ftputil`` 2.0 with minimal changes
+  to your source code, pass in an additional parameter
+  ``_remove_only_empty=False``. Note that this is deprecated and
+  will probably be unsupported in future ``ftputil`` versions.
 
 - ``remove(path)``
 
