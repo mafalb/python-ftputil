@@ -34,7 +34,7 @@ import ftputil
 import getpass
 import stat
 import os
-import sys
+import time
 
 
 class Base(unittest.TestCase):
@@ -230,6 +230,46 @@ class TestPath(Base):
         host.remove('ftputil2.py')
         host.chdir(self.rootdir)
         
+    def test_getmtime(self):
+        '''Test FTPHost._Path.getmtime.'''
+        host = self.host
+        host.chdir(self.testdir)
+        # test a directory
+        local_time = time.time()
+        host.mkdir('__test2')
+        remote_mtime = host.path.getmtime('__test2')
+        #  accept a difference of up to 30 seconds
+        self.failIf(remote_mtime-local_time >= 30)
+        # test a file
+        local_time = time.time()
+        host.upload('ftputil.py', 'ftputil2.py', 'b')
+        remote_mtime = host.path.getmtime('ftputil2.py')
+        #  accept a difference of up to 30 seconds
+        self.failIf(remote_mtime-local_time >= 30)
+        # clean up
+        host.rmdir('__test2')
+        host.remove('ftputil2.py')
+        host.chdir(self.rootdir)
+
+    def test_getsize(self):
+        '''Test FTPHost._Path.getsize.'''
+        host = self.host
+        host.chdir(self.testdir)
+        # test a directory
+        host.mkdir('__test2')
+        remote_size = host.path.getsize('__test2')
+        empty_dir_size = 512
+        self.assertEqual(remote_size, empty_dir_size)
+        # test a file
+        host.upload('ftputil.py', 'ftputil2.py', 'b')
+        local_size = os.path.getsize('ftputil.py')
+        remote_size = host.path.getsize('ftputil2.py')
+        self.assertEqual(local_size, remote_size)
+        # clean up
+        host.rmdir('__test2')
+        host.remove('ftputil2.py')
+        host.chdir(self.rootdir)
+        
 
 class TestFileOperations(Base):
     pass
@@ -241,5 +281,4 @@ if __name__ == '__main__':
     password = getpass.getpass('Password for %s@%s: ' % 
                                (user, host_name) )
     unittest.main()
-
 
