@@ -152,6 +152,32 @@ session_factory are passed to the factory to generate a new background
 session (which happens for every remote file that is opened; see
 below).
 
+This functionality of the constructor also allows to wrap ftplib.FTP
+objects to do something that wouldn't be possible with the ftplib.FTP
+constructor alone.
+
+As an example, assume you want to connect to another than the default
+port but ftplib.FTP only offers this by means of its `connect`
+method, but not via its constructor. The solution is to provide a
+wrapper class:
+
+-----
+import ftplib
+import ftputil
+
+class MySession(ftplib.FTP):
+    def __init__(self, host, userid, password, port):
+        """Act like ftplib.FTP's constructor but connect to port x."""
+        ftplib.FTP.__init__(self)
+        self.connect(host, port)
+        self.login(userid, password)
+
+# try not to use MySession() as factory, - use the class itself
+host = ftputil.FTPHost(host, userid, password,
+                       port=PORT, session_factory=MySession)
+# use `host` as usual
+-----
+
 FTPHost attributes and methods
 ------------------------------
 
