@@ -29,20 +29,17 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.27 2002/03/29 23:18:10 schwa Exp $
-
-# Ideas for future development:
-#   - Rewrite tests to use mock FTP sessions
-#     (see http://www.mockobjects.com)
+# $Id: _test_ftputil.py,v 1.28 2002/03/30 15:10:27 schwa Exp $
 
 import unittest
-import ftputil
-import getpass
 import stat
 import os
 import time
 import operator
+
+import ftputil
 import _mock_ftplib
+
 
 class FTPHostWrapper(ftputil.FTPHost):
     def __init__(self, session_factory):
@@ -65,31 +62,31 @@ class TestStat(unittest.TestCase):
     def test_lstat(self):
         """Test FTPHost.lstat."""
         # check if stat results are correct
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
-        stat_result = host.lstat('/absolute/path/index.html')
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
-        stat_result = host.lstat('/absolute/path/scios2')
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        stat_result = host.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
         self.assertEqual(stat_result.st_size, 512)
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         # test status indirectly via stat module
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
-        stat_result = host.lstat('/absolute/path')
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
     def test_listdir(self):
         """Test FTPHost.listdir."""
         # try to list a path which isn't there
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
         self.assertRaises(ftputil.PermanentError,
                           host.listdir, 'notthere')
         # do we have all expected "files"?
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
         self.assertEqual( len(host.listdir(host.curdir)), 9 )
         # have they the expected names?
-        host = FTPHostWrapper(_mock_ftplib.StatTest)
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
         expected = ('chemeng download image index.html os2 '
                     'osup publications python scios2').split()
         remote_file_list = host.listdir(host.curdir)
@@ -97,71 +94,35 @@ class TestStat(unittest.TestCase):
             self.failUnless(file in remote_file_list)
 
 
-# class TestPath(Base):
-#     """Test operations in FTPHost.path."""
-#
-#     def test_isdir_isfile_islink(self):
-#         """Test FTPHost._Path.isdir/isfile/islink."""
-#         host = self.host
-#         host.chdir(self.testdir)
-#         # test a path which isn't there
-#         self.failIf( host.path.isdir('notthere') )
-#         self.failIf( host.path.isfile('notthere') )
-#         self.failIf( host.path.islink('notthere') )
-#         # test a directory
-#         self.failUnless( host.path.isdir(self.testdir) )
-#         self.failIf( host.path.isfile(self.testdir) )
-#         self.failIf( host.path.islink(self.testdir) )
-#         # test a file
-#         host.upload('ftputil.py', 'ftputil2.py', 'b')
-#         self.failIf( host.path.isdir('ftputil2.py') )
-#         self.failUnless( host.path.isfile('ftputil2.py') )
-#         self.failIf( host.path.islink(self.testdir) )
-#         # clean up
-#         host.remove('ftputil2.py')
-#         host.chdir(self.rootdir)
-#
-#     def test_getmtime(self):
-#         """Test FTPHost._Path.getmtime."""
-#         host = self.host
-#         host.chdir(self.testdir)
-#         # test a directory
-#         local_time = time.time()
-#         host.mkdir('__test2')
-#         remote_mtime = host.path.getmtime('__test2')
-#         #  accept a difference of up to 30 seconds
-#         self.failIf(remote_mtime - local_time >= 30)
-#         # test a file
-#         local_time = time.time()
-#         host.upload('ftputil.py', 'ftputil2.py', 'b')
-#         remote_mtime = host.path.getmtime('ftputil2.py')
-#         #  accept a difference of up to 30 seconds
-#         self.failIf(remote_mtime - local_time >= 30)
-#         # clean up
-#         host.rmdir('__test2')
-#         host.remove('ftputil2.py')
-#         host.chdir(self.rootdir)
-#
-#     def test_getsize(self):
-#         """Test FTPHost._Path.getsize."""
-#         host = self.host
-#         host.chdir(self.testdir)
-#         # test a directory
-#         host.mkdir('__test2')
-#         remote_size = host.path.getsize('__test2')
-#         empty_dir_size = 512
-#         self.assertEqual(remote_size, empty_dir_size)
-#         # test a file
-#         host.upload('ftputil.py', 'ftputil2.py', 'b')
-#         local_size = os.path.getsize('ftputil.py')
-#         remote_size = host.path.getsize('ftputil2.py')
-#         self.assertEqual(local_size, remote_size)
-#         # clean up
-#         host.rmdir('__test2')
-#         host.remove('ftputil2.py')
-#         host.chdir(self.rootdir)
-#
-#
+class TestPath(unittest.TestCase):
+    """Test operations in FTPHost.path."""
+
+    def test_isdir_isfile_islink(self):
+        """Test FTPHost._Path.isdir/isfile/islink."""
+        testdir = '/home/sschwarzer'
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host.chdir(testdir)
+        # test a path which isn't there
+        self.failIf( host.path.isdir('notthere') )
+        self.failIf( host.path.isfile('notthere') )
+        self.failIf( host.path.islink('notthere') )
+        # test a directory
+        self.failUnless( host.path.isdir(testdir) )
+        self.failIf( host.path.isfile(testdir) )
+        self.failIf( host.path.islink(testdir) )
+        # test a file
+        testfile = '/home/sschwarzer/index.html'
+        self.failIf( host.path.isdir(testfile) )
+        self.failUnless( host.path.isfile(testfile) )
+        self.failIf( host.path.islink(testfile) )
+        # test a link
+        testlink = '/home/sschwarzer/osup'
+        # uncomment these two when following links is implemented
+        #self.failIf( host.path.isdir(testlink) )
+        #self.failIf( host.path.isfile(testlink) )
+        self.failUnless( host.path.islink(testlink) )
+
+
 # class TestFileOperations(Base):
 #     """
 #     Test operations with file-like objects (including
