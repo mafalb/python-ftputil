@@ -214,7 +214,31 @@ class _FTPFile:
         data = self._fo.read(*args)
         if self._binmode:
             return data
-        return _crlf_to_python_linesep(data)
+        data = _crlf_to_python_linesep(data)
+        if args == ():
+            return _crlf_to_python_linesep(data)
+        # If the read data contains \r characters the number
+        #  of read characters will be too little! Thus we
+        #  (would) have to continue to read until we have
+        #  fetched the requested number of bytes.
+        #  The algorithm below avoids repetitive string
+        #  concatanations in the style of
+        #      data = data + more_data
+        #  and so should also work relatively well if there
+        #  are many short lines in the file.
+        wanted_size = args[0]
+        chunks = [data]
+        current_size = len(data)
+        while current_size < wanted_size:
+            # print 'not enough bytes (now %s, wanting %s)' % \
+            #       (current_size, wanted_size)
+            more_data = self._fo.read(wanted_size-current_size)
+            more_data = _crlf_to_python_linesep(more_data)
+            # print '-> new (normalized) data:', \
+            #       repr(more_data)
+            chunks.append(more_data)
+            current_size += len(more_data)
+        return ''.join(chunks)
 
     def readline(self, *args):
         '''Return one read line, normalized if in text
