@@ -110,17 +110,17 @@ class FTPIOError(IOError):
 #####################################################################
 # Support for file-like objects
 
-# converter for native line ends to normalized ones in Python.
+# converter for \r\n line ends to normalized ones in Python.
 #  RFC 959 states that the server will send \r\n on text mode
 #  transfers, so this conversion should be safe. I still use
 #  text mode transfers (mode 'r', not 'rb') in socket.makefile
-#  because the server may do charset conversions on text
-#  transfers.
-_native_to_python_linesep = \
+#  (below) because the server may do charset conversions on
+#  text transfers.
+_crlf_to_python_linesep = \
   lambda text: text.replace('\r', '')
 
-# converter for Python line ends into native ones
-_python_to_native_linesep = \
+# converter for Python line ends into \r\n
+_python_to_crlf_linesep = \
   lambda text: text.replace('\n', '\r\n')
 
 
@@ -153,7 +153,7 @@ class _FTPFile:
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
-        self.closed = 0   #XXX safer to do this before?
+        self.closed = 0
         self._conn = self._session.transfercmd(command)
         self._fo = self._conn.makefile(mode)
 
@@ -162,8 +162,8 @@ class _FTPFile:
     # line separator conversion for text modes.
     #
     # Note that we must convert line endings because
-    # the FTP server expects the native line separator
-    # format to be sent on ASCII transfers.
+    # the FTP server expects \r\n to be sent on text
+    # transfers.
     #
     def read(self, *args, **kwargs):
         '''Return read bytes, normalized if in text
@@ -171,7 +171,7 @@ class _FTPFile:
         data = self._fo.read(*args, **kwargs)
         if self._binmode:
             return data
-        return _native_to_python_linesep(data)
+        return _crlf_to_python_linesep(data)
 
     def readline(self, *args, **kwargs):
         '''Return one read line, normalized if in text
@@ -179,7 +179,7 @@ class _FTPFile:
         data = self._fo.readline(*args, **kwargs)
         if self._binmode:
             return data
-        return _native_to_python_linesep(data)
+        return _crlf_to_python_linesep(data)
 
     def readlines(self, *args, **kwargs):
         '''Return read lines, normalized if in text
@@ -190,7 +190,7 @@ class _FTPFile:
         # more memory-friendly than
         #  return [... for line in lines]
         for i in range( len(lines) ):
-            lines[i] = _native_to_python_linesep(lines[i])
+            lines[i] = _crlf_to_python_linesep(lines[i])
         return lines
 
     def xreadlines(self):
@@ -207,7 +207,7 @@ class _FTPFile:
         '''Write data to file. Do linesep conversion for
         text mode.'''
         if not self._binmode:
-            data = _python_to_native_linesep(data)
+            data = _python_to_crlf_linesep(data)
         self._fo.write(data)
 
     def writelines(self, lines):
@@ -216,7 +216,7 @@ class _FTPFile:
         if not self._binmode:
             # more memory-friendly than [... for line in lines]
             for i in range( len(lines) ):
-                lines[i] = _python_to_native_linesep(lines[i])
+                lines[i] = _python_to_crlf_linesep(lines[i])
         self._fo.writelines(lines)
 
     #
