@@ -35,8 +35,8 @@ to `os.stat`_. Even `FTPHost.path.walk`_ works.
 
 .. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
 
-The distribution contains a `regression test module`_ and a custom
-UserTuple_ class to provide stat_ results with Python 2.1.
+The distribution contains a custom ``UserTuple`` module to provide stat_
+results with Python 2.1.
 
 .. _stat: http://www.python.org/doc/current/lib/module-stat.html
 
@@ -55,6 +55,7 @@ The exceptions are organized as follows::
             ParserError(FTPOSError)
         FTPIOError(FTPError)
         RootDirError(FTPError)
+        TimeShiftError(FTPError)
 
 and are described here:
 
@@ -168,6 +169,12 @@ and are described here:
   is not possible to do a ``stat`` call  on the root directory ``/``. If
   you know *any* way to do it, please let me know. :-)
 
+- ``TimeShiftError``
+
+  is used to denote errors which relate to setting the `time shift`_,
+  e. g. trying to set a value which is no multiple of a full hour.
+
+
 ``FTPHost`` objects
 -------------------
 
@@ -265,6 +272,8 @@ wrapper class::
   source and target are strings. Additionally, the description of
   the upload method applies here, too.
 
+.. _`upload_if_newer`:
+
 - ``upload_if_newer(source, target, mode='')``
 
   is similar to the upload method. The only difference is that the
@@ -272,6 +281,8 @@ wrapper class::
   the source file is more recent than that of the target file, or
   the target doesn't exist at all. If an upload actually occured,
   the return value is a true value, else a false value.
+
+.. _`download_if_newer`:
 
 - ``download_if_newer(source, target, mode='')``
 
@@ -370,13 +381,58 @@ wrapper class::
   parse output from another server type, please contact me under the
   email address at the end of this text.
 
+.. implement and document support for setting the directory parser
+   "manually"
+
 .. _`FTPHost.stat`:
 
 - ``stat(path)``
-  return ``stat`` information also for files which are pointed to by a
+  returns ``stat`` information also for files which are pointed to by a
   link. This method follows multiple links until a regular file or
   directory is found. If an infinite link chain is encountered, a
   ``PermanentError`` is raised.
+
+.. _`time shift`:
+.. _`set_time_shift`:
+
+- ``set_time_shift(time_shift)``
+  sets the so-called time shift value (measured in seconds). The time shift
+  is the difference between the local time of the server and the local time
+  of the client at a given moment, i. e. by definition
+
+  ::
+
+    time_shift = server_time - client_time
+
+  Setting this value is important if `upload_if_newer`_ and
+  `download_if_newer`_ should work correctly even if the time zone of the
+  FTP server differs from that of the client (where ``ftputil`` runs).
+
+  See also `synchronize_times`_ for a way to set the time shift with a simple
+  method call.
+
+- ``time_shift()``
+  return the currently-set time shift value. See ``set_time_shift`` (above)
+  for its definition.
+
+.. _`synchronize_times`:
+
+- ``synchronize_times()``
+  synchronizes the local times of the server and the client, so that
+  `upload_if_newer`_ and `download_if_newer`_ work as expected, even if the
+  client and the server are in different time zones. For this to work, *all*
+  of the following conditions must be true:
+
+  - The connection between server and client is established.
+
+  - The client has write access to the directory that is
+    current when ``synchronize_times`` is called.
+
+  - That directory is *not* the root directory (i. e. ``/``) of
+    the FTP server.
+
+  If you can't fulfill these conditions, you can nevertheless set the time
+  shift value manually with `set_time_shift`_.
 
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
@@ -429,29 +485,20 @@ in the Library Reference.
 .. _`file objects`:
    http://www.python.org/doc/current/lib/bltin-file-objects.html
 
-Note that ftputil supports both binary and text mode with the
+Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
+
+.. Add "Tips and tricks" section
 
 Bugs and limitations
 --------------------
 
-.. update this; I should be able to support Python 2.0
-
-- ftputil needs at least Python 2.1 to work. The only place where
-  Python 2.0 is not enough is in ``FTPHost.listdir``. If you need Python
-  2.0, and, yet better, also have a patch, contact me under the
-  below-mentioned email address.
+- ftputil needs at least Python 2.0 to work.
 
 - Due to the implementation of ``lstat`` it can not return a sensible
   value for the root directory ``/``. If you know an implementation that
   can do this, please let me know. The root directory is handled
   appropriately in ``FTPHost.path.exists/isfile/isdir/islink``, though.
-
-- Depending on local time and/or daylight saving time settings
-  different local hosts may interpret the modification times in the
-  FTP server output differently. If there's a need for it, I would
-  provide a method to (manually) set a difference value for the
-  local/remote host pair.
 
 - Timeouts of individual child sessions currently are not handled yet.
   This is only a problem if your ``FTPHost`` object or the generated
@@ -472,35 +519,12 @@ Bugs and limitations
 Files
 -----
 
-- ``ftputil.py``
+If not overwritten via installation options, the ``ftputil`` files reside in
+the ``ftputil`` package. The package directory contains a ``doc``
+subdirectory which in turn contains this documentation in `reStructured Text`_
+and in HTML format.
 
-  is the main module file.
-
-.. _UserTuple:
-
-- ``UserTuple.py``
-
-  may be used as the base class for ``_Stat``. If you have at least
-  Python version 2.2 you can safely delete the ``UserTuple`` module.
-
-- ``ftputil.html``
-
-  is this file.
-
-- ``ftputil_pydoc.html``
-
-  is the development documentation for ftputil, generated with
-  Pythons ``pydoc`` utility. If you only want to *use* ftputil, you
-  probably don't need this file.
-
-.. _`regression test module`:
-
-- ``_test_ftputil.py`` and ``_mock_ftplib.py``
-
-  are needed for the unit tests of ftputil. If you don't want to
-  debug or modify ftputil, you can delete these files.
-  ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module
-  (see `Endo-Testing: Unit Testing with Mock Objects`_ for details).
+.. _`reStructured Text`: http://docutils.sourceforge.net/rst.html
 
 References
 ----------
@@ -520,7 +544,7 @@ References
 Author
 ------
 
-ftputil is written by Stefan Schwarzer <sschwarzer@sschwarzer.net>.
+``ftputil`` is written by Stefan Schwarzer <sschwarzer@sschwarzer.net>.
 
-Feedback is appreciated.
+Feedback is appreciated. :-)
 
