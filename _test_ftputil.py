@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.46 2002/03/30 21:54:38 schwa Exp $
+# $Id: _test_ftputil.py,v 1.47 2002/03/30 22:08:45 schwa Exp $
 
 import unittest
 import stat
@@ -53,7 +53,33 @@ class ReadMockSession(_mock_ftplib.MockSession):
 class AsciiReadMockSession(_mock_ftplib.MockSession):
     mock_file_content = '\r\n'.join( map( str, range(20) ) )
 
+def random_data(pool, size=10000):
+    """
+    Return a sequence of characters consisting of those from
+    the pool of integer numbers.
+    """
+    character_list = []
+    for i in range(size):
+        ordinal = random.choice(pool)
+        character_list.append( chr(ordinal) )
+    result = ''.join(character_list)
+    return result
+    
+def ascii_data():
+    """Return an ASCII character string."""
+    pool = range(32, 128)
+    pool.append( ord('\n') )
+    return random_data(pool)
+    
+def binary_data():
+    """Return an binary character string."""
+    pool = range(0, 256)
+    return random_data(pool)
 
+class BinaryDownloadMockSession(_mock_ftplib.MockSession):
+    mock_file_content = binary_data()
+
+    
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
                      ftp_host_class=ftputil.FTPHost):
     return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
@@ -349,34 +375,11 @@ class TestFileOperations(unittest.TestCase):
         self.assertRaises(ftputil.FTPIOError, host.file,
                           'notthere', 'r')
 
-    def random_data(self, pool, size=10000):
-        """
-        Return a sequence of characters consisting of those from
-        the pool of integer numbers.
-        """
-        character_list = []
-        for i in range(size):
-            ordinal = random.choice(pool)
-            character_list.append( chr(ordinal) )
-        result = ''.join(character_list)
-        return result
-        
-    def ascii_data(self):
-        """Return an ASCII character string."""
-        pool = range(32, 128)
-        pool.append( ord('\n') )
-        return self.random_data(pool)
-        
-    def binary_data(self):
-        """Return an binary character string."""
-        pool = range(0, 256)
-        return self.random_data(pool)
-
     def test_ascii_upload(self):
         """Test ASCII mode upload."""
         local_source = '__test_source'
         # generate file
-        data = self.ascii_data()
+        data = ascii_data()
         source_file = open(local_source, 'w')
         source_file.write(data)
         source_file.close()
@@ -384,33 +387,26 @@ class TestFileOperations(unittest.TestCase):
         host = ftp_host_factory()
         host.upload(local_source, 'dummy')
         # check uploaded content
+        # the data which was uploaded has its line endings converted
+        #  so the conversion must also be applied to 'data'
         data = data.replace('\n', '\r\n')
-        file_content = _mock_ftplib.content_of('dummy')
-        self.assertEqual(data, file_content)
+        remote_file_content = _mock_ftplib.content_of('dummy')
+        self.assertEqual(data, remote_file_content)
+        # clean up
+        os.unlink(local_source)
 
-#         host.download(remote_path, local_test_path)
-#         # compare local data
-#         input_ = file(local_source)
-#         original = input_.read()
-#         input_.close()
-#         input_ = file(local_test_path)
-#         copy = input_.read()
-#         input_.close()
-#         self.assertEqual(original, copy)
-#         # test binary up/download
-#         host.upload(local_source, remote_path, 'b')
-#         host.download(remote_path, local_test_path, 'b')
-#         # compare local data
-#         input_ = file(local_source, 'rb')
-#         original = input_.read()
-#         input_.close()
-#         input_ = file(local_test_path, 'rb')
-#         copy = input_.read()
-#         input_.close()
-#         self.assertEqual(original, copy)
-#         # clean up
-#         host.remove(remote_path)
-#         os.remove(local_test_path)
+    def test_binary_download(self):
+        """Test binary mode download."""
+        local_target = '__test_target'
+        host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
+        # download
+        host.download('dummy', local_target, 'b')
+        # read file and compare
+        data = open(local_target, 'rb').read()
+        remote_file_content = _mock_ftplib.content_of('dummy')
+        self.assertEqual(data, remote_file_content)
+        # clean up
+        os.unlink(local_target)
 
 
 if __name__ == '__main__':
