@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.19 2003/10/04 17:37:14 schwa Exp $
+# $Id: ftp_stat.py,v 1.20 2003/10/04 21:45:06 schwa Exp $
 
 import stat
 import sys
@@ -117,10 +117,11 @@ class _Stat:
         for line in lines:
             try:
                 stat_result = self.parse_line(line)
+                st_name = stat_result._st_name
+                if st_name not in (self._host.curdir, self._host.pardir):
+                    names.append(st_name)
             except ftp_error.ParserError:
                 pass
-            else:
-                names.append(stat_result._st_name)
         return names
 
     def _stat_candidates(self, lines, wanted_name):
