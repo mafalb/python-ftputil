@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.78 2004/07/12 21:13:03 schwa Exp $
+# $Id: _test_ftputil.py,v 1.79 2004/07/12 22:02:12 schwa Exp $
 
 import ftplib
 import operator
@@ -387,13 +387,13 @@ class TestUploadAndDownload(unittest.TestCase):
         # the data which was uploaded has its line endings converted
         #  so the conversion must also be applied to 'data'
         data = data.replace('\n', '\r\n')
-        remote_file_content = _mock_ftplib.content_of('/home/older')
+        remote_file_content = _mock_ftplib.content_of('older')
         self.assertEqual(data, remote_file_content)
         # target doesn't exist, so upload
         host = _test_base.ftp_host_factory()
         flag = host.upload_if_newer(local_source, '/home/notthere')
         self.assertEqual(flag, True)
-        remote_file_content = _mock_ftplib.content_of('/home/notthere')
+        remote_file_content = _mock_ftplib.content_of('notthere')
         self.assertEqual(data, remote_file_content)
         # clean up
         os.unlink(local_source)
@@ -402,7 +402,7 @@ class TestUploadAndDownload(unittest.TestCase):
         """Compare content of downloaded file with its source, then
         delete the local target file."""
         data = open(filename, 'rb').read()
-        remote_file_content = _mock_ftplib.content_of('/home/newer')
+        remote_file_content = _mock_ftplib.content_of('newer')
         self.assertEqual(data, remote_file_content)
         # clean up
         os.unlink(filename)

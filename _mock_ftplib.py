@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.26 2004/07/09 21:44:04 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.27 2004/07/12 22:02:12 schwa Exp $
 
 """
 This module implements a mock version of the standard library's
@@ -135,7 +135,11 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
       # = /home/dir with spaces
       'dir with spaces': """\
 total 1
--rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces"""
+-rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces""",
+
+      # fail when trying to write to this directory (the content isn't
+      #  relevant)
+      'sschwarzer': ""
 
     }
 
@@ -144,7 +148,7 @@ total 1
 
     def __init__(self, host='', user='', password=''):
         self.closed = 0
-        # count successful transfercmd invocations to ensure that
+        # count successful `transfercmd` invocations to ensure that
         #  each has a corresponding `voidresp`
         self._transfercmds = 0
 
