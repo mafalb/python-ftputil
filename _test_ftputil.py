@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.40 2002/03/30 18:36:39 schwa Exp $
+# $Id: _test_ftputil.py,v 1.41 2002/03/30 18:38:23 schwa Exp $
 
 import unittest
 import stat
@@ -327,20 +327,17 @@ class TestFileOperations(unittest.TestCase):
         data = input_.readline()
         self.assertEqual(data, '')
         input_.close()
-#
-#     def ascii_readlines(self):
-#         """Use readline operations to get data."""
-#         host = self.host
-#         # write some data
-#         local_data = 'line 1\nanother line\nyet another line'
-#         self.write_test_data(local_data, 'w')
-#         input_ = host.file(self.remote_name, 'r')
-#         data = input_.read(3)
-#         self.assertEqual(data, 'lin')
-#         data = input_.readlines()
-#         self.assertEqual(data, ['e 1\n', 'another line\n',
-#                                 'yet another line'])
-#         input_.close()
+
+    def test_ascii_readlines(self):
+        """Use ASCII readline operations to get data."""
+        host = ftp_host_factory(session_factory=ReadMockSession)
+        input_ = host.file('dummy', 'r')
+        data = input_.read(3)
+        self.assertEqual(data, 'lin')
+        data = input_.readlines()
+        self.assertEqual(data, ['e 1\n', 'another line\n',
+                                'yet another line'])
+        input_.close()
 #
 #     def ascii_xreadlines(self):
 #         """Write some ASCII data to the host and use an
