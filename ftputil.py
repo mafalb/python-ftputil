@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.102 2003/03/15 18:57:22 schwa Exp $
+# $Id: ftputil.py,v 1.103 2003/03/15 21:22:31 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -127,6 +127,7 @@ class FTPError:
         return self.strerror
 
 class RootDirError(FTPError): pass
+class TimeShiftError(FTPError): pass
 
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
@@ -391,6 +392,9 @@ class FTPHost:
         #  but it seems to work at least with Unix and Windows
         #  servers
         self.curdir, self.pardir, self.sep = '.', '..', '/'
+        # set default time shift (used in `upload_if_newer` and
+        #  `download_if_newer`)
+        self.set_time_shift(0.0)
         # check if we have a Microsoft ROBIN server
         try:
             response = _try_with_oserror(self._session.voidcmd, 'STAT')
@@ -480,6 +484,112 @@ class FTPHost:
         except:
             # we don't want warnings if the constructor did fail
             pass
+
+    #
+    # time shift adjustment between client (i. e. us) and server
+    #
+    def set_time_shift(self, time_shift):
+        """
+        Set the time shift value (i. e. the time difference between
+        client and server) for this `FTPHost` object. By definition,
+        the time shift value is positive if the local time of the
+        server is greater than the local time of the client. The
+        time shift is measured in seconds.
+        """
+        self._time_shift = time_shift
+
+    def time_shift(self):
+        """
+        Return the time shift between FTP server and client. See the
+        docstring of `set_time_shift` for more on this value.
+        """
+        return self._time_shift
+
+    def __rounded_time_shift(self, time_shift):
+        """
+        Return the given time shift in seconds, but rounded to
+        full hours. The argument is also assumed to be given in
+        seconds.
+        """
+        minute = 60.0
+        hour = 60 * minute
+        # avoid division by zero below
+        if time_shift == 0:
+            return 0.0
+        # use a positive value for rounding
+        absolute_time_shift = abs(time_shift)
+        signum = time_shift / absolute_time_shift
+        # round it to hours; this code should also work for later Python
+        #  versions because of the explicit `int`
+        absolute_rounded_time_shift = \
+          int( (absolute_time_shift+30*minute) / hour) * hour
+        # return with correct sign
+        return signum * absolute_rounded_time_shift
+
+    def __assert_valid_time_shift(self, time_shift):
+        """
+        Perform sanity checks on the time shift value (given in
+        seconds). If the value fails, raise a `TimeShiftError`,
+        else simply return `None`.
+        """
+        minute = 60.0
+        hour = 60 * minute
+        absolute_rounded_time_shift = \
+          abs( self.__rounded_time_shift(time_shift) )
+        # test 1: fail if the absolute time shift is greater than
+        #  a full day (24 hours)
+        if absolute_rounded_time_shift > 24 * hour:
+            raise TimeShiftError(
+                  "time shift (%.2f s) > 1 day" % time_shift)
+        # test 2: fail if the deviation between given time shift and
+        #  full hours is greater than a certain limit (e. g. five minutes)
+        maximum_deviation = 5 * minute
+        if abs( time_shift - self.__rounded_time_shift(time_shift) ) > \
+           maximum_deviation:
+            raise TimeShiftError(
+                  "time shift (%.2f s) deviates more than %d s from full hours"
+                  % (time_shift, maximum_deviation) )
+
+    def synchronize_time(self):
+        """
+        Synchronize the local times of FTP client and server. This
+        is necessary to let `upload_if_newer` and `download_if_newer`
+        work correctly.
+
+        This implementation of `synchronize_time` requires all of the
+        following:
+        - The connection between server and client is established.
+        - The client has write access to the directory that is
+          current when `synchronize_time` is called.
+        - That directory isn't the root directory of the FTP server.
+
+        The usual usage pattern of `synchronize_time` is to call it
+        directly after the connection is established. (As can be
+        concluded from the points above, this requires write access
+        to the login directory.)
+
+        If `synchronize_time` fails, it raises a `TimeShiftError`.
+        """
+        helper_file_name = "_ftputil_sync_"
+        # open a dummy file for writing in the current directory
+        #  on the FTP host, then close it
+        try:
+            file_ = self.file(helper_file_name, 'w')
+            file_.close()
+            # get the modification time of the new file
+            try:
+                modification_time = self.path.getmtime(helper_file_name)
+            except RootDirError:
+                raise TimeShiftError("can't use root directory for temp file")
+        finally:
+            # remove the just written file
+            self.unlink(helper_file_name)
+        # calculate the difference between server and client
+        time_shift = modification_time - time.time()
+        # do some sanity checks
+        self.__assert_valid_time_shift(time_shift)
+        # if tests passed, store the time difference as time shift value
+        self.set_time_shift( self.__rounded_time_shift(time_shift) )
 
     #
     # operations based on file-like objects (rather high-level)

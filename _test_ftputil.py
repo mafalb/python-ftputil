@@ -1,4 +1,4 @@
-# Copyright (C) 2002, Stefan Schwarzer
+# Copyright (C) 2003, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.63 2003/03/15 18:46:17 schwa Exp $
+# $Id: _test_ftputil.py,v 1.64 2003/03/15 21:22:31 schwa Exp $
 
 import unittest
 import stat
@@ -92,16 +92,33 @@ class AsciiReadMockSession(_mock_ftplib.MockSession):
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
 
+class TimeShiftMockSession(_mock_ftplib.MockSession):
+    current_dir = '/login/dir'
+
+    def delete(self, file_name):
+        pass
+
 
 #
 # customized `FTPHost` class for conditional upload/download tests
 #
 class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
     def upload(self, source, target, mode=''):
-        assert 0, "FTPHost.upload should not have been called"
+        assert 0, "`FTPHost.upload` should not have been called"
 
     def download(self, source, target, mode=''):
-        assert 0, "FTPHost.download should not have been called"
+        assert 0, "`FTPHost.download` should not have been called"
+
+class TimeShiftFTPHost(ftputil.FTPHost):
+    class _Path:
+        def set_mtime(self, mtime):
+            self._mtime = mtime
+        def getmtime(self, file_name):
+            return self._mtime
+
+    def __init__(self, *args, **kwargs):
+        ftputil.FTPHost.__init__(self, *args, **kwargs)
+        self.path = self._Path()
 
 
 #
@@ -552,6 +569,51 @@ class TestUploadAndDownload(unittest.TestCase):
         self.assertEqual(flag, False)
         # remove target file
         os.unlink(local_target)
+
+
+class TestTimeShift(unittest.TestCase):
+    def test_rounded_time_shift(self):
+        """Test if time shift is rounded correctly."""
+        host = ftp_host_factory(session_factory=TimeShiftMockSession)
+        # use private bound method
+        rounded_time_shift = host._FTPHost__rounded_time_shift
+        # original value, expected result
+        test_data = [
+          (0, 0), (0.1, 0), (-0.1, 0), (1500, 0), (-1500, 0),
+          (1800, 3600), (-1800, -3600), (2000, 3600), (-2000, -3600),
+          (5*3600-100, 5*3600), (-5*3600+100, -5*3600) ]
+        for time_shift, expected_time_shift in test_data:
+            calculated_time_shift = rounded_time_shift(time_shift)
+            self.assertEqual(calculated_time_shift, expected_time_shift)
+
+    def test_assert_valid_time_shift(self):
+        """Test time shift sanity checks."""
+        host = ftp_host_factory(session_factory=TimeShiftMockSession)
+        # use private bound method
+        assert_time_shift = host._FTPHost__assert_valid_time_shift
+        # valid time shifts
+        test_data = [23*3600, -23*3600, 3600+30, -3600+30]
+        for time_shift in test_data:
+            self.failUnless( assert_time_shift(time_shift) is None )
+        # invalid time shift (exceeds one day)
+        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 25*3600)
+        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, -25*3600)
+        # invalid time shift (deviation from full hours unacceptable)
+        self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 10*60)
+        self.assertRaises(ftputil.TimeShiftError, assert_time_shift,
+                          -3600-10*60)
+        
+    def test_synchronize_time(self):
+        """Test time synchronization with server."""
+        host = ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
+                                session_factory=TimeShiftMockSession)
+        # valid time shift
+        host.path.set_mtime( time.time() + 3630 )
+        host.synchronize_time()
+        self.assertEqual( host.time_shift(), 3600 )
+        # invalid time shift
+        host.path.set_mtime( time.time() + 3600+10*60 )
+        self.assertRaises(ftputil.TimeShiftError, host.synchronize_time)
 
 
 if __name__ == '__main__':
