@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.117 2003/06/08 19:42:06 schwa Exp $
+# $Id: ftputil.py,v 1.118 2003/06/08 19:44:32 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -654,7 +654,7 @@ class FTPHost:
                 return None
 
     def lstat(self, path):
-        """Return an object similar to that returned by os.lstat."""
+        """Return an object similar to that returned by `os.lstat`."""
         # get output from FTP's `DIR` command
         lines = []
         path = self.path.abspath(path)
