@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.12 2002/03/30 21:20:28 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.13 2002/03/30 21:50:25 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -311,12 +311,22 @@ class MockSession:
 
 DEBUG = 0
 
+# Use a global dictionary of the form {path: mock_file, ...}
+#  to make "volatile" mock files accessible. This is used for
+#  testing the contents of a file after an FTPHost.upload call.
+mock_files = {}
+
+def content_of(path):
+    return mock_files[path].getvalue()
+
 class MockFile(StringIO.StringIO):
     """
     Mock class for the file objects _contained in_ _FTPFile
     objects (not for _FTPFile objects themselves!).
     """
-    def __init__(self, content=''):
+    def __init__(self, path, content=''):
+        global mock_files
+        mock_files[path] = self
         StringIO.StringIO.__init__(self, content)
 
     def getvalue(self):
@@ -329,20 +339,21 @@ class MockFile(StringIO.StringIO):
         if not self.closed:
             self._value_after_close = StringIO.StringIO.getvalue(self)
         StringIO.StringIO.close(self)
-            
+
     
 class MockSocket:
     """
     Mock class which is used to return something from
     MockSession.transfercmd.
     """
-    def __init__(self, mock_file_content=''):
+    def __init__(self, path, mock_file_content=''):
         if DEBUG:
             print 'File content: *%s*' % mock_file_content
+        self.file_path = path
         self.mock_file_content = mock_file_content
 
     def makefile(self, mode):
-        return MockFile(self.mock_file_content)
+        return MockFile(self.file_path, self.mock_file_content)
 
     def close(self):
         pass
@@ -431,7 +442,7 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
             raise ftplib.error_perm
         # fail if path isn't available (this name is hard-coded here
         #  and has to be used for the corresponding tests)
-        if cmd == 'RETR' and path == 'notthere':
+        if (cmd, path) == ('RETR', 'notthere'):
             raise ftplib.error_perm
-        return MockSocket(self.mock_file_content)
+        return MockSocket(path, self.mock_file_content)
 
