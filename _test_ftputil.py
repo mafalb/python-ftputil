@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.55 2002/03/31 23:18:06 schwa Exp $
+# $Id: _test_ftputil.py,v 1.56 2002/03/31 23:20:35 schwa Exp $
 
 import unittest
 import stat
@@ -65,7 +65,7 @@ def ascii_data():
     return random_data(pool)
 
 def binary_data():
-    """Return an binary character string."""
+    """Return a binary character string."""
     pool = range(0, 256)
     return random_data(pool)
 
