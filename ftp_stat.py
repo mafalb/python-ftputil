@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.7 2003/06/09 16:52:57 schwa Exp $
+# $Id: ftp_stat.py,v 1.8 2003/06/09 17:22:57 schwa Exp $
 
 import stat
 import sys
@@ -80,14 +80,12 @@ class _StatParser:
         """
         raise NotImplementedError("must be defined by subclass")
 
-    def parse_directory_listing(self, listing):
+    def parse_lines(self, lines):
         """
         Return a list of `_Stat` objects with one `_Stat` object per
-        line in the listing. The order of the entries is kept.
+        line in the list `lines`. The order of the entries is kept.
         """
-        lines = listing.splitlines()
-        stat_results = [ self.parse_line( line.strip() )
-                         for line in lines ]
+        stat_results = [ self.parse_line(line) for line in lines ]
         return stat_results
 
 
