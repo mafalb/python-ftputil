@@ -1,45 +1,49 @@
-NAME
+ftputil documentation
+=====================
+
+Name
+----
 
     ftputil - abstract Python interface for FTP sessions
 
-----------------------------------------------------------------------
-DESCRIPTION
+Description
+-----------
 
 The ftputil module is a high-level interface to the ftplib module. The
-FTPHost objects generated from it allow many operations similar to
-those of os and os.path.
+``FTPHost`` objects generated from it allow many operations similar to
+those of ``os`` and ``os.path``.
 
-Examples:
+Examples::
 
-# download some files from the login directory
-host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
-names = host.listdir(host.curdir)
-for name in names:
-    if host.path.isfile(name):
-        host.download(name, name, 'b')  # remote, local, binary mode
+    # download some files from the login directory
+    host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
+    names = host.listdir(host.curdir)
+    for name in names:
+        if host.path.isfile(name):
+            host.download(name, name, 'b')  # remote, local, binary mode
 
-# make a new directory and copy a remote file into it
-host.mkdir('newdir')
-source = host.file('index.html', 'r')  # file-like object
-target = host.file('newdir/index.html', 'w')  # file-like object
-host.copyfileobj(source, target)  # similar to shutil.copyfileobj
-source.close()
-target.close()
+    # make a new directory and copy a remote file into it
+    host.mkdir('newdir')
+    source = host.file('index.html', 'r')  # file-like object
+    target = host.file('newdir/index.html', 'w')  # file-like object
+    host.copyfileobj(source, target)  # similar to shutil.copyfileobj
+    source.close()
+    target.close()
 
-Also, there are FTPHost.lstat and FTPHost.stat to request size and
+Also, there are ``FTPHost.lstat`` and ``FTPHost.stat`` to request size and
 modification time of a file. The latter can also follow links, similar
-to os.stat. Even FTPHost.path.walk works.
+to os.stat. Even ``FTPHost.path.walk`` works.
 
 The distribution contains a regression test module and a custom
 UserTuple class to provide stat results with Python 2.1.
 
-----------------------------------------------------------------------
-MODULE CONTENTS
+Module contents
+---------------
 
 Exception hierarchy
--------------------
+~~~~~~~~~~~~~~~~~~~
 
-The exceptions are organized as follows:
+The exceptions are organized as follows::
 
     FTPError
         FTPOSError(FTPError, OSError)
@@ -49,10 +53,12 @@ The exceptions are organized as follows:
         FTPIOError(FTPError)
         RootDirError(FTPError)
 
-FTPError is the root of the exception hierarchy of the module.
+``FTPError`` is the root of the exception hierarchy of the module.
 
-FTPOSError is derived from OSError. This is for similarity between the
-os module and FTPHost objects. Compare
+``FTPOSError`` is derived from ``OSError``. This is for similarity between the
+os module and ``FTPHost`` objects. Compare
+
+::
 
     try:
         os.chdir('nonexisting_directory')
@@ -60,6 +66,8 @@ os module and FTPHost objects. Compare
         ...
 
 with
+
+::
 
     host = ftputil.FTPHost('host', 'user', 'password')
     try:
@@ -69,38 +77,46 @@ with
 
 Imagine a function
 
+::
+
     def func(path, file):
         ...
 
-which works on the local file system and catches OSErrors. If you
+which works on the local file system and catches ``OSErrors``. If you
 change the parameter list to
+
+::
 
     def func(path, file, os=os):
         ...
 
-where os denotes the os module, you can call the function also as
+where ``os`` denotes the ``os`` module, you can call the function also as
+
+::
 
     host = ftputil.FTPHost('host', 'user', 'password')
     func(path, file, os=host)
 
 to use the same code for a local and remote file system. Another
-similarity between OSError and FTPOSError is that the latter holds the
+similarity between ``OSError`` and ``FTPOSError`` is that the latter holds the
 FTP server return code in the errno attribute of the exception object
 and the error text in strerror.
 
 TemporaryError is raised for FTP return codes from the 4xx category.
-This corresponds to ftplib.error_temp (though TemporaryError and
-ftplib.error_temp are _not_ identical). PermanentError is raised for
-5xx return codes from the FTP server (again, that's similar but _not_
-identical to ftplib.error_perm).
+This corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
+``ftplib.error_temp`` are *not* identical). ``PermanentError`` is raised for
+5xx return codes from the FTP server (again, that's similar but *not*
+identical to ``ftplib.error_perm``).
 
-ParserError is used for errors during the parsing of directory
-listings from the server. This exception is used by the FTPHost
-methods stat, lstat, and listdir.
+``ParserError`` is used for errors during the parsing of directory
+listings from the server. This exception is used by the ``FTPHost``
+methods ``stat``, ``lstat``, and ``listdir``.
 
-FTPIOError denotes an I/O error on the remote host. This appears
+``FTPIOError`` denotes an I/O error on the remote host. This appears
 mainly with file-like objects which are retrieved by invoking
-FTPHost.file (FTPHost.open is an alias). Compare
+``FTPHost.file`` (``FTPHost.open`` is an alias). Compare
+
+::
 
     >>> try:
     ...     f = open('notthere')
@@ -112,6 +128,8 @@ FTPHost.file (FTPHost.open is an alias). Compare
     No such file or directory
 
 with
+
+::
 
     >>> host = ftputil.FTPHost('host', 'user', 'password')
     >>> try:
@@ -126,159 +144,158 @@ with
 As you can see, both code snippets are similar. (However, the error
 codes aren't the same.)
 
-RootDirError is a special case. Due to the implementation of the
-lstat method it is not possible to do a stat on the root directory /.
-If you know _any_ way to do it, please let me know. :-)
+``RootDirError`` is a special case. Due to the implementation of the
+lstat method it is not possible to do a ``stat`` call  on the root directory
+``/``. If you know *any* way to do it, please let me know. :-)
 
-----------------------------------------------------------------------
-FTPHost OBJECTS
+``FTPHost`` objects
+-------------------
 
 Construction
-------------
+~~~~~~~~~~~~
 
-FTPHost instances may be generated with the following call:
+``FTPHost`` instances may be generated with the following call::
 
     host = ftputil.FTPHost(host, user, password, account,
                            session_factory=ftplib.FTP)
 
 The first four parameters are strings with the same meaning as for the
-FTP class in the ftplib module. The keyword argument session_factory
-may be used to generate FTP connections with other factories than the
-default ftplib.FTP. For example, the M2Crypto distribution uses a
-secure FTP class which is derived from ftplib.FTP.
+FTP class in the ``ftplib`` module. The keyword argument
+``session_factory`` may be used to generate FTP connections with other
+factories than the default ``ftplib.FTP``. For example, the M2Crypto
+distribution uses a secure FTP class which is derived from
+``ftplib.FTP``.
 
 In fact, all positional and keyword arguments other than
-session_factory are passed to the factory to generate a new background
+``session_factory`` are passed to the factory to generate a new background
 session (which happens for every remote file that is opened; see
 below).
 
-This functionality of the constructor also allows to wrap ftplib.FTP
-objects to do something that wouldn't be possible with the ftplib.FTP
-constructor alone.
+This functionality of the constructor also allows to wrap
+``ftplib.FTP`` objects to do something that wouldn't be possible with
+the ``ftplib.FTP`` constructor alone.
 
 As an example, assume you want to connect to another than the default
-port but ftplib.FTP only offers this by means of its `connect`
+port but ``ftplib.FTP`` only offers this by means of its ``connect``
 method, but not via its constructor. The solution is to provide a
-wrapper class:
+wrapper class::
 
------
-import ftplib
-import ftputil
+    import ftplib
+    import ftputil
 
-EXAMPLE_PORT = 50001
+    EXAMPLE_PORT = 50001
 
-class MySession(ftplib.FTP):
-    def __init__(self, host, userid, password, port):
-        """Act like ftplib.FTP's constructor but connect to other port."""
-        ftplib.FTP.__init__(self)
-        self.connect(host, port)
-        self.login(userid, password)
+    class MySession(ftplib.FTP):
+        def __init__(self, host, userid, password, port):
+            """Act like ftplib.FTP's constructor but connect to other port."""
+            ftplib.FTP.__init__(self)
+            self.connect(host, port)
+            self.login(userid, password)
 
-# try not to use MySession() as factory, - use the class itself
-host = ftputil.FTPHost(host, userid, password,
-                       port=EXAMPLE_PORT, session_factory=MySession)
-# use `host` as usual
------
+    # try not to use MySession() as factory, - use the class itself
+    host = ftputil.FTPHost(host, userid, password,
+                           port=EXAMPLE_PORT, session_factory=MySession)
+    # use `host` as usual
 
-FTPHost attributes and methods
-------------------------------
+``FTPHost`` attributes and methods
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-curdir, pardir, sep
+``curdir``, ``pardir``, ``sep``
     are strings which denote the current and the parent directory on
     the remote server. sep identifies the path separator. Though RFC
     959 (File Transfer Protocol) notes that these values may be server
     dependent, the Unix counterparts seem to work well in practice,
     even for non-Unix servers.
 
-file(path, mode='r')
+``file(path, mode='r')``
     returns a file-like object that is connected to the path on the
     remote host. This path may be absolute or relative to current
     directory on the remote host (this directory can be determined
     with the getcwd method). As with local file objects the default
-    mode is 'r', i. e. reading text files. Valid modes are 'r', 'rb',
-    'w', and 'wb'.
+    mode is "r", i. e. reading text files. Valid modes are "r", "rb",
+    "w", and "wb".
 
-open(path, mode='r')
-    is an alias for file (see above).
+``open(path, mode='r')``
+    is an alias for ``file`` (see above).
 
-copyfileobj(source, target, length=64*1024)
+``copyfileobj(source, target, length=64*1024)``
     copies the contents from the file-like object source to the
-    file-like object target. The only difference to shutil.copyfileobj
-    is the default buffer size.
+    file-like object target. The only difference to
+    ``shutil.copyfileobj`` is the default buffer size.
 
-upload(source, target, mode='')
+``upload(source, target, mode='')``
     copies a local source file (given by a filename, i. e. a string)
     to the remote host under the name target. Both source and target
     may be absolute paths or relative to their corresponding current
     directory (on the local or the remote host, respectively). The
-    mode may be '' or 'a' for ASCII uploads or 'b' for binary uploads.
+    mode may be "" or "a" for ASCII uploads or "b" for binary uploads.
     ASCII mode is the default (again, similar to regular local file
     objects).
 
-download(source, target, mode='')
+``download(source, target, mode='')``
     performs a download from the remote source to a target file. Both
     source and target are strings. Additionally, the description of
     the upload method applies here, too.
 
-upload_if_newer(source, target, mode='')
+``upload_if_newer(source, target, mode='')``
     is similar to the upload method. The only difference is that the
     upload is only invoked if the time of the last modification for
     the source file is more recent than that of the target file, or
     the target doesn't exist at all. If an upload actually occured,
     the return value is a true value, else a false value.
 
-download_if_newer(source, target, mode='')
-    corresponds to upload_if_newer but performs a download from the
+``download_if_newer(source, target, mode='')``
+    corresponds to ``upload_if_newer`` but performs a download from the
     server to the local host. Read the descriptions of download and
-    upload_if_newer for more. If a download actually occured,
+    ``upload_if_newer`` for more. If a download actually occured,
     the return value is a true value, else a false value.
 
-close()
+``close()``
     closes the connection to the remote host. After this, no more
     interaction with the FTP server is possible without using a new
-    FTPHost object.
+    ``FTPHost`` object.
 
-getcwd()
+``getcwd()``
     returns the absolute current directory on the remote host. This
-    method acts similar to os.getcwd.
+    method acts similar to ``os.getcwd``.
 
-chdir(directory)
+``chdir(directory)``
     sets the current directory on the FTP server. This resembles
-    os.chdir, as you may have expected. :-)
+    ``os.chdir``, as you may have expected. :-)
 
-mkdir(path, [mode])
+``mkdir(path, [mode])``
     makes the given directory on the remote host. In the current
     implementation, this doesn't construct "intermediate" directories
     which don't already exist. The mode parameter is ignored. This is
-    for compatibilty with os.mkdir if an FTPHost object is passed into
+    for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is passed into
     a function instead of the os module (see the subsection on Python
     exceptions above for an explanation).
 
-rmdir(path)
+``rmdir(path)``
     removes the given remote directory. Currently, "intermediate"
-    directories can't be deleted (as with os.rmdir).
+    directories can't be deleted (as with ``os.rmdir``).
 
-remove(path)
-    removes a file on the remote host (similar to os.remove).
+``remove(path)``
+    removes a file on the remote host (similar to ``os.remove``).
 
-unlink(path)
-    is an alias for remove.
+``unlink(path)``
+    is an alias for ``remove``.
 
-rename(source, target)
+``rename(source, target)``
     renames the source file (or directory) on the FTP server.
 
-listdir(path)
+``listdir(path)``
     returns a list containing the names of the files and directories
-    in the given path; similar to os.listdir.
+    in the given path; similar to ``os.listdir``.
 
-lstat(path)
-    returns an object similar that from os.lstat (a "tuple" with
-    additional attributes; see the documentation of the os module for
+``lstat(path)``
+    returns an object similar that from ``os.lstat`` (a "tuple" with
+    additional attributes; see the documentation of the ``os`` module for
     details). However, due to the nature of the application, there are
     some important aspects to keep in mind:
 
-    - The result is derived by parsing the output of a DIR command on
-      the server. Therefore, the result from FTPHost.lstat can not
+    - The result is derived by parsing the output of a ``DIR`` command on
+      the server. Therefore, the result from ``FTPHost.lstat`` can not
       contain more information than the received text. In particular:
 
     - User and group ids can only be determined as strings, not as
@@ -293,69 +310,74 @@ lstat(path)
       files, the information may be accurate to a minute.
 
     - Links can only be recognized on servers that provide this
-      information in the DIR output.
+      information in the ``DIR`` output.
 
     - Items that can't be determined at all are set to None.
 
     - There's a special problem with stat'ing the root directory. In
-      this case, a RootDirError is raised. This has to do with the
-      algorithm used by (l)stat and I know of no approach which solves
+      this case, a ``RootDirError`` is raised. This has to do with the
+      algorithm used by ``(l)stat`` and I know of no approach which solves
       this problem.
+
+.. update for other servers
 
     Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
     a format commonly used by Unix servers is assumed. If you need to
     parse output from another server type, please contact me under the
     email address at the end of this text.
 
-stat(path)
-    return stat information also for files which are pointed to by a
+``stat(path)``
+    return ``stat`` information also for files which are pointed to by a
     link. This method follows multiple links until a regular file or
     directory is found. If an infinite link chain is encountered, a
-    PermanentError is raised.
+    ``PermanentError`` is raised.
 
-FTPHost.path
-------------
+``FTPHost.path``
+~~~~~~~~~~~~~~~~
 
-FTPHost objects contain an attribute named path, similar to os.path.
-(See there for documentation.) The following methods can be applied
-to the remote host with the same semantics as for os.path:
+``FTPHost`` objects contain an attribute named path, similar to
+``os.path``. (See there for documentation.) The following methods can
+be applied to the remote host with the same semantics as for
+``os.path``:
 
-abspath(path)
-basename(path)
-commonprefix(path_list)
-dirname(path)
-exists(path)
-getmtime(path)
-getsize(path)
-isabs(path)
-isdir(path)
-isfile(path)
-islink(path)
-join(path1, path2, ...)
-normcase(path)
-normpath(path)
-split(path)
-splitdrive(path)
-splitext(path)
-walk(path, func, arg)
+::
 
-See the section on the os.path module in the Library Reference,
+    abspath(path)
+    basename(path)
+    commonprefix(path_list)
+    dirname(path)
+    exists(path)
+    getmtime(path)
+    getsize(path)
+    isabs(path)
+    isdir(path)
+    isfile(path)
+    islink(path)
+    join(path1, path2, ...)
+    normcase(path)
+    normpath(path)
+    split(path)
+    splitdrive(path)
+    splitext(path)
+    walk(path, func, arg)
+
+See the section on the ``os.path`` module in the Library Reference,
 http://www.python.org/doc/current/lib/module-os.path.html
 
-----------------------------------------------------------------------
-FTPFile OBJECTS
+``FTPFile`` objects
+-------------------
 
-FTPFile objects as returned by a call to FTPHost.file (or
-FTPHost.open) have the following methods - with the same arguments and
-semantics as for local files:
+``FTPFile`` objects as returned by a call to ``FTPHost.file`` (or
+``FTPHost.open``) have the following methods - with the same arguments and
+semantics as for local files::
 
-close()
-read([count])
-readline([count])
-readlines()
-write(data)
-writelines(string_sequence)
-xreadlines()
+    close()
+    read([count])
+    readline([count])
+    readlines()
+    write(data)
+    writelines(string_sequence)
+    xreadlines()
 
 and the attribute closed. For details, see the section "File objects"
 in the Library Reference,
@@ -364,18 +386,20 @@ http://www.python.org/doc/current/lib/bltin-file-objects.html
 Note that ftputil supports both binary and text mode with the
 appropriate line ending conversions.
 
-----------------------------------------------------------------------
-BUGS AND LIMITATIONS
+Bugs and limitations
+--------------------
+
+.. update this; I should be able to support Python 2.0
 
 - ftputil needs at least Python 2.1 to work. The only place where
-  Python 2.0 is not enough is in FTPHost.listdir. If you need Python
+  Python 2.0 is not enough is in ``FTPHost.listdir``. If you need Python
   2.0, and, yet better, also have a patch, contact me under the
   below-mentioned email address.
 
-- Due to the implementation of lstat it can not return a sensible
-  value for the root directory /. If you know an implementation that
+- Due to the implementation of ``lstat`` it can not return a sensible
+  value for the root directory ``/``. If you know an implementation that
   can do this, please let me know. The root directory is handled
-  appropriately in FTPHost.path.exists/isfile/isdir/islink, though.
+  appropriately in ``FTPHost.path.exists/isfile/isdir/islink``, though.
 
 - Depending on local time and/or daylight saving time settings
   different local hosts may interpret the modification times in the
@@ -384,63 +408,64 @@ BUGS AND LIMITATIONS
   local/remote host pair.
 
 - Timeouts of individual child sessions currently are not handled yet.
-  This is only a problem if your FTPHost object or the generated
-  FTPFile objects are inactive for about ten minutes or longer.
+  This is only a problem if your ``FTPHost`` object or the generated
+  ``FTPFile`` objects are inactive for about ten minutes or longer.
 
 - Until now, I haven't paid attention to thread safety. In principle,
-  at least, different FTPFile objects should be usable in different
+  at least, different ``FTPFile`` objects should be usable in different
   threads.
 
-- FTPFile objects in text mode _may not_ support charsets with more
+- ``FTPFile`` objects in text mode *may not* support charsets with more
   than one byte per character. Please email me your experiences
   (address below), if you have to work with multibyte text streams in
   FTP sessions.
 
-- The UserTuple class, provided in UserTuple.py, is not thoroughly
+- The ``UserTuple`` class, provided in ``UserTuple.py``, is not thoroughly
   tested. If you encouter problems, please notify me.
 
-----------------------------------------------------------------------
-FILES
+Files
+-----
 
-ftputil.py
+``ftputil.py``
     is the main module file.
 
-UserTuple.py
-    may be used as the base class for _Stat. If you have at least
-    Python version 2.2 you can safely delete the UserTuple module.
+``UserTuple.py``
+    may be used as the base class for ``_Stat``. If you have at least
+    Python version 2.2 you can safely delete the ``UserTuple`` module.
 
-ftputil.txt
+``ftputil.txt``
     is this file.
 
-ftputil_pydoc.txt
+``ftputil_pydoc.txt``
     is the development documentation for ftputil, generated with
-    Pythons pydoc utility. If you only want to _use_ ftputil, you
+    Pythons ``pydoc`` utility. If you only want to *use* ftputil, you
     probably don't need this file.
 
-_test_ftputil.py
-_mock_ftplib.py
+``_test_ftputil.py`` and ``_mock_ftplib.py``
     are needed for the unit tests of ftputil. If you don't want to
-    debug or modify ftputil, you can delete these files. _mock_ftplib
-    is a "mock" variant of the ftplib module. See below for details.
+    debug or modify ftputil, you can delete these files.
+    ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module. See
+    below for details.
 
-----------------------------------------------------------------------
-SEE ALSO
+See also
+--------
 
 Mackinnon T, Freeman S, Craig P. 2000.
-    Endo-Testing: Unit Testing with Mock Objects
+    `Endo-Testing: Unit Testing with Mock Objects`.
     http://www.mockobjects.com/misc/mockobjects.pdf
 
 Postel J, Reynolds J. 1985.
-    RFC 959 - File Transfer Protocol (FTP).
+    `RFC 959 - File Transfer Protocol (FTP)`.
     http://www.ietf.org/rfc/rfc959.txt
 
 Van Rossum G, Drake Jr FL. 2001.
-    Python Library Reference.
+    `Python Library Reference`.
     http://www.python.org/doc/current/lib/lib.html
 
-----------------------------------------------------------------------
-AUTHOR
+Author
+------
 
 ftputil is written by Stefan Schwarzer <sschwarzer@sschwarzer.net>.
+
 Feedback is appreciated.
 
