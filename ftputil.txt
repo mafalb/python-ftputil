@@ -405,8 +405,29 @@ Uploading and downloading files
   is similar to the upload method. The only difference is that the
   upload is only invoked if the time of the last modification for
   the source file is more recent than that of the target file, or
-  the target doesn't exist at all. If an upload actually occured,
+  the target doesn't exist at all. If an upload actually happened,
   the return value is a true value, else a false value.
+
+  Note that this method only checks the existence and/or the
+  modification time of the source and target file; it can't recognize
+  a change in the transfer mode, e. g.
+
+  ::
+
+    # transfer in ASCII mode
+    host.upload_if_newer('source_file', 'target_file', 'a')
+    # won't transfer the file again
+    host.upload_if_newer('source_file', 'target_file', 'b')
+
+  Similarly, if a transfer is interrupted, the remote file will have a
+  newer modification time than the local file, and thus the transfer
+  won't be repeated if ``upload_if_newer`` is used a second time.
+  There are (at least) two possibilities after a failed upload:
+
+  - use ``upload`` instead of ``upload_if_newer``, or
+
+  - remove the incomplete target file with ``FTPHost.remove``, then
+    use ``upload`` or ``upload_if_newer`` to transfer it again.
 
   If it seems that a file is uploaded unnecessarily, read the
   subsection on `time shift`_ settings.
@@ -417,8 +438,8 @@ Uploading and downloading files
 
   corresponds to ``upload_if_newer`` but performs a download from the
   server to the local host. Read the descriptions of download and
-  ``upload_if_newer`` for more. If a download actually occured,
-  the return value is a true value, else a false value.
+  ``upload_if_newer`` for more. If a download actually happened, the
+  return value is a true value, else a false value.
 
   If it seems that a file is downloaded unnecessarily, read the
   subsection on `time shift`_ settings.
@@ -597,7 +618,7 @@ Conditional upload/download to/from a server in a different time zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 You may find that ``ftputil`` uploads or downloads files
-unnecessarily, or not when it should. This can occur when the FTP
+unnecessarily, or not when it should. This can happen when the FTP
 server is in a different time zone than the client on which
 ``ftputil`` runs. Please see the the section on setting the
 `time shift`_. It may even be sufficient to call `synchronize_times`_.
