@@ -110,9 +110,12 @@ class FTPIOError(IOError):
 #####################################################################
 # Support for file-like objects
 
-# converter for native line ends to normalized ones in Python;
+# converter for native line ends to normalized ones in Python.
 #  RFC 959 states that the server will send \r\n on text mode
-#  transfers, so this conversion should be safe
+#  transfers, so this conversion should be safe. I still use
+#  text mode transfers (mode 'r', not 'rb') in socket.makefile
+#  because the server may do charset conversions on text
+#  transfers.
 _native_to_python_linesep = \
   lambda text: text.replace('\r', '')
 
