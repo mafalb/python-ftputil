@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.28 2002/03/30 15:10:27 schwa Exp $
+# $Id: _test_ftputil.py,v 1.29 2002/03/30 15:11:29 schwa Exp $
 
 import unittest
 import stat
@@ -163,12 +163,6 @@ class TestPath(unittest.TestCase):
 #         # clean up
 #         host.remove(path1)
 #         host.remove(path2)
-#
-#     def write_test_data(self, data, mode):
-#         """Write test data to the remote host."""
-#         output = self.host.file(self.remote_name, mode)
-#         output.write(data)
-#         output.close()
 #
 #     def binary_write(self):
 #         """Write binary data to the host and read it back."""
