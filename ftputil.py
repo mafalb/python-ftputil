@@ -151,10 +151,10 @@ class _FTPFile:
         if mode not in ('r', 'rb', 'w', 'wb'):
             raise FTPIOError("invalid mode '%s'" % mode)
         # remember convenience variables instead of mode
-        self._binary = 'b' in mode
+        self._binmode = 'b' in mode
         self._readmode = 'r' in mode
         # select ASCII or binary mode
-        transfer_type = ('A', 'I')[self._binary]
+        transfer_type = ('A', 'I')[self._binmode]
         command = 'TYPE %s' % transfer_type
         self._session.voidcmd(command)
         # make transfer command
@@ -177,7 +177,7 @@ class _FTPFile:
         '''Return read bytes, normalized if in text
         transfer mode.'''
         data = self._fo.read(*args, **kwargs)
-        if self._binary:
+        if self._binmode:
             return data
         return _native_to_python_linesep(data)
 
@@ -185,7 +185,7 @@ class _FTPFile:
         '''Return one read line, normalized if in text
         transfer mode.'''
         data = self._fo.readline(*args, **kwargs)
-        if self._binary:
+        if self._binmode:
             return data
         return _native_to_python_linesep(data)
 
@@ -193,7 +193,7 @@ class _FTPFile:
         '''Return read lines, normalized if in text
         transfer mode.'''
         lines = self._fo.readlines(*args, **kwargs)
-        if self._binary:
+        if self._binmode:
             return lines
         # more memory-friendly than
         #  return [... for line in lines]
@@ -204,7 +204,7 @@ class _FTPFile:
     def xreadlines(self):
         '''Return an appropriate xreadlines object with
         built-in line separator conversion support.'''
-        if self._binary:
+        if self._binmode:
             return self._fo.xreadlines()
         else:
             # we don't provide an xreadline-compatible class
@@ -214,14 +214,14 @@ class _FTPFile:
     def write(self, data):
         '''Write data to file. Do linesep conversion for
         text mode.'''
-        if not self._binary:
+        if not self._binmode:
             data = _python_to_native_linesep(data)
         self._fo.write(data)
 
     def writelines(self, lines):
         '''Write lines to file. Do linesep conversion for
         text mode.'''
-        if not self._binary:
+        if not self._binmode:
             # more memory-friendly than [... for line in lines]
             for i in range( len(lines) ):
                 lines[i] = _python_to_native_linesep(lines[i])
