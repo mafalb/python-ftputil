@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.73 2002/03/30 14:49:17 schwa Exp $
+# $Id: ftputil.py,v 1.74 2002/03/30 22:53:42 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -231,8 +231,7 @@ class _FTPFile:
         if not 'b' in mode:
             mode = mode + 'b'
         # get connection and file object
-        self._conn = _try_with_ioerror(
-                     self._session.transfercmd, command)
+        self._conn = _try_with_ioerror(self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
         # this comes last so that close does not try to
         #  close _FTPFile objects without _conn and _fo
@@ -271,7 +270,7 @@ class _FTPFile:
         while current_size < wanted_size:
             # print 'not enough bytes (now %s, wanting %s)' % \
             #       (current_size, wanted_size)
-            more_data = self._fo.read(wanted_size-current_size)
+            more_data = self._fo.read(wanted_size - current_size)
             if not more_data:
                 break
             more_data = _crlf_to_python_linesep(more_data)
@@ -395,8 +394,7 @@ class FTPHost:
         self.curdir, self.pardir, self.sep = '.', '..', '/'
         # check if we have a Microsoft ROBIN server
         try:
-            response = _try_with_oserror(
-                       self._session.voidcmd, 'STAT')
+            response = _try_with_oserror(self._session.voidcmd, 'STAT')
         except PermanentError:
             response = ''
         if response.find('ROBIN Microsoft') != -1:
@@ -514,8 +512,7 @@ class FTPHost:
         """
         path = self.path.abspath(path)
         if not self.path.isdir(path):
-            raise PermanentError(
-                  "550 %s: no such directory" % path)
+            raise PermanentError("550 %s: no such directory" % path)
         names = []
         def callback(line):
             stat_result = self._parse_line(line, fail=0)
@@ -556,8 +553,7 @@ class FTPHost:
         if char_to_mode.has_key(file_type):
             st_mode = st_mode | char_to_mode[file_type]
         else:
-            raise ParserError("unknown file type "
-                  "character '%s'" % file_type)
+            raise ParserError("unknown file type character '%s'" % file_type)
         # st_ino, st_dev, st_nlink, st_uid, st_gid,
         # st_size, st_atime
         st_ino = None
@@ -651,8 +647,7 @@ class FTPHost:
             return self._parser(line)
         except (ValueError, IndexError):
             if fail:
-                raise ParserError(
-                      "can't parse line '%s'" % line)
+                raise ParserError("can't parse line '%s'" % line)
             else:
                 return None
 
@@ -672,15 +667,13 @@ class FTPHost:
             if (stat_result is not None) and \
               (stat_result.st_name == basename):
                 return stat_result
-        raise PermanentError(
-              "550 %s: no such file or directory" % path)
+        raise PermanentError("550 %s: no such file or directory" % path)
 
     def stat(self, path):
         """Return info from a stat call."""
         stat_result = self.lstat(path)
         if stat.S_ISLNK(stat_result.st_mode):
-            raise NotImplementedError("following links "
-                  "is not yet implemented")
+            raise NotImplementedError("following links is not yet implemented")
         else:
             return stat_result
 
@@ -694,7 +687,6 @@ class FTPHost:
                 break
             target.write(buf)
 
-    #TODO Test this
     def copyfile(self, src, dst):
         """Copy data from src to dst (adapted from shutil.copyfile)."""
         fsrc = None
@@ -763,8 +755,8 @@ class _Stat(UserList.UserList):
         if self._index_mapping.has_key(attr_name):
             return self[ self._index_mapping[attr_name] ]
         else:
-            raise AttributeError("'_Stat' object has "
-                  "no attribute '%s'" % attr_name)
+            raise AttributeError("'_Stat' object has no attribute '%s'" %
+                                 attr_name)
 
 
 class _Path:
