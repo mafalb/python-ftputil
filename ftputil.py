@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.89 2002/04/03 21:49:42 schwa Exp $
+# $Id: ftputil.py,v 1.90 2002/04/03 21:57:21 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -100,8 +100,8 @@ else:
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
-           'FTPHost']
-__version__ = '1.1 b1'
+           'RootDirError', 'FTPHost']
+__version__ = '1.1 b2'
 
 
 #####################################################################
@@ -123,6 +123,7 @@ class FTPError:
         return self.strerror
 
 class RootDirError(FTPError): pass
+
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
