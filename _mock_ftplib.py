@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.3 2002/03/29 18:50:33 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.4 2002/03/29 21:47:11 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -41,18 +41,42 @@ run the unit tests.
 
 import ftplib
 
-class FTP(ftplib.FTP):
+try:
+    import cStringIO as StringIO
+except ImportError:
+    import StringIO
+
+
+class MockSocket:
+    def __init__(self, mock_socket_file_contents=''):
+        self.mock_socket_file_contents = mock_socket_file_contents
+
+    def makefile(self, mode):
+        return StringIO.StringIO(self.mock_socket_file_contents)
+
+
+class MockSession:
     """
     Mock implementation of ftplib.FTP . For information on mock
     objects see http://www.mockobjects.com/ .
     """
-    debugging = 0
+
+    # taken from ftplib.FTP
     host = ''
-    port = ftplib.FTP_PORT
     sock = None
     file = None
     welcome = None
     passiveserver = 1
+
+    # mock object settings
+    voidresp_raise = None
+    voidresp_result = None
+    sendcmd_result = None
+    voidcmd_exception = None
+    voidcmd_result = None
+    mock_socket_file_contents = ''
+    login_raise = None
+    login_result = None
 
     # Initialization method (called by class instantiation).
     # Initialize host to localhost, port to standard ftp port
@@ -69,41 +93,15 @@ class FTP(ftplib.FTP):
         - port: port to connect to (integer, default previous port)"""
         if host: self.host = host
         if port: self.port = port
-        self.passiveserver = 0
-        msg = "getaddrinfo returns an empty list"
-        for res in socket.getaddrinfo(self.host, self.port, 0, socket.SOCK_STREAM):
-            af, socktype, proto, canonname, sa = res
-            try:
-                self.sock = socket.socket(af, socktype, proto)
-                self.sock.connect(sa)
-            except socket.error, msg:
-                if self.sock:
-                    self.sock.close()
-                self.sock = None
-                continue
-            break
-        if not self.sock:
-            raise socket.error, msg
-        self.af = af
-        self.file = self.sock.makefile('rb')
-        self.welcome = self.getresp()
+        self.passiveserver = 1
+        self.file = StringIO.StringIO()
+        self.welcome = 'Welcome to the MockSession class! ;-)'
         return self.welcome
 
     def getwelcome(self):
         """Get the welcome message from the server.
         (this is read and squirreled away by connect())"""
-        if self.debugging:
-            print '*welcome*', self.sanitize(self.welcome)
         return self.welcome
-
-    def set_debuglevel(self, level):
-        """Set the debugging level.
-        The required argument level means:
-        0: no debugging output (default)
-        1: print commands and responses but not body text etc.
-        2: also print raw lines read and sent before stripping CR/LF"""
-        self.debugging = level
-    debug = set_debuglevel
 
     def set_pasv(self, val):
         """Use passive or active mode for data transfers.
@@ -111,152 +109,21 @@ class FTP(ftplib.FTP):
         With a true argument, use the PASV command."""
         self.passiveserver = val
 
-    # Internal: "sanitize" a string for printing
-    def sanitize(self, s):
-        if s[:5] == 'pass ' or s[:5] == 'PASS ':
-            i = len(s)
-            while i > 5 and s[i-1] in '\r\n':
-                i = i-1
-            s = s[:5] + '*'*(i-5) + s[i:]
-        return `s`
-
-    # Internal: send one line to the server, appending CRLF
-    def putline(self, line):
-        line = line + CRLF
-        if self.debugging > 1: print '*put*', self.sanitize(line)
-        self.sock.send(line)
-
-    # Internal: send one command to the server (through putline())
-    def putcmd(self, line):
-        if self.debugging: print '*cmd*', self.sanitize(line)
-        self.putline(line)
-
-    # Internal: return one line from the server, stripping CRLF.
-    # Raise EOFError if the connection is closed
-    def getline(self):
-        line = self.file.readline()
-        if self.debugging > 1:
-            print '*get*', self.sanitize(line)
-        if not line: raise EOFError
-        if line[-2:] == CRLF: line = line[:-2]
-        elif line[-1:] in CRLF: line = line[:-1]
-        return line
-
-    # Internal: get a response from the server, which may possibly
-    # consist of multiple lines.  Return a single string with no
-    # trailing CRLF.  If the response consists of multiple lines,
-    # these are separated by '\n' characters in the string
-    def getmultiline(self):
-        line = self.getline()
-        if line[3:4] == '-':
-            code = line[:3]
-            while 1:
-                nextline = self.getline()
-                line = line + ('\n' + nextline)
-                if nextline[:3] == code and \
-                        nextline[3:4] != '-':
-                    break
-        return line
-
-    # Internal: get a response from the server.
-    # Raise various errors if the response indicates an error
-    def getresp(self):
-        resp = self.getmultiline()
-        if self.debugging: print '*resp*', self.sanitize(resp)
-        self.lastresp = resp[:3]
-        c = resp[:1]
-        if c == '4':
-            raise error_temp, resp
-        if c == '5':
-            raise error_perm, resp
-        if c not in '123':
-            raise error_proto, resp
-        return resp
-
     def voidresp(self):
         """Expect a response beginning with '2'."""
-        resp = self.getresp()
-        if resp[0] != '2':
-            raise error_reply, resp
-        return resp
-
-    def abort(self):
-        """Abort a file transfer.  Uses out-of-band data.
-        This does not follow the procedure from the RFC to send Telnet
-        IP and Synch; that doesn't seem to work with the servers I've
-        tried.  Instead, just send the ABOR command as OOB data."""
-        line = 'ABOR' + CRLF
-        if self.debugging > 1: print '*put urgent*', self.sanitize(line)
-        self.sock.send(line, MSG_OOB)
-        resp = self.getmultiline()
-        if resp[:3] not in ('426', '226'):
-            raise error_proto, resp
+        if self.voidresp_raise:
+            raise ftplib.error_reply, resp
+        return self.voidresp_result
 
     def sendcmd(self, cmd):
         """Send a command and return the response."""
-        self.putcmd(cmd)
-        return self.getresp()
+        return self.sendcmd_result
 
     def voidcmd(self, cmd):
         """Send a command and expect a response beginning with '2'."""
-        self.putcmd(cmd)
-        return self.voidresp()
-
-    def sendport(self, host, port):
-        """Send a PORT command with the current host and the given
-        port number.
-        """
-        hbytes = host.split('.')
-        pbytes = [`port/256`, `port%256`]
-        bytes = hbytes + pbytes
-        cmd = 'PORT ' + ','.join(bytes)
-        return self.voidcmd(cmd)
-
-    def sendeprt(self, host, port):
-        """Send a EPRT command with the current host and the given port number."""
-        af = 0
-        if self.af == socket.AF_INET:
-            af = 1
-        if self.af == socket.AF_INET6:
-            af = 2
-        if af == 0:
-            raise error_proto, 'unsupported address family'
-        fields = ['', `af`, host, `port`, '']
-        cmd = 'EPRT ' + string.joinfields(fields, '|')
-        return self.voidcmd(cmd)
-
-    def makeport(self):
-        """Create a new socket and send a PORT command for it."""
-        msg = "getaddrinfo returns an empty list"
-        sock = None
-        for res in socket.getaddrinfo(None, 0, self.af, socket.SOCK_STREAM, 0, socket.AI_PASSIVE):
-            af, socktype, proto, canonname, sa = res
-            try:
-                sock = socket.socket(af, socktype, proto)
-                sock.bind(sa)
-            except socket.error, msg:
-                if sock:
-                    sock.close()
-                sock = None
-                continue
-            break
-        if not sock:
-            raise socket.error, msg
-        sock.listen(1)
-        port = sock.getsockname()[1] # Get proper port
-        host = self.sock.getsockname()[0] # Get proper host
-        if self.af == socket.AF_INET:
-            resp = self.sendport(host, port)
-        else:
-            resp = self.sendeprt(host, port)
-        return sock
-
-    def makepasv(self):
-        if self.af == socket.AF_INET:
-            host, port = parse227(self.sendcmd('PASV'))
-        else:
-            host, port = parse229(self.sendcmd('EPSV'), self.sock.getpeername())
-        return host, port
+        if self.voidcmd_exception is not None:
+            raise self.voidcmd_exception
+        return self.voidcmd_result
 
     def ntransfercmd(self, cmd, rest=None):
         """Initiate a transfer over the data connection.
@@ -273,59 +140,19 @@ class FTP(ftplib.FTP):
         marker used to tell the server to skip over any data up to the
         given marker.
         """
-        size = None
-        if self.passiveserver:
-            host, port = self.makepasv()
-            af, socktype, proto, canon, sa = socket.getaddrinfo(host, port, 0, socket.SOCK_STREAM)[0]
-            conn = socket.socket(af, socktype, proto)
-            conn.connect(sa)
-            if rest is not None:
-                self.sendcmd("REST %s" % rest)
-            resp = self.sendcmd(cmd)
-            if resp[0] != '1':
-                raise error_reply, resp
-        else:
-            sock = self.makeport()
-            if rest is not None:
-                self.sendcmd("REST %s" % rest)
-            resp = self.sendcmd(cmd)
-            if resp[0] != '1':
-                raise error_reply, resp
-            conn, sockaddr = sock.accept()
-        if resp[:3] == '150':
-            # this is conditional in case we received a 125
-            size = parse150(resp)
+        conn = MockSocket(self.mock_socket_file_contents)
+        size = self.ntransfercmd_size
         return conn, size
 
     def transfercmd(self, cmd, rest=None):
         """Like ntransfercmd() but returns only the socket."""
         return self.ntransfercmd(cmd, rest)[0]
 
-    def login(self, user = '', passwd = '', acct = ''):
+    def login(self, user='', passwd='', acct=''):
         """Login, default anonymous."""
-        if not user: user = 'anonymous'
-        if not passwd: passwd = ''
-        if not acct: acct = ''
-        if user == 'anonymous' and passwd in ('', '-'):
-            # get fully qualified domain name of local host
-            thishost = socket.getfqdn()
-            try:
-                if os.environ.has_key('LOGNAME'):
-                    realuser = os.environ['LOGNAME']
-                elif os.environ.has_key('USER'):
-                    realuser = os.environ['USER']
-                else:
-                    realuser = 'anonymous'
-            except AttributeError:
-                # Not all systems have os.environ....
-                realuser = 'anonymous'
-            passwd = passwd + realuser + '@' + thishost
-        resp = self.sendcmd('USER ' + user)
-        if resp[0] == '3': resp = self.sendcmd('PASS ' + passwd)
-        if resp[0] == '3': resp = self.sendcmd('ACCT ' + acct)
-        if resp[0] != '2':
-            raise error_reply, resp
-        return resp
+        if self.login_raise:
+            raise ftplib.error_reply, self.login_result
+        return self.login_result
 
     def retrbinary(self, cmd, callback, blocksize=8192, rest=None):
         """Retrieve data in binary mode.
@@ -492,3 +319,9 @@ class FTP(ftplib.FTP):
             self.file.close()
             self.sock.close()
             self.file = self.sock = None
+
+
+class FailOnLoginSession:
+    def __init__(self, host='', user='', password=''):
+        raise ftplib.error_perm
+
