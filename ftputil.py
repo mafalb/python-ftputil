@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.94 2002/05/29 11:50:17 schwa Exp $
+# $Id: ftputil.py,v 1.95 2002/10/22 20:58:17 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -101,7 +101,14 @@ else:
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '1.1.1'
+__version__ = '1.1.4'
+
+
+# define `True` and `False` if necessary
+try:
+    True, False
+except NameError:
+    True, False = 1 == 1, 1 == 0
 
 
 #####################################################################
@@ -507,6 +514,9 @@ class FTPHost:
         """
         Upload a file only if it's newer than the target on the
         remote host or if the target file does not exist.
+
+        If an upload was necessary, return `True`, else return
+        `False`.
         """
         source_timestamp = os.path.getmtime(source)
         if self.path.exists(target):
@@ -516,11 +526,17 @@ class FTPHost:
             target_timestamp = 0.0
         if source_timestamp > target_timestamp:
             self.upload(source, target, mode)
+            return True
+        else:
+            return False
 
     def download_if_newer(self, source, target, mode=''):
         """
         Download a file only if it's newer than the target on the
         local host or if the target file does not exist.
+
+        If a download was necessary, return `True`, else return
+        `False`.
         """
         source_timestamp = self.path.getmtime(source)
         if os.path.exists(target):
@@ -530,6 +546,9 @@ class FTPHost:
             target_timestamp = 0.0
         if source_timestamp > target_timestamp:
             self.download(source, target, mode)
+            return True
+        else:
+            return False
 
     def close(self):
         """Close host connection."""

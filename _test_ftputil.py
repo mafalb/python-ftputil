@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.60 2002/04/03 21:50:24 schwa Exp $
+# $Id: _test_ftputil.py,v 1.61 2002/10/22 20:58:17 schwa Exp $
 
 import unittest
 import stat
@@ -156,7 +156,7 @@ class TestStat(unittest.TestCase):
             host.lstat('/')
         except ftputil.RootDirError, exc_obj:
             self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
-        
+
     def test_lstat_one_file(self):
         """Test lstat for a file."""
         host = ftp_host_factory()
@@ -178,11 +178,15 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_atime, None)
         # The comparison with the value 937785600.0 may fail in
         #  some Python environments. It seems that this depends on
-        #  how time.mktime interprets the dst flag.
-        self.assertEqual(stat_result.st_mtime, 937785600.0)
+        #  how `time.mktime` interprets the dst flag.
+        self.failUnless(stat_result.st_mtime == 937785600.0 or
+                        stat_result.st_mtime == 937778400.0)
         self.assertEqual(stat_result.st_ctime, None)
-        self.assertEqual( stat_result, (17901, None, None, 6, '45854', '200',
-                                        512, None, 937785600.0, None) )
+        # same here (or similarly)
+        self.failUnless( stat_result == (17901, None, None, 6, '45854', '200',
+                                         512, None, 937785600.0, None) or
+                         stat_result == (17901, None, None, 6, '45854', '200',
+                                         512, None, 937778400.0, None) )
 
     def test_lstat_via_stat_module(self):
         """Test lstat indirectly via stat module."""
@@ -478,10 +482,12 @@ class TestUploadAndDownload(unittest.TestCase):
         # target is newer, so don't upload
         host = ftp_host_factory(
                ftp_host_class=FailingUploadAndDownloadFTPHost)
-        host.upload_if_newer(local_source, '/home/newer')
+        flag = host.upload_if_newer(local_source, '/home/newer')
+        self.assertEqual(flag, False)
         # target is older, so upload
         host = ftp_host_factory()
-        host.upload_if_newer(local_source, '/home/older')
+        flag = host.upload_if_newer(local_source, '/home/older')
+        self.assertEqual(flag, True)
         # check uploaded content
         # the data which was uploaded has its line endings converted
         #  so the conversion must also be applied to 'data'
@@ -490,7 +496,8 @@ class TestUploadAndDownload(unittest.TestCase):
         self.assertEqual(data, remote_file_content)
         # target doesn't exist, so upload
         host = ftp_host_factory()
-        host.upload_if_newer(local_source, '/home/notthere')
+        flag = host.upload_if_newer(local_source, '/home/notthere')
+        self.assertEqual(flag, True)
         remote_file_content = _mock_ftplib.content_of('/home/notthere')
         self.assertEqual(data, remote_file_content)
         # clean up
@@ -510,7 +517,8 @@ class TestUploadAndDownload(unittest.TestCase):
         local_target = '__test_target'
         # target does not exist, so download
         host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
-        host.download_if_newer('/home/newer', local_target, 'b')
+        flag = host.download_if_newer('/home/newer', local_target, 'b')
+        self.assertEqual(flag, True)
         self.compare_and_delete_downloaded_data(local_target)
 
     def test_conditional_download_with_older_target(self):
@@ -520,7 +528,8 @@ class TestUploadAndDownload(unittest.TestCase):
         open(local_target, 'w').close()
         # source is newer, so download
         host = ftp_host_factory(session_factory=BinaryDownloadMockSession)
-        host.download_if_newer('/home/newer', local_target, 'b')
+        flag = host.download_if_newer('/home/newer', local_target, 'b')
+        self.assertEqual(flag, True)
         self.compare_and_delete_downloaded_data(local_target)
 
     def test_conditional_download_with_newer_target(self):
@@ -533,7 +542,8 @@ class TestUploadAndDownload(unittest.TestCase):
         host = ftp_host_factory(
                ftp_host_class=FailingUploadAndDownloadFTPHost,
                session_factory=BinaryDownloadMockSession)
-        host.download_if_newer('/home/older', local_target, 'b')
+        flag = host.download_if_newer('/home/older', local_target, 'b')
+        self.assertEqual(flag, False)
         # remove target file
         os.unlink(local_target)
 
