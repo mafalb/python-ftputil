@@ -45,12 +45,7 @@ altsep = None
 
 
 #####################################################################
-# Exception classes
-
-class FTPIOError(IOError):
-    def __init__(self, ftp_exception):
-        self.ftp_exception = ftp_exception
-        IOError( self, str(ftp_exception) )
+# Exception class
 
 class FTPOSError(OSError):
     def __init__(self, ftp_exception):
