@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.108 2003/03/15 22:35:37 schwa Exp $
+# $Id: ftputil.py,v 1.109 2003/03/15 22:44:00 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -86,7 +86,6 @@ import os
 import posixpath
 import stat
 import sys
-import threading
 import time
 
 if sys.version_info[:2] >= (2, 2):
@@ -385,7 +384,6 @@ class FTPHost:
         self.path = _Path(self)
         # associated `FTPHost` objects for data transfer
         self._children = []
-        self.__children_lock = threading.Lock()
         self.closed = False
         # set curdir, pardir etc. for the remote host; RFC 959 states
         #  that this is, strictly spoken, dependent on the server OS
@@ -451,19 +449,15 @@ class FTPHost:
         This method tries to reuse a child but will generate a new one
         if none is available.
         """
-        self.__children_lock.acquire()
-        try:
-            host = self._available_child()
-            if host is None:
-                host = self._copy()
-                self._children.append(host)
-                host._file = _FTPFile(host)
-            basedir = self.getcwd()
-            host.chdir(basedir)
-            host._file._open(path, mode)
-            return host._file
-        finally:
-            self.__children_lock.release()
+        host = self._available_child()
+        if host is None:
+            host = self._copy()
+            self._children.append(host)
+            host._file = _FTPFile(host)
+        basedir = self.getcwd()
+        host.chdir(basedir)
+        host._file._open(path, mode)
+        return host._file
 
     def open(self, path, mode='r'):
         return self.file(path, mode)
