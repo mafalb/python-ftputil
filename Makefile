@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.8 2004/02/27 23:18:00 schwa Exp $
+# $Id: Makefile,v 1.9 2004/02/27 23:21:55 schwa Exp $
 
 
 SHELL=/bin/sh
@@ -51,9 +51,9 @@ test:
 
 patch:
 	@echo "Patching files"
-	sed -i -E -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
-	sed -i -E -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
-	sed -i -E -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
+	sed -i'' -E -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
+	sed -i'' -E -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
+	sed -i'' -E -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
 
 docs: ${DOC_FILES} README.txt ftputil.txt
 
