@@ -1,10 +1,10 @@
 Python Library Documentation: module ftputil
 
 NAME
-    ftputil - ftputil - higher level support for FTP sessions
+    ftputil - higher level support for FTP sessions
 
 FILE
-    f:/program/python/ftputil/ftputil.py
+    ftputil.py
 
 DESCRIPTION
     FTPHost objects
@@ -54,6 +54,7 @@ CLASSES
             ParserError
             PermanentError
             TemporaryError
+        RootDirError
     FTPHost
     _FTPFile
     _Path
@@ -150,7 +151,7 @@ CLASSES
      |      named path.
      |  
      |  lstat(self, path)
-     |      Return an object similar to that returned by os.stat.
+     |      Return an object similar to that returned by os.lstat.
      |  
      |  mkdir(self, path, mode=None)
      |      Make the directory path on the remote host. The argument mode
@@ -301,6 +302,20 @@ CLASSES
      |  
      |  __getitem__(...)
     
+    class RootDirError(FTPError)
+     |  Data and non-method functions defined here:
+     |  
+     |  __doc__ = None
+     |  
+     |  __module__ = 'ftputil'
+     |  
+     |  ----------------------------------------------------------------------
+     |  Methods inherited from FTPError:
+     |  
+     |  __init__(self, ftp_exception)
+     |  
+     |  __str__(self)
+    
     class TemporaryError(FTPOSError)
      |  Method resolution order:
      |      TemporaryError
@@ -444,7 +459,7 @@ CLASSES
      |  ----------------------------------------------------------------------
      |  Data and non-method functions defined here:
      |  
-     |  __dict__ = <dict-proxy object at 0x55810c>
+     |  __dict__ = <dict-proxy object at 0x106a0c>
      |  
      |  __doc__ = '\n    Support class resembling a tuple like that which is r...
      |  
@@ -506,7 +521,7 @@ CLASSES
      |  ----------------------------------------------------------------------
      |  Data and non-method functions inherited from __builtin__.tuple:
      |  
-     |  __new__ = <built-in method __new__ of type object at 0x17f53c30>
+     |  __new__ = <built-in method __new__ of type object at 0x17bb3c30>
      |      T.__new__(S, ...) -> a new object with type S, a subtype of T
      |  
      |  ----------------------------------------------------------------------
@@ -566,9 +581,9 @@ FUNCTIONS
 
 DATA
     __all__ = ['FTPError', 'FTPOSError', 'TemporaryError', 'PermanentError...
-    __file__ = './ftputil.py'
+    __file__ = './ftputil.pyc'
     __name__ = 'ftputil'
-    __version__ = '1.1'
+    __version__ = '1.1 b2'
     nested_scopes = _Feature((2, 1, 0, 'beta', 1), (2, 2, 0, 'alpha', 0), ...
 
 VERSION

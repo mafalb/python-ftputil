@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.90 2002/04/03 21:57:21 schwa Exp $
+# $Id: ftputil.py,v 1.91 2002/04/07 21:36:04 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -101,7 +101,7 @@ else:
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '1.1 b2'
+__version__ = '1.1'
 
 
 #####################################################################
