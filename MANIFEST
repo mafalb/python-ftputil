@@ -1,10 +1,5 @@
 UserTuple.py
 __init__.py
-_mock_ftplib.py
-_test_base.py
-_test_ftp_path.py
-_test_ftp_stat.py
-_test_ftputil.py
 ftp_error.py
 ftp_file.py
 ftp_path.py
@@ -12,3 +7,8 @@ ftp_stat.py
 ftputil.py
 setup.py
 true_false.py
+VERSION
+README.txt
+README.html
+ftputil.txt
+ftputil.html
