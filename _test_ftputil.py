@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.33 2002/03/30 15:36:25 schwa Exp $
+# $Id: _test_ftputil.py,v 1.34 2002/03/30 16:50:08 schwa Exp $
 
 import unittest
 import stat
@@ -41,10 +41,34 @@ import ftputil
 import _mock_ftplib
 
 
-class FTPHostWrapper(ftputil.FTPHost):
-    def __init__(self, session_factory):
-        ftputil.FTPHost.__init__(self, 'dummy_host', 'dummy_user',
-          'dummy_password', session_factory=session_factory)
+class FailOnLoginSession(_mock_ftplib.MockSession):
+    def __init__(self, host='', user='', password=''):
+        raise ftplib.error_perm
+
+class InspectableFTPHost(ftputil.FTPHost):
+    def file_content(self, child_index):
+        """
+        Return content for the associated file object of a child
+        FTPHost object.
+        
+        Usage of the getvalue() method implies that the file object
+        really is a StringIO.StringIO object. In fact, this kind of
+        file object is established by the MockSocket class which in
+        turn is used by the MockSession class.
+
+        Unfortunately, this method requires deep knowledge of the
+        internal implementation of the FTPHost and _FTPFile classes.
+        """
+        child = self._children[child_index]
+        ftp_file = child._file
+        file_object = ftp_file._fo
+        file_content = file_object.getvalue()
+        return file_content
+
+
+def ftp_host_factory(session_factory, ftp_host_class=ftputil.FTPHost):
+    return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
+                          session_factory=session_factory)
 
 
 class TestLogin(unittest.TestCase):
@@ -52,8 +76,8 @@ class TestLogin(unittest.TestCase):
 
     def test_invalid_login(self):
         """Login to invalid host must fail."""
-        self.assertRaises(ftputil.FTPOSError, FTPHostWrapper,
-                          _mock_ftplib.FailOnLoginSession)
+        self.assertRaises(ftputil.FTPOSError, ftp_host_factory,
+                          FailOnLoginSession)
 
 
 class TestStat(unittest.TestCase):
@@ -64,7 +88,7 @@ class TestStat(unittest.TestCase):
 
     def test_failing_lstat(self):
         """Test whether lstat fails for a nonexistent path."""
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         self.assertRaises(ftputil.PermanentError, host.lstat,
                           '/home/sschw/notthere')
         self.assertRaises(ftputil.PermanentError, host.lstat,
@@ -72,7 +96,7 @@ class TestStat(unittest.TestCase):
 
     def test_lstat_one_file(self):
         """Test FTPHost.lstat with a file."""
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
@@ -80,7 +104,7 @@ class TestStat(unittest.TestCase):
     def test_lstat_one_dir(self):
         """Test FTPHost.lstat with a directory."""
         # some directory
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
         self.assertEqual(stat_result.st_ino, None)
@@ -96,7 +120,7 @@ class TestStat(unittest.TestCase):
 
     def test_lstat_via_stat_module(self):
         """Test FTPHost.lstat indirectly via stat module."""
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
@@ -106,17 +130,17 @@ class TestListdir(unittest.TestCase):
 
     def test_failing_listdir(self):
         """Test failing FTPHost.listdir."""
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         self.assertRaises(ftputil.PermanentError,
                           host.listdir, 'notthere')
 
     def test_succeeding_listdir(self):
         """Test succeeding FTPHost.listdir."""
         # do we have all expected "files"?
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         self.assertEqual( len(host.listdir(host.curdir)), 9 )
         # have they the expected names?
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         expected = ('chemeng download image index.html os2 '
                     'osup publications python scios2').split()
         remote_file_list = host.listdir(host.curdir)
@@ -130,7 +154,7 @@ class TestPath(unittest.TestCase):
     def test_isdir_isfile_islink(self):
         """Test FTPHost._Path.isdir/isfile/islink."""
         testdir = '/home/sschwarzer'
-        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        host = ftp_host_factory(_mock_ftplib.MockSession)
         host.chdir(testdir)
         # test a path which isn't there
         self.failIf( host.path.isdir('notthere') )
@@ -147,7 +171,7 @@ class TestPath(unittest.TestCase):
         self.failIf( host.path.islink(testfile) )
         # test a link
         testlink = '/home/sschwarzer/osup'
-        # uncomment these two when following links is implemented
+        #XXX uncomment these two when following links is implemented
         #self.failIf( host.path.isdir(testlink) )
         #self.failIf( host.path.isfile(testlink) )
         self.failUnless( host.path.islink(testlink) )
@@ -194,20 +218,20 @@ class TestFileOperations(unittest.TestCase):
 #         host.remove(path1)
 #         host.remove(path2)
 #
-#     def binary_write(self):
-#         """Write binary data to the host and read it back."""
-#         host = self.host
-#         local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
-#         # write data in binary mode
-#         self.write_test_data(local_data, 'wb')
-#         # check the file length on the remote host
-#         remote_size = host.path.getsize(self.remote_name)
-#         self.assertEqual( remote_size, len(local_data) )
-#         # read the data back and compare
-#         input_ = host.file(self.remote_name, 'rb')
-#         remote_data = input_.read()
-#         input_.close()
-#         self.assertEqual(local_data, remote_data)
+    def binary_write(self):
+        """Write binary data to the host and read it back."""
+        host = self.host
+        local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
+        # write data in binary mode
+        self.write_test_data(local_data, 'wb')
+        # check the file length on the remote host
+        remote_size = host.path.getsize(self.remote_name)
+        self.assertEqual( remote_size, len(local_data) )
+        # read the data back and compare
+        input_ = host.file(self.remote_name, 'rb')
+        remote_data = input_.read()
+        input_.close()
+        self.assertEqual(local_data, remote_data)
 #
 #     def ascii_write(self):
 #         """Write an ASCII to the host and check the written file."""
@@ -247,11 +271,8 @@ class TestFileOperations(unittest.TestCase):
 #         self.assertRaises(ftputil.FTPIOError, host.file,
 #                           self.testdir, 'w')
 #         self.binary_write()
-#         self.ascii_write()
-#         self.ascii_writelines()
-#         # clean up
-#         host.remove(self.remote_name)
-#         host.chdir(self.rootdir)
+#         #self.ascii_write()
+#         #self.ascii_writelines()
 #
 #     def ascii_read(self):
 #         """Write some ASCII data to the host and use plain

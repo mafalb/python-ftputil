@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.8 2002/03/30 16:48:07 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.9 2002/03/30 16:50:08 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -408,9 +408,5 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
             print cmd
         return MockSocket(self.mock_file_content)
 
-
-class FailOnLoginSession(MockSession):
-    def __init__(self, host='', user='', password=''):
-        raise ftplib.error_perm
 
 
