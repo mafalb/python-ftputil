@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.6 2002/03/29 23:16:32 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.7 2002/03/30 14:53:01 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -324,14 +324,14 @@ class MockSession:
 
 class MockSession:
 
-    # used by MockSession.pwd
-    pwd_results = []
+    # used by MockSession.cwd and MockSession.pwd
+    current_dir = '/home/sschwarzer'
     
     # used by MockSession.dir
     dir_contents = {
-          '/absolute': """\
-drwxr-sr-x   2 45854    200           512 May  4  2000 path""",
-          '/absolute/path': """\
+          '/home': """\
+drwxr-sr-x   2 45854    200           512 May  4  2000 sschwarzer""",
+          '/home/sschwarzer': """\
 total 14
 drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
 drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
@@ -353,13 +353,13 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
             raise ftplib.error_perm
 
     def pwd(self):
-        result = self.pwd_results[self.pwd_result_index]
-        self.pwd_result_index += 1
-        return result
+        return self.current_dir
 
     def dir(self, path, callback=None):
         if DEBUG:
             print 'dir: %s' % path
+        if path.endswith('/'):
+            path = path[:-1]
         if not self.dir_contents.has_key(path):
             raise ftplib.error_perm
         dir_lines = self.dir_contents[path].split('\n')
@@ -373,8 +373,4 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 class FailOnLoginSession(MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
-
-
-class StatTest(MockSession):
-    pwd_results = ['/absolute/path']
 
