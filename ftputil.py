@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer <s.schwarzer@ndh.net>
+# Copyright (C) 2003, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.110 2003/03/15 23:03:23 schwa Exp $
+# $Id: ftputil.py,v 1.111 2003/03/16 18:40:47 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -75,18 +75,25 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 
 # Ideas for future development:
 # - handle connection timeouts
-# - caching of `FTPHost.stat` results??
+# - what about thread safety? (also have a look at ftplib)
+# - caching of `FTPHost.stat` results? policy?
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
 # for Python 2.1
 from __future__ import nested_scopes
 
 import ftplib
+import ftp_error
+import ftp_file
 import os
 import posixpath
 import stat
 import sys
 import time
+
+# make exceptions available in this module for backwards compatibilty
+from ftp_error import *
+
 
 if sys.version_info[:2] >= (2, 2):
     _StatBase = tuple
@@ -104,247 +111,6 @@ try:
     True, False
 except NameError:
     True, False = (1 == 1), (1 == 0)
-
-
-#####################################################################
-# Exception classes and wrappers
-
-class FTPError:
-    """General error class"""
-
-    def __init__(self, ftp_exception):
-        self.args = (ftp_exception,)
-        self.strerror = str(ftp_exception)
-        try:
-            self.errno = int(self.strerror[:3])
-        except (TypeError, IndexError, ValueError):
-            self.errno = None
-        self.filename = None
-
-    def __str__(self):
-        return self.strerror
-
-class RootDirError(FTPError): pass
-class TimeShiftError(FTPError): pass
-
-class FTPOSError(FTPError, OSError): pass
-class TemporaryError(FTPOSError): pass
-class PermanentError(FTPOSError): pass
-class ParserError(FTPOSError): pass
-
-#XXX Do you know better names for `_try_with_oserror` and
-#    `_try_with_ioerror`?
-def _try_with_oserror(callee, *args, **kwargs):
-    """
-    Try the callee with the given arguments and map resulting
-    exceptions from `ftplib.all_errors` to `FTPOSError` and its
-    derived classes.
-    """
-    try:
-        return callee(*args, **kwargs)
-    except ftplib.error_temp, obj:
-        raise TemporaryError(obj)
-    except ftplib.error_perm, obj:
-        raise PermanentError(obj)
-    except ftplib.all_errors:
-        ftp_error = sys.exc_info()[1]
-        raise FTPOSError(ftp_error)
-
-class FTPIOError(FTPError, IOError): pass
-
-def _try_with_ioerror(callee, *args, **kwargs):
-    """
-    Try the callee with the given arguments and map resulting
-    exceptions from `ftplib.all_errors` to `FTPIOError`.
-    """
-    try:
-        return callee(*args, **kwargs)
-    except ftplib.all_errors:
-        ftp_error = sys.exc_info()[1]
-        raise FTPIOError(ftp_error)
-
-
-#####################################################################
-# Support for file-like objects
-
-# converter for `\r\n` line ends to normalized ones in Python.
-#  RFC 959 states that the server will send `\r\n` on text mode
-#  transfers, so this conversion should be safe. I still use
-#  text mode transfers (mode 'r', not 'rb') in socket.makefile
-#  (below) because the server may do charset conversions on
-#  text transfers.
-_crlf_to_python_linesep = lambda text: text.replace('\r', '')
-
-# converter for Python line ends into `\r\n`
-_python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
-
-
-# helper class for xreadline protocol for ASCII transfers
-class _XReadlines:
-    """Represents `xreadline` objects for ASCII transfers."""
-
-    def __init__(self, ftp_file):
-        self._ftp_file = ftp_file
-        self._next_index = 0
-
-    def __getitem__(self, index):
-        """Return next line with specified index."""
-        if index != self._next_index:
-            raise RuntimeError( "_XReadline access index "
-                  "out of order (expected %s but got %s)" %
-                  (self._next_index, index) )
-        line = self._ftp_file.readline()
-        if not line:
-            raise IndexError("_XReadline object out of data")
-        self._next_index = self._next_index + 1
-        return line
-
-
-class _FTPFile:
-    """
-    Represents a file-like object connected to an FTP host.
-    File and socket are closed appropriately if the close
-    operation is requested.
-    """
-
-    def __init__(self, host):
-        """Construct the file(-like) object."""
-        self._host = host
-        self._session = host._session
-        self.closed = True   # yet closed
-
-    def _open(self, path, mode):
-        """Open the remote file with given pathname and mode."""
-        # check mode
-        if 'a' in mode:
-            raise FTPIOError("append mode not supported")
-        if mode not in ('r', 'rb', 'w', 'wb'):
-            raise FTPIOError("invalid mode '%s'" % mode)
-        # remember convenience variables instead of mode
-        self._binmode = 'b' in mode
-        self._readmode = 'r' in mode
-        # select ASCII or binary mode
-        transfer_type = ('A', 'I')[self._binmode]
-        command = 'TYPE %s' % transfer_type
-        _try_with_ioerror(self._session.voidcmd, command)
-        # make transfer command
-        command_type = ('STOR', 'RETR')[self._readmode]
-        command = '%s %s' % (command_type, path)
-        # ensure we can process the raw line separators;
-        #  force to binary regardless of transfer type
-        if not 'b' in mode:
-            mode = mode + 'b'
-        # get connection and file object
-        self._conn = _try_with_ioerror(self._session.transfercmd, command)
-        self._fo = self._conn.makefile(mode)
-        # this comes last so that close does not try to
-        #  close `_FTPFile` objects without `_conn` and `_fo`
-        #  attributes
-        self.closed = False
-
-    #
-    # Read and write operations with support for line separator
-    # conversion for text modes.
-    #
-    # Note that we must convert line endings because the FTP server
-    # expects `\r\n` to be sent on text transfers.
-    #
-    def read(self, *args):
-        """Return read bytes, normalized if in text transfer mode."""
-        data = self._fo.read(*args)
-        if self._binmode:
-            return data
-        data = _crlf_to_python_linesep(data)
-        if args == ():
-            return data
-        # If the read data contains `\r` characters the number of read
-        #  characters will be too small! Thus we (would) have to
-        #  continue to read until we have fetched the requested number
-        #  of bytes (or run out of source data).
-        # The algorithm below avoids repetitive string concatanations
-        #  in the style of
-        #      data = data + more_data
-        #  and so should also work relatively well if there are many
-        #  short lines in the file.
-        wanted_size = args[0]
-        chunks = [data]
-        current_size = len(data)
-        while current_size < wanted_size:
-            # print 'not enough bytes (now %s, wanting %s)' % \
-            #       (current_size, wanted_size)
-            more_data = self._fo.read(wanted_size - current_size)
-            if not more_data:
-                break
-            more_data = _crlf_to_python_linesep(more_data)
-            # print '-> new (normalized) data:', repr(more_data)
-            chunks.append(more_data)
-            current_size += len(more_data)
-        return ''.join(chunks)
-
-    def readline(self, *args):
-        """Return one read line, normalized if in text transfer mode."""
-        data = self._fo.readline(*args)
-        if self._binmode:
-            return data
-        # eventually complete begun newline
-        if data.endswith('\r'):
-            data = data + self.read(1)
-        return _crlf_to_python_linesep(data)
-
-    def readlines(self, *args):
-        """Return read lines, normalized if in text transfer mode."""
-        lines = self._fo.readlines(*args)
-        if self._binmode:
-            return lines
-        # more memory-friendly than `return [... for line in lines]`
-        for i in range( len(lines) ):
-            lines[i] = _crlf_to_python_linesep(lines[i])
-        return lines
-
-    def xreadlines(self):
-        """
-        Return an appropriate `xreadlines` object with built-in line
-        separator conversion support.
-        """
-        if self._binmode:
-            return self._fo.xreadlines()
-        return _XReadlines(self)
-
-    def write(self, data):
-        """Write data to file. Do linesep conversion for text mode."""
-        if not self._binmode:
-            data = _python_to_crlf_linesep(data)
-        self._fo.write(data)
-
-    def writelines(self, lines):
-        """Write lines to file. Do linesep conversion for text mode."""
-        if self._binmode:
-            self._fo.writelines(lines)
-            return
-        for line in lines:
-            self._fo.write( _python_to_crlf_linesep(line) )
-
-    #
-    # other attributes
-    #
-    def __getattr__(self, attr_name):
-        """Delegate unknown attribute requests to the file."""
-        if attr_name in ( 'flush isatty fileno seek tell '
-                          'truncate name softspace'.split() ):
-            return getattr(self._fo, attr_name)
-        raise AttributeError(
-              "'FTPFile' object has no attribute '%s'" % attr_name)
-
-    def close(self):
-        """Close the `FTPFile`."""
-        if not self.closed:
-            self._fo.close()
-            _try_with_ioerror(self._conn.close)
-            _try_with_ioerror(self._session.voidresp)
-            self.closed = True
-
-    def __del__(self):
-        self.close()
 
 
 #####################################################################
@@ -395,8 +161,9 @@ class FTPHost:
         self.set_time_shift(0.0)
         # check if we have a Microsoft ROBIN server
         try:
-            response = _try_with_oserror(self._session.voidcmd, 'STAT')
-        except PermanentError:
+            response = ftp_error._try_with_oserror(
+                       self._session.voidcmd, 'STAT')
+        except ftp_error.PermanentError:
             response = ''
         #XXX If these servers can be configured to change their directory
         # output format, we will need a more sophisticated test.
@@ -422,7 +189,7 @@ class FTPHost:
             del kwargs['session_factory']
         else:
             factory = ftplib.FTP
-        return _try_with_oserror(factory, *args, **kwargs)
+        return ftp_error._try_with_oserror(factory, *args, **kwargs)
 
     def _copy(self):
         """Return a copy of this FTPHost object."""
@@ -453,7 +220,7 @@ class FTPHost:
         if host is None:
             host = self._copy()
             self._children.append(host)
-            host._file = _FTPFile(host)
+            host._file = ftp_file._FTPFile(host)
         basedir = self.getcwd()
         host.chdir(basedir)
         host._file._open(path, mode)
@@ -471,7 +238,7 @@ class FTPHost:
                 host._file.close()
                 host.close()
             # now deal with our-self
-            _try_with_oserror(self._session.close)
+            ftp_error._try_with_oserror(self._session.close)
             self._children = []
             self.closed = True
 
@@ -536,14 +303,14 @@ class FTPHost:
         # test 1: fail if the absolute time shift is greater than
         #  a full day (24 hours)
         if absolute_rounded_time_shift > 24 * hour:
-            raise TimeShiftError(
+            raise ftp_error.TimeShiftError(
                   "time shift (%.2f s) > 1 day" % time_shift)
         # test 2: fail if the deviation between given time shift and
         #  full hours is greater than a certain limit (e. g. five minutes)
         maximum_deviation = 5 * minute
         if abs( time_shift - self.__rounded_time_shift(time_shift) ) > \
            maximum_deviation:
-            raise TimeShiftError(
+            raise ftp_error.TimeShiftError(
                   "time shift (%.2f s) deviates more than %d s from full hours"
                   % (time_shift, maximum_deviation) )
 
@@ -577,8 +344,9 @@ class FTPHost:
             # get the modification time of the new file
             try:
                 remote_time = self.path.getmtime(helper_file_name)
-            except RootDirError:
-                raise TimeShiftError("can't use root directory for temp file")
+            except ftp_error.RootDirError:
+                raise ftp_error.TimeShiftError(
+                      "can't use root directory for temp file")
         finally:
             # remove the just written file
             self.unlink(helper_file_name)
@@ -696,26 +464,26 @@ class FTPHost:
     #
     def getcwd(self):
         """Return the current path name."""
-        return _try_with_oserror(self._session.pwd)
+        return ftp_error._try_with_oserror(self._session.pwd)
 
     def chdir(self, path):
         """Change the directory on the host."""
-        _try_with_oserror(self._session.cwd, path)
+        ftp_error._try_with_oserror(self._session.cwd, path)
 
     def mkdir(self, path, mode=None):
         """
         Make the directory path on the remote host. The argument mode
         is ignored and only "supported" for similarity with os.mkdir.
         """
-        _try_with_oserror(self._session.mkd, path)
+        ftp_error._try_with_oserror(self._session.mkd, path)
 
     def rmdir(self, path):
         """Remove the directory on the remote host."""
-        _try_with_oserror(self._session.rmd, path)
+        ftp_error._try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
         """Remove the given file."""
-        _try_with_oserror(self._session.delete, path)
+        ftp_error._try_with_oserror(self._session.delete, path)
 
     def unlink(self, path):
         """Remove the given file."""
@@ -723,7 +491,7 @@ class FTPHost:
 
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
-        _try_with_oserror(self._session.rename, source, target)
+        ftp_error._try_with_oserror(self._session.rename, source, target)
 
     def listdir(self, path):
         """
@@ -732,13 +500,13 @@ class FTPHost:
         """
         path = self.path.abspath(path)
         if not self.path.isdir(path):
-            raise PermanentError("550 %s: no such directory" % path)
+            raise ftp_error.PermanentError("550 %s: no such directory" % path)
         names = []
         def callback(line):
             stat_result = self._parse_line(line, fail=False)
             if stat_result is not None:
                 names.append(stat_result._st_name)
-        _try_with_oserror(self._session.dir, path, callback)
+        ftp_error._try_with_oserror(self._session.dir, path, callback)
         return names
 
     def _stat_candidates(self, lines, wanted_name):
@@ -773,7 +541,8 @@ class FTPHost:
         if char_to_mode.has_key(file_type):
             st_mode = st_mode | char_to_mode[file_type]
         else:
-            raise ParserError("unknown file type character '%s'" % file_type)
+            raise ftp_error.ParserError(
+                  "unknown file type character '%s'" % file_type)
         # st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime
         st_ino = None
         st_dev = None
@@ -871,7 +640,7 @@ class FTPHost:
             return self._parser(line)
         except (ValueError, IndexError):
             if fail:
-                raise ParserError("can't parse line '%s'" % line)
+                raise ftp_error.ParserError("can't parse line '%s'" % line)
             else:
                 return None
 
@@ -884,9 +653,10 @@ class FTPHost:
         #  the output of an FTP `DIR` command. Unfortunately, it is
         #  not possible to to this for the root directory `/`.
         if path == '/':
-            raise RootDirError("can't invoke stat for remote root directory")
+            raise ftp_error.RootDirError(
+                  "can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
-        _try_with_oserror( self._session.dir, dirname,
+        ftp_error._try_with_oserror( self._session.dir, dirname,
                            lambda line: lines.append(line) )
         # search for name to be stat'ed without full parsing
         candidates = self._stat_candidates(lines, basename)
@@ -896,7 +666,8 @@ class FTPHost:
             if (stat_result is not None) and \
               (stat_result._st_name == basename):
                 return stat_result
-        raise PermanentError("550 %s: no such file or directory" % path)
+        raise ftp_error.PermanentError(
+              "550 %s: no such file or directory" % path)
 
     def stat(self, path):
         """Return info from a `stat` call."""
@@ -909,7 +680,8 @@ class FTPHost:
             path = self.path.join(dirname, stat_result._st_target)
             path = self.path.normpath(path)
             if visited_paths.has_key(path):
-                raise PermanentError("recursive link structure detected")
+                raise ftp_error.PermanentError(
+                      "recursive link structure detected")
             visited_paths[path] = True
 
 
@@ -970,9 +742,9 @@ class _Path:
         try:
             self._host.lstat(path)
             return True
-        except RootDirError:
+        except ftp_error.RootDirError:
             return True
-        except FTPOSError:
+        except ftp_error.FTPOSError:
             return False
 
     def getmtime(self, path):
@@ -986,27 +758,27 @@ class _Path:
     def isfile(self, path):
         try:
             stat_result = self._host.stat(path)
-        except RootDirError:
+        except ftp_error.RootDirError:
             return False
-        except FTPOSError:
+        except ftp_error.FTPOSError:
             return False
         return stat.S_ISREG(stat_result.st_mode)
 
     def isdir(self, path):
         try:
             stat_result = self._host.stat(path)
-        except RootDirError:
+        except ftp_error.RootDirError:
             return True
-        except FTPOSError:
+        except ftp_error.FTPOSError:
             return False
         return stat.S_ISDIR(stat_result.st_mode)
 
     def islink(self, path):
         try:
             stat_result = self._host.lstat(path)
-        except RootDirError:
+        except ftp_error.RootDirError:
             return False
-        except FTPOSError:
+        except ftp_error.FTPOSError:
             return False
         return stat.S_ISLNK(stat_result.st_mode)
 
