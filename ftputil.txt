@@ -1,6 +1,8 @@
 ftputil documentation
 =====================
 
+.. contents::
+
 Introduction
 ------------
 
@@ -13,6 +15,8 @@ those of os_ and `os.path`_.
 .. _`os.path`: http://www.python.org/doc/current/lib/module-os.path.html
 
 Examples::
+
+    import ftputil
 
     # download some files from the login directory
     host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
@@ -36,15 +40,12 @@ to `os.stat`_. Even `FTPHost.path.walk`_ works.
 .. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
 
 The distribution contains a custom ``UserTuple`` module to provide stat_
-results with Python 2.1.
+results with Python versions 2.0 and 2.1.
 
 .. _stat: http://www.python.org/doc/current/lib/module-stat.html
 
-Module contents
----------------
-
 Exceptions
-~~~~~~~~~~
+----------
 
 The exceptions are organized as follows::
 
@@ -262,6 +263,56 @@ Files and directories
   file-like object target. The only difference to
   ``shutil.copyfileobj`` is the default buffer size.
 
+- ``close()``
+
+  closes the connection to the remote host. After this, no more
+  interaction with the FTP server is possible without using a new
+  ``FTPHost`` object.
+
+- ``getcwd()``
+
+  returns the absolute current directory on the remote host. This
+  method acts similar to ``os.getcwd``.
+
+- ``chdir(directory)``
+
+  sets the current directory on the FTP server. This resembles
+  ``os.chdir``, as you may have expected. :-)
+
+- ``mkdir(path, [mode])``
+
+  makes the given directory on the remote host. In the current
+  implementation, this doesn't construct "intermediate" directories
+  which don't already exist. The mode parameter is ignored. This is
+  for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is
+  passed into a function instead of the os module (see the subsection
+  on Python exceptions above for an explanation).
+
+- ``rmdir(path)``
+
+  removes the given remote directory. Currently, "intermediate"
+  directories can't be deleted (as with ``os.rmdir``).
+
+- ``remove(path)``
+
+  removes a file on the remote host (similar to ``os.remove``).
+
+- ``unlink(path)``
+
+  is an alias for ``remove``.
+
+- ``rename(source, target)``
+
+  renames the source file (or directory) on the FTP server.
+
+- ``listdir(path)``
+
+  returns a list containing the names of the files and directories
+  in the given path; similar to ``os.listdir``.
+
+Uploading and downloading files
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+
 - ``upload(source, target, mode='')``
 
   copies a local source file (given by a filename, i. e. a string)
@@ -288,6 +339,9 @@ Files and directories
   the target doesn't exist at all. If an upload actually occured,
   the return value is a true value, else a false value.
 
+  If it seems that a file is uploaded unnecessarily, read the
+  subsection on `time shift`_ settings.
+
 .. _`download_if_newer`:
 
 - ``download_if_newer(source, target, mode='')``
@@ -297,52 +351,8 @@ Files and directories
   ``upload_if_newer`` for more. If a download actually occured,
   the return value is a true value, else a false value.
 
-- ``close()``
-
-  closes the connection to the remote host. After this, no more
-  interaction with the FTP server is possible without using a new
-  ``FTPHost`` object.
-
-- ``getcwd()``
-
-  returns the absolute current directory on the remote host. This
-  method acts similar to ``os.getcwd``.
-
-- ``chdir(directory)``
-
-  sets the current directory on the FTP server. This resembles
-  ``os.chdir``, as you may have expected. :-)
-
-- ``mkdir(path, [mode])``
-
-  makes the given directory on the remote host. In the current
-  implementation, this doesn't construct "intermediate" directories
-  which don't already exist. The mode parameter is ignored. This is
-  for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is passed into
-  a function instead of the os module (see the subsection on Python
-  exceptions above for an explanation).
-
-- ``rmdir(path)``
-
-  removes the given remote directory. Currently, "intermediate"
-  directories can't be deleted (as with ``os.rmdir``).
-
-- ``remove(path)``
-
-  removes a file on the remote host (similar to ``os.remove``).
-
-- ``unlink(path)``
-
-  is an alias for ``remove``.
-
-- ``rename(source, target)``
-
-  renames the source file (or directory) on the FTP server.
-
-- ``listdir(path)``
-
-  returns a list containing the names of the files and directories
-  in the given path; similar to ``os.listdir``.
+  If it seems that a file is downloaded unnecessarily, read the
+  subsection on `time shift`_ settings.
 
 Stat'ing files and directories
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
@@ -378,8 +388,8 @@ Stat'ing files and directories
 
   - There's a special problem with stat'ing the root directory. In
     this case, a ``RootDirError`` is raised. This has to do with the
-    algorithm used by ``(l)stat`` and I know of no approach which solves
-    this problem.
+    algorithm used by ``(l)stat`` and I know of no approach which
+    solves this problem.
 
 .. update for other servers
 
@@ -401,57 +411,57 @@ Stat'ing files and directories
   directory is found. If an infinite link chain is encountered, a
   ``PermanentError`` is raised.
 
-Time shift correction
-,,,,,,,,,,,,,,,,,,,,,
+Time zone correction
+,,,,,,,,,,,,,,,,,,,,
 
 .. _`time shift`:
 .. _`set_time_shift`:
 
 - ``set_time_shift(time_shift)``
-  sets the so-called time shift value (measured in seconds). The time shift
-  is the difference between the local time of the server and the local time
-  of the client at a given moment, i. e. by definition
+  sets the so-called time shift value (measured in seconds). The time
+  shift is the difference between the local time of the server and the
+  local time of the client at a given moment, i. e. by definition
 
   ::
 
     time_shift = server_time - client_time
 
   Setting this value is important if `upload_if_newer`_ and
-  `download_if_newer`_ should work correctly even if the time zone of the
-  FTP server differs from that of the client (where ``ftputil`` runs). Note
-  that the time shift value *can* be negative.
+  `download_if_newer`_ should work correctly even if the time zone of
+  the FTP server differs from that of the client (where ``ftputil``
+  runs). Note that the time shift value *can* be negative.
 
-  If the time shift value is invalid, e. g. no multiple of a full hour or its
-  absolute (unsigned) value larger than 24 hours, a ``TimeShiftError`` is
-  raised.
+  If the time shift value is invalid, e. g. no multiple of a full hour
+  or its absolute (unsigned) value larger than 24 hours, a
+  ``TimeShiftError`` is raised.
 
-  See also `synchronize_times`_ for a way to set the time shift with a simple
-  method call.
+  See also `synchronize_times`_ for a way to set the time shift with a
+  simple method call.
 
 - ``time_shift()``
-  return the currently-set time shift value. See ``set_time_shift`` (above)
-  for its definition.
+  return the currently-set time shift value. See ``set_time_shift``
+  (above) for its definition.
 
 .. _`synchronize_times`:
 
 - ``synchronize_times()``
   synchronizes the local times of the server and the client, so that
-  `upload_if_newer`_ and `download_if_newer`_ work as expected, even if the
-  client and the server are in different time zones. For this to work, *all*
-  of the following conditions must be true:
+  `upload_if_newer`_ and `download_if_newer`_ work as expected, even
+  if the client and the server are in different time zones. For this
+  to work, *all* of the following conditions must be true:
 
   - The connection between server and client is established.
 
-  - The client has write access to the directory that is
-    current when ``synchronize_times`` is called.
+  - The client has write access to the directory that is current when
+    ``synchronize_times`` is called.
 
-  - That directory is *not* the root directory (i. e. ``/``) of
-    the FTP server.
+  - That directory is *not* the root directory (i. e. ``/``) of the
+    FTP server.
 
-  If you can't fulfill these conditions, you can nevertheless set the time
-  shift value manually with `set_time_shift`_. Trying to call
-  ``synchronize_times`` if the above conditions aren't true results in a
-  ``TimeShiftError`` exception.
+  If you can't fulfill these conditions, you can nevertheless set the
+  time shift value manually with `set_time_shift`_. Trying to call
+  ``synchronize_times`` if the above conditions aren't true results in
+  a ``TimeShiftError`` exception.
 
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
@@ -538,10 +548,10 @@ Bugs and limitations
 Files
 -----
 
-If not overwritten via installation options, the ``ftputil`` files reside in
-the ``ftputil`` package. The package directory contains a ``doc``
-subdirectory which in turn contains this documentation in `reStructured Text`_
-and in HTML format.
+If not overwritten via installation options, the ``ftputil`` files
+reside in the ``ftputil`` package. The package directory contains a
+``doc`` subdirectory which in turn contains this documentation in
+`reStructured Text`_ and in HTML format.
 
 .. _`reStructured Text`: http://docutils.sourceforge.net/rst.html
 
