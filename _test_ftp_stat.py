@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2004, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.14 2004/01/01 21:31:56 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.15 2004/01/31 22:37:53 schwa Exp $
 
 from __future__ import division
 

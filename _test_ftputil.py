@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2002-2003, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.75 2003/10/30 20:08:11 schwa Exp $
+# $Id: _test_ftputil.py,v 1.76 2004/01/31 22:37:53 schwa Exp $
 
 import ftplib
 import operator
