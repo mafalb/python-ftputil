@@ -209,126 +209,144 @@ wrapper class::
 ``FTPHost`` attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``curdir``, ``pardir``, ``sep``
-    are strings which denote the current and the parent directory on
-    the remote server. sep identifies the path separator. Though `RFC
-    959`_ (File Transfer Protocol) notes that these values may be server
-    dependent, the Unix counterparts seem to work well in practice,
-    even for non-Unix servers.
+- ``curdir``, ``pardir``, ``sep``
 
-``file(path, mode='r')``
-    returns a file-like object that is connected to the path on the
-    remote host. This path may be absolute or relative to current
-    directory on the remote host (this directory can be determined
-    with the getcwd method). As with local file objects the default
-    mode is "r", i. e. reading text files. Valid modes are "r", "rb",
-    "w", and "wb".
+  are strings which denote the current and the parent directory on
+  the remote server. sep identifies the path separator. Though `RFC
+  959`_ (File Transfer Protocol) notes that these values may be server
+  dependent, the Unix counterparts seem to work well in practice,
+  even for non-Unix servers.
 
-``open(path, mode='r')``
-    is an alias for ``file`` (see above).
+- ``file(path, mode='r')``
 
-``copyfileobj(source, target, length=64*1024)``
-    copies the contents from the file-like object source to the
-    file-like object target. The only difference to
-    ``shutil.copyfileobj`` is the default buffer size.
+  returns a file-like object that is connected to the path on the
+  remote host. This path may be absolute or relative to current
+  directory on the remote host (this directory can be determined
+  with the getcwd method). As with local file objects the default
+  mode is "r", i. e. reading text files. Valid modes are "r", "rb",
+  "w", and "wb".
 
-``upload(source, target, mode='')``
-    copies a local source file (given by a filename, i. e. a string)
-    to the remote host under the name target. Both source and target
-    may be absolute paths or relative to their corresponding current
-    directory (on the local or the remote host, respectively). The
-    mode may be "" or "a" for ASCII uploads or "b" for binary uploads.
-    ASCII mode is the default (again, similar to regular local file
-    objects).
+- ``open(path, mode='r')``
 
-``download(source, target, mode='')``
-    performs a download from the remote source to a target file. Both
-    source and target are strings. Additionally, the description of
-    the upload method applies here, too.
+  is an alias for ``file`` (see above).
 
-``upload_if_newer(source, target, mode='')``
-    is similar to the upload method. The only difference is that the
-    upload is only invoked if the time of the last modification for
-    the source file is more recent than that of the target file, or
-    the target doesn't exist at all. If an upload actually occured,
-    the return value is a true value, else a false value.
+- ``copyfileobj(source, target, length=64*1024)``
 
-``download_if_newer(source, target, mode='')``
-    corresponds to ``upload_if_newer`` but performs a download from the
-    server to the local host. Read the descriptions of download and
-    ``upload_if_newer`` for more. If a download actually occured,
-    the return value is a true value, else a false value.
+  copies the contents from the file-like object source to the
+  file-like object target. The only difference to
+  ``shutil.copyfileobj`` is the default buffer size.
 
-``close()``
-    closes the connection to the remote host. After this, no more
-    interaction with the FTP server is possible without using a new
-    ``FTPHost`` object.
+- ``upload(source, target, mode='')``
 
-``getcwd()``
-    returns the absolute current directory on the remote host. This
-    method acts similar to ``os.getcwd``.
+  copies a local source file (given by a filename, i. e. a string)
+  to the remote host under the name target. Both source and target
+  may be absolute paths or relative to their corresponding current
+  directory (on the local or the remote host, respectively). The
+  mode may be "" or "a" for ASCII uploads or "b" for binary uploads.
+  ASCII mode is the default (again, similar to regular local file
+  objects).
 
-``chdir(directory)``
-    sets the current directory on the FTP server. This resembles
-    ``os.chdir``, as you may have expected. :-)
+- ``download(source, target, mode='')``
 
-``mkdir(path, [mode])``
-    makes the given directory on the remote host. In the current
-    implementation, this doesn't construct "intermediate" directories
-    which don't already exist. The mode parameter is ignored. This is
-    for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is passed into
-    a function instead of the os module (see the subsection on Python
-    exceptions above for an explanation).
+  performs a download from the remote source to a target file. Both
+  source and target are strings. Additionally, the description of
+  the upload method applies here, too.
 
-``rmdir(path)``
-    removes the given remote directory. Currently, "intermediate"
-    directories can't be deleted (as with ``os.rmdir``).
+- ``upload_if_newer(source, target, mode='')``
 
-``remove(path)``
-    removes a file on the remote host (similar to ``os.remove``).
+  is similar to the upload method. The only difference is that the
+  upload is only invoked if the time of the last modification for
+  the source file is more recent than that of the target file, or
+  the target doesn't exist at all. If an upload actually occured,
+  the return value is a true value, else a false value.
 
-``unlink(path)``
-    is an alias for ``remove``.
+- ``download_if_newer(source, target, mode='')``
 
-``rename(source, target)``
-    renames the source file (or directory) on the FTP server.
+  corresponds to ``upload_if_newer`` but performs a download from the
+  server to the local host. Read the descriptions of download and
+  ``upload_if_newer`` for more. If a download actually occured,
+  the return value is a true value, else a false value.
 
-``listdir(path)``
-    returns a list containing the names of the files and directories
-    in the given path; similar to ``os.listdir``.
+- ``close()``
+
+  closes the connection to the remote host. After this, no more
+  interaction with the FTP server is possible without using a new
+  ``FTPHost`` object.
+
+- ``getcwd()``
+
+  returns the absolute current directory on the remote host. This
+  method acts similar to ``os.getcwd``.
+
+- ``chdir(directory)``
+
+  sets the current directory on the FTP server. This resembles
+  ``os.chdir``, as you may have expected. :-)
+
+- ``mkdir(path, [mode])``
+
+  makes the given directory on the remote host. In the current
+  implementation, this doesn't construct "intermediate" directories
+  which don't already exist. The mode parameter is ignored. This is
+  for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is passed into
+  a function instead of the os module (see the subsection on Python
+  exceptions above for an explanation).
+
+- ``rmdir(path)``
+
+  removes the given remote directory. Currently, "intermediate"
+  directories can't be deleted (as with ``os.rmdir``).
+
+- ``remove(path)``
+
+  removes a file on the remote host (similar to ``os.remove``).
+
+- ``unlink(path)``
+
+  is an alias for ``remove``.
+
+- ``rename(source, target)``
+
+  renames the source file (or directory) on the FTP server.
+
+- ``listdir(path)``
+
+  returns a list containing the names of the files and directories
+  in the given path; similar to ``os.listdir``.
 
 .. _`FTPHost.lstat`:
 
-``lstat(path)``
-    returns an object similar that from ``os.lstat`` (a "tuple" with
-    additional attributes; see the documentation of the ``os`` module for
-    details). However, due to the nature of the application, there are
-    some important aspects to keep in mind:
+- ``lstat(path)``
 
-    - The result is derived by parsing the output of a ``DIR`` command on
-      the server. Therefore, the result from ``FTPHost.lstat`` can not
-      contain more information than the received text. In particular:
+  returns an object similar that from ``os.lstat`` (a "tuple" with
+  additional attributes; see the documentation of the ``os`` module for
+  details). However, due to the nature of the application, there are
+  some important aspects to keep in mind:
 
-    - User and group ids can only be determined as strings, not as
-      numbers, and that only if the server supplies them. This is
-      usually the case with Unix servers but may not be for other FTP
-      server programs.
+  - The result is derived by parsing the output of a ``DIR`` command on
+    the server. Therefore, the result from ``FTPHost.lstat`` can not
+    contain more information than the received text. In particular:
 
-    - Values for the time of the last modification may be rough,
-      depending on the information from the server. For timestamps
-      older than a year, this usually means that the precision of the
-      modification timestamp value is not better than days. For newer
-      files, the information may be accurate to a minute.
+  - User and group ids can only be determined as strings, not as
+    numbers, and that only if the server supplies them. This is
+    usually the case with Unix servers but may not be for other FTP
+    server programs.
 
-    - Links can only be recognized on servers that provide this
-      information in the ``DIR`` output.
+  - Values for the time of the last modification may be rough,
+    depending on the information from the server. For timestamps
+    older than a year, this usually means that the precision of the
+    modification timestamp value is not better than days. For newer
+    files, the information may be accurate to a minute.
 
-    - Items that can't be determined at all are set to None.
+  - Links can only be recognized on servers that provide this
+    information in the ``DIR`` output.
 
-    - There's a special problem with stat'ing the root directory. In
-      this case, a ``RootDirError`` is raised. This has to do with the
-      algorithm used by ``(l)stat`` and I know of no approach which solves
-      this problem.
+  - Items that can't be determined at all are set to None.
+
+  - There's a special problem with stat'ing the root directory. In
+    this case, a ``RootDirError`` is raised. This has to do with the
+    algorithm used by ``(l)stat`` and I know of no approach which solves
+    this problem.
 
 .. _`RFC 959`: http://www.ietf.org/rfc/rfc959.txt
 
@@ -336,18 +354,18 @@ wrapper class::
 
 ..
 
-    Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
-    a format commonly used by Unix servers is assumed. If you need to
-    parse output from another server type, please contact me under the
-    email address at the end of this text.
+  Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
+  a format commonly used by Unix servers is assumed. If you need to
+  parse output from another server type, please contact me under the
+  email address at the end of this text.
 
 .. _`FTPHost.stat`:
 
-``stat(path)``
-    return ``stat`` information also for files which are pointed to by a
-    link. This method follows multiple links until a regular file or
-    directory is found. If an infinite link chain is encountered, a
-    ``PermanentError`` is raised.
+- ``stat(path)``
+  return ``stat`` information also for files which are pointed to by a
+  link. This method follows multiple links until a regular file or
+  directory is found. If an infinite link chain is encountered, a
+  ``PermanentError`` is raised.
 
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
@@ -443,29 +461,35 @@ Bugs and limitations
 Files
 -----
 
+- ``ftputil.py``
+
+  is the main module file.
+
 .. _UserTuple:
+
+- ``UserTuple.py``
+
+  may be used as the base class for ``_Stat``. If you have at least
+  Python version 2.2 you can safely delete the ``UserTuple`` module.
+
+- ``ftputil.html``
+
+  is this file.
+
+- ``ftputil_pydoc.html``
+
+  is the development documentation for ftputil, generated with
+  Pythons ``pydoc`` utility. If you only want to *use* ftputil, you
+  probably don't need this file.
+
 .. _`regression test module`:
 
-``ftputil.py``
-    is the main module file.
+- ``_test_ftputil.py`` and ``_mock_ftplib.py``
 
-``UserTuple.py``
-    may be used as the base class for ``_Stat``. If you have at least
-    Python version 2.2 you can safely delete the ``UserTuple`` module.
-
-``ftputil.txt``
-    is this file.
-
-``ftputil_pydoc.txt``
-    is the development documentation for ftputil, generated with
-    Pythons ``pydoc`` utility. If you only want to *use* ftputil, you
-    probably don't need this file.
-
-``_test_ftputil.py`` and ``_mock_ftplib.py``
-    are needed for the unit tests of ftputil. If you don't want to
-    debug or modify ftputil, you can delete these files.
-    ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module. See
-    below for details.
+  are needed for the unit tests of ftputil. If you don't want to
+  debug or modify ftputil, you can delete these files.
+  ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module. See
+  below for details.
 
 References
 ----------
