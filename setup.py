@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.6 2003/10/25 18:35:49 schwa Exp $
+# $Id: setup.py,v 1.7 2004/02/27 18:39:50 schwa Exp $
 
 """
 setup.py - installation script for Python distutils
@@ -66,15 +66,15 @@ core.setup(
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
   url="http://www.sschwarzer.net/python/python_software.html",
-  description="High-level FTP client interface",
+  description="High-level FTP client library (virtual filesystem and more)",
   license="Open source (BSD-style)",
   platforms=["Pure Python (Python version >= 2.0)"],
   long_description="""\
-ftputil is a high-level FTP client interface for the Python programming
+ftputil is a high-level FTP client library for the Python programming
 language. ftputil implements a virtual file system for accessing FTP servers,
-that is, it can generate file-like objects for remote files. Additionally,
-the library supports many functions similar to those in the os, os.path and
-shutil modules. ftputil has some convenience functions for conditional uploads
+that is, it can generate file-like objects for remote files. The library
+supports many functions similar to those in the os, os.path and
+shutil modules. ftputil has convenience functions for conditional uploads
 and downloads, and handles FTP clients and servers in different timezones.""",
   **more_args
   )
