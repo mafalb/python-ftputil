@@ -33,7 +33,7 @@
 ftp_error.py - exception classes and wrappers
 """
 
-# $Id: ftp_error.py,v 1.2 2003/10/04 21:45:37 schwa Exp $
+# $Id: ftp_error.py,v 1.3 2004/07/09 21:47:15 schwa Exp $
 
 import ftplib
 import sys
@@ -53,7 +53,10 @@ class FTPError:
     def __str__(self):
         return self.strerror
 
-class RootDirError(FTPError): pass
+class InternalError(FTPError): pass
+class RootDirError(InternalError): pass
+class InaccessibleLoginDirError(InternalError): pass
+
 class TimeShiftError(FTPError): pass
 
 class FTPOSError(FTPError, OSError): pass
