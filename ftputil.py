@@ -81,7 +81,7 @@ import posixpath
 
 __all__ = ['FTPOSError', 'TemporaryError', 'PermanentError',
            'ParserError', 'FTPIOError', 'FTPHost']
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 
 #####################################################################
