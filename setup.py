@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.2 2003/10/04 18:59:29 schwa Exp $
+# $Id: setup.py,v 1.3 2003/10/05 15:51:08 schwa Exp $
 
 """
 setup.py - installation script for Python distutils
@@ -44,7 +44,7 @@ from distutils import sysconfig
 _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
-_doc_target = "%s/%s/doc/" % (sysconfig.get_python_lib(), _package)
+_data_target = "%s/%s/" % (sysconfig.get_python_lib(), _package)
 
 core.setup(
   # installation data
@@ -52,8 +52,8 @@ core.setup(
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
-  data_files=[(_doc_target, ["ftputil.txt", "ftputil.html",
-                             "README.txt", "README.html"])],
+  data_files=[(_data_target, ["ftputil.txt", "ftputil.html",
+                              "README.txt", "README.html"])],
   # metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
