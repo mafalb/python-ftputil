@@ -1,0 +1,145 @@
+NAME
+
+ftputil - abstract Python interface for FTP sessions
+
+----------------------------------------------------------------------
+DESCRIPTION
+
+The ftputil module is a high-level interface to the ftplib module. The
+FTPHost objects generated from it allow many operations similar to
+those of os and os.path.
+
+Examples:
+
+# download some files from the login directory
+host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
+names = host.listdir(host.curdir)
+for name in names:
+    if host.path.isfile(name):
+        host.download(name, name, 'b')  # remote, local, binary mode
+
+# make a new directory and copy a remote file into it
+host.mkdir('newdir')
+source = host.file('index.html', 'r')  # file-like object
+target = host.file('newdir/index.html', 'w')  # file-like object
+host.copyfileobj(source, target)  # similar to shutil.copyfileobj
+source.close()
+target.close()
+
+Also, there are FTPHost.lstat and FTPHost.stat to request size and
+modification time of a file. The latter can also follow links, similar
+to os.stat. Even FTPHost.path.walk works.
+
+The distribution contains a regression test module and a custom
+UserTuple class to provide stat results with Python 2.1.
+
+----------------------------------------------------------------------
+MODULE CONTENTS
+
+Exception hierarchy
+-------------------
+
+The exceptions are organized as follows:
+
+    FTPError
+        FTPOSError(FTPError, OSError)
+            TemporaryError(FTPOSError)
+            PermanentError(FTPOSError)
+            ParserError(FTPOSError)
+        FTPIOError(FTPError)
+
+FTPError is the root of the exception hierarchy of the module.
+
+FTPOSError is derived from OSError. This is for similarity between the
+os module and FTPHost objects. Compare
+
+    try:
+        os.chdir('nonexisting_directory')
+    except OSError:
+        ...
+
+with
+
+    host = ftputil.FTPHost('host', 'user', 'password')
+    try:
+        host.chdir('nonexisting_directory')
+    except OSError:
+        ...
+
+Imagine a function
+
+    def func(path, file):
+        ...
+    
+which works on the local file system and catches OSErrors. If you
+change the parameter list to
+
+    def func(path, file, os=os):
+        ...
+
+where os denotes the os module, you can call the function also as
+
+    host = ftputil.FTPHost('host', 'user', 'password')
+    func(path, file, os=host)
+
+to use the same code for a local and remote file system. Another
+similarity between OSError and FTPOSError is that the latter holds the
+FTP server return code in the errno attribute of the exception object
+and the error text in strerror.
+
+TemporaryError is raised for FTP return codes from the 4xx category.
+This corresponds to ftplib.error_temp (though TemporaryError and
+ftplib.error_temp are _not_ identical). PermanentError is raised for
+5xx return codes from the FTP server (again, that's similar but _not_
+identical to ftplib.error_perm).
+
+ParserError is used for errors during the parsing of directory
+listings from the server. This exception is used by the FTPHost
+methods stat, lstat, and listdir.
+
+FTPIOError denotes an I/O error on the remote host. This appears
+mainly with file-like objects which are retrieved by invoking
+FTPHost.file (FTPHost.open is an alias). Compare
+
+    >>> try:
+    ...     f = open('notthere')
+    ... except IOError, obj:
+    ...     print obj.errno
+    ...     print obj.strerror
+    ...
+    2
+    No such file or directory
+
+with
+
+    >>> host = ftputil.FTPHost('host', 'user', 'password')
+    >>> try:
+    ...     f = host.open('notthere')
+    ... except IOError, obj:
+    ...     print obj.errno
+    ...     print obj.strerror
+    ...
+    550
+    550 notthere: No such file or directory.
+
+As you can see, both code snippets are similar. (However, the error
+codes aren't the same.)
+
+----------------------------------------------------------------------
+FTPHost OBJECTS
+
+
+----------------------------------------------------------------------
+FTPFile OBJECTS
+
+
+----------------------------------------------------------------------
+BUGS AND LIMITATIONS
+
+----------------------------------------------------------------------
+AUTHOR
+
+Stefan Schwarzer <s.schwarzer@ndh.net>
+
+----------------------------------------------------------------------
+
