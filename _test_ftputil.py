@@ -35,6 +35,7 @@ import getpass
 import stat
 import os
 import time
+import operator
 
 
 class Base(unittest.TestCase):
@@ -56,7 +57,7 @@ class Base(unittest.TestCase):
 
 class TestLogin(unittest.TestCase):
     '''Test invalid logins.'''
-    
+
     def test_invalid_login(self):
         '''Login to invalid host must fail.'''
         # plain FTPOSError, no derived class
@@ -90,7 +91,7 @@ class TestRemoveAndRename(Base):
                                     'ftputil2.py') )
         self.failIf( host.path.exists( host.path.join(
                      self.testdir, 'ftputil2.py') ) )
-        
+
     def test_rename(self):
         '''Test FTPHost.rename.'''
         host = self.host
@@ -163,7 +164,7 @@ class TestDirectories(Base):
 
 class TestStat(Base):
     '''Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.'''
-    
+
     def setUp(self):
         Base.setUp(self)
         host = self.host
@@ -176,7 +177,7 @@ class TestStat(Base):
         host.rmdir('__test2')
         host.remove('ftputil2.py')
         Base.tearDown(self)
-        
+
     def test_listdir(self):
         '''Test FTPHost.listdir.'''
         host = self.host
@@ -204,7 +205,7 @@ class TestStat(Base):
         local_size = os.path.getsize('ftputil.py')
         remote_size = host.lstat('ftputil2.py').st_size
         self.assertEqual(local_size, remote_size)
-        
+
 
 class TestPath(Base):
     '''Test operations in FTPHost.path.'''
@@ -229,7 +230,7 @@ class TestPath(Base):
         # clean up
         host.remove('ftputil2.py')
         host.chdir(self.rootdir)
-        
+
     def test_getmtime(self):
         '''Test FTPHost._Path.getmtime.'''
         host = self.host
@@ -269,7 +270,7 @@ class TestPath(Base):
         host.rmdir('__test2')
         host.remove('ftputil2.py')
         host.chdir(self.rootdir)
-        
+
 
 class TestFileOperations(Base):
     '''Test operations with file-like objects (including
@@ -280,7 +281,7 @@ class TestFileOperations(Base):
         output = self.host.file(self.remote_name, mode)
         output.write(data)
         output.close()
-        
+
     def binary_write(self):
         '''Write binary data to the host and read it back.'''
         host = self.host
@@ -295,7 +296,7 @@ class TestFileOperations(Base):
         remote_data = input_.read()
         input_.close()
         self.assertEqual(local_data, remote_data)
-        
+
     def ascii_write(self):
         '''Write an ASCII to the host and check the written
         file.'''
@@ -310,7 +311,7 @@ class TestFileOperations(Base):
         # expect the same data as above if we have a
         #  Unix FTP server
         self.assertEqual(local_data, remote_data)
-        
+
     def ascii_writelines(self):
         '''Write data via writelines and read it back.'''
         host = self.host
@@ -325,7 +326,7 @@ class TestFileOperations(Base):
         input_.close()
         # check data
         self.assertEqual( ''.join(local_data), remote_data )
-        
+
     def test_write_to_host(self):
         '''Test _FTPFile.write*'''
         host = self.host
@@ -370,7 +371,7 @@ class TestFileOperations(Base):
         input_ = host.file(self.remote_name, 'r')
         data = input_.read( len(local_data) )
         self.assertEqual(data, local_data)
-        
+
     def ascii_readline(self):
         '''Write some ASCII data to the host and use readline
         operations to get it back.'''
@@ -391,7 +392,7 @@ class TestFileOperations(Base):
         data = input_.readline()
         self.assertEqual(data, '')
         input_.close()
-        
+
     def binary_readline(self):
         '''Write some ASCII data to the host and use binary
         readline operations to get it back.'''
@@ -415,7 +416,7 @@ class TestFileOperations(Base):
         data = input_.readline()
         self.assertEqual(data, '')
         input_.close()
-        
+
     def ascii_readlines(self):
         '''Write some ASCII data to the host and use readline
         operations to get it back.'''
@@ -430,7 +431,34 @@ class TestFileOperations(Base):
         self.assertEqual(data, ['e 1\n', 'another line\n',
                                 'yet another line'])
         input_.close()
-        
+
+    def ascii_xreadlines(self):
+        '''Write some ASCII data to the host and use an
+        xreadline-like object to retrieve it.'''
+        host = self.host
+        # write data
+        local_data = 'line 1\nanother line\nyet another line'
+        self.write_test_data(local_data, 'w')
+        # open file, skip some bytes
+        input_ = host.file(self.remote_name, 'r')
+        data = input_.read(3)
+        xrl_obj = input_.xreadlines()
+        self.failUnless(xrl_obj.__class__ is
+                        ftputil._XReadlines)
+        data = xrl_obj[0]
+        self.assertEqual(data, 'e 1\n')
+        # try to skip an index
+        self.assertRaises(RuntimeError, operator.__getitem__,
+                          xrl_obj, 2)
+        # continue reading
+        data = xrl_obj[1]
+        self.assertEqual(data, 'another line\n')
+        data = xrl_obj[2]
+        self.assertEqual(data, 'yet another line')
+        # try to read beyond EOF
+        self.assertRaises(IndexError, operator.__getitem__,
+                          xrl_obj, 3)
+
     def test_read_from_host(self):
         '''Test _FTPFile.read*'''
         host = self.host
@@ -443,6 +471,7 @@ class TestFileOperations(Base):
         self.ascii_readline()
         self.binary_readline()
         self.ascii_readlines()
+        self.ascii_xreadlines()
         # clean up
         host.remove(self.remote_name)
         host.chdir(self.rootdir)
@@ -477,7 +506,7 @@ class TestFileOperations(Base):
         host.rmdir('__test2')
         host.unlink(source_path)
         host.chdir(self.rootdir)
-        
+
     def test_upload_download(self):
         '''Test FTPHost.upload/download.'''
         host = self.host
@@ -515,7 +544,7 @@ class TestFileOperations(Base):
 if __name__ == '__main__':
     host_name = 'ftp.ndh.net'
     user = 'sschwarzer'
-    password = getpass.getpass('Password for %s@%s: ' % 
+    password = getpass.getpass('Password for %s@%s: ' %
                                (user, host_name) )
     unittest.main()
 
