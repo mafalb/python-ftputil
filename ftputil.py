@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.86 2002/04/01 19:02:07 schwa Exp $
+# $Id: ftputil.py,v 1.87 2002/04/01 20:32:29 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -76,7 +76,6 @@ Note: ftputil currently is not threadsafe. More specifically,
 """
 
 # Ideas for future development:
-# - write documentation
 # - allow to set an offset for the time difference of local
 #   and remote host
 # - handle connection timeouts
@@ -355,7 +354,7 @@ class FTPHost:
     # Implementation notes:
     #
     # Upon every request of a file (_FTPFile object) a
-    # new ftplib.FTP session is created ("cloned"), leading
+    # new FTP session is created ("cloned"), leading
     # to a child session of the FTPHost object from which the
     # file is requested.
     #
