@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.14 2003/10/04 14:07:53 schwa Exp $
+# $Id: ftp_stat.py,v 1.15 2003/10/04 14:33:44 schwa Exp $
 
 import stat
 import sys
@@ -42,12 +42,17 @@ import time
 import ftp_error
 
 
-if sys.version_info[:2] >= (2, 2):
+# set up the base class for the stat results, depending on the
+#  capabilities of the used Python version
+try:
+    class __InheritanceTest(tuple):
+        pass
     _StatResultBase = tuple
-else:
+except TypeError:
+    # "base is not a class object"
     import UserTuple
     _StatResultBase = UserTuple.UserTuple
-
+    
 
 class _StatResult(_StatResultBase):
     """
