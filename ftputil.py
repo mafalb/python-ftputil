@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.130 2003/10/04 17:27:21 schwa Exp $
+# $Id: ftputil.py,v 1.131 2003/10/04 17:37:14 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -78,7 +78,7 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 
 # TODO
 # - move "stat stuff" into an own module `ftp_stat.py`
-# - fix defects regarding timeshift/stat calculations
+# - fix defects regarding time shift/stat calculations
 # - package ftputil for distutils
 #
 # Ideas for future development:
@@ -348,10 +348,6 @@ class FTPHost:
 
         If `synchronize_time` fails, it raises a `TimeShiftError`.
         """
-        #FIXME `synchronize_time`, `upload_if_newer`,
-        #  `download_if_newer` and the `*stat` methods will fail
-        #  if the timezones for client and server "cross the
-        #  dateline" (see mail from Andrew Ittner, 2003-03-17)
         helper_file_name = "_ftputil_sync_"
         # open a dummy file for writing in the current directory
         #  on the FTP host, then close it

@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.18 2003/10/04 14:43:44 schwa Exp $
+# $Id: ftp_stat.py,v 1.19 2003/10/04 17:37:14 schwa Exp $
 
 import stat
 import sys
@@ -252,12 +252,14 @@ class _UnixStat(_Stat):
             hour, minute = year_or_time.split(':')
             year, hour, minute = None, int(hour), int(minute)
             # try the current year
-            #FIXME that doesn't work for some timezone combinations
-            #  of client and server
             year = time.localtime()[0]
             st_mtime = time.mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
-            if st_mtime > time.time():
+            # rhs of comparison: transform client time to server time
+            #  (as on the lhs), so both can be compared with respect
+            #  to the set time shift (see the definition of the time
+            #  shift in `FTPHost.set_time_shift`'s docstring)
+            if st_mtime > time.time() + self._host.time_shift():
                 # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, -1) )
@@ -326,7 +328,7 @@ class _MSStat(_Stat):
         if am_pm == 'P':
             hour = hour + 12
         st_mtime = time.mktime( (year, month, day, hour,
-                   minute, 0, 0, 0, -1) )
+                                 minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
         stat_result = _StatResult(
