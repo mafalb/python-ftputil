@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2004, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.25 2003/10/05 17:55:57 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.26 2004/07/09 21:44:04 schwa Exp $
 
 """
 This module implements a mock version of the standard library's
@@ -109,15 +109,14 @@ class MockSession:
       '/': """\
 drwxr-xr-x   2 45854    200           512 May  4  2000 home""",
 
-      'home': """\
+      '/home': """\
 drwxr-sr-x   2 45854    200           512 May  4  2000 sschwarzer
 -rw-r--r--   1 45854    200          4605 Jan 19  1970 older
 -rw-r--r--   1 45854    200          4605 Jan 19  2020 newer
 lrwxrwxrwx   1 45854    200            21 Jan 19  2002 link -> sschwarzer/index.html
 lrwxrwxrwx   1 45854    200            15 Jan 19  2002 bad_link -> python/bad_link""",
 
-      # = /home/python
-      'python': """\
+      '/home/python': """\
 lrwxrwxrwx   1 45854    200             7 Jan 19  2002 link_link -> ../link
 lrwxrwxrwx   1 45854    200            14 Jan 19  2002 bad_link -> /home/bad_link""",
 
@@ -133,18 +132,11 @@ drwxr-sr-x   2 45854    200           512 May 25  2000 publications
 drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
 drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
 
-      # = /home/sschwarzer
-      'sschwarzer': """\
-total 14
-drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
-drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
-drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
--rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
-drwxr-sr-x   2 45854    200           512 May 29  2000 os2
-lrwxrwxrwx   2 45854    200             6 May 29  2000 osup -> ../os2
-drwxr-sr-x   2 45854    200           512 May 25  2000 publications
-drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
-drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""
+      # = /home/dir with spaces
+      'dir with spaces': """\
+total 1
+-rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces"""
+
     }
 
     # file content to be used (indirectly) with transfercmd
