@@ -29,6 +29,47 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+'''
+ftputil - higher level support for FTP sessions
+
+FTPHost objects
+    This class resembles the os module's interface to
+    ordinary file systems. In addition, it provides a
+    method file which will return file-objects correspond-
+    ing to remote files.
+
+    # example session
+    host = ftputil.FTPHost(hostname,
+                           [user, [password, [account]]])
+    print host.getcwd()  # e. g. '/home/me'
+    source = host.file('sourcefile', 'r')
+    host.mkdir('newdir')
+    host.chdir('newdir')
+    target = host.file('targetfile', 'w')
+    while 1:
+        line = source.readline()
+        if not line:
+            break
+        target.writeline(line)
+    source.close()
+    target.close()
+    host.remove('targetfile')
+    host.chdir(host.pardir)
+    host.rmdir('newdir')
+    host.close()
+
+FTPFile objects
+    FTPFile objects are constructed via the file method of
+    FTPHost objects. FTPFile objects support the usual file
+    oprations for non-seekable files (read, readline, write,
+    writelines, close).
+
+Note: ftputil currently is not threadsafe. More specifically,
+      you can use different FTPHost objects in different
+      threads but not using a single FTPHost object in
+      different threads.
+'''
+
 import ftplib
 import os
 import sys
@@ -156,8 +197,10 @@ class _FTPFile:
         built-in line separator conversion support.'''
         if self._binary:
             return self._fp.xreadlines()
-        raise NotImplementedError(
-              "xreadlines in ASCII mode not yet supported")
+        else:
+            # we don't provide an xreadline-compatible class
+            #  right now, so fall back to readlines
+            return self.readlines()
 
     def write(self, data):
         '''Write data to file. Do linesep conversion for
