@@ -29,18 +29,19 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.65 2003/03/15 21:40:05 schwa Exp $
+# $Id: _test_ftputil.py,v 1.66 2003/03/16 18:41:36 schwa Exp $
 
-import unittest
-import stat
-import os
-import time
 import operator
+import os
 import random
+import stat
+import time
+import unittest
 
+import _mock_ftplib
+import ftp_file
 import ftplib
 import ftputil
-import _mock_ftplib
 
 # define `True` and `False` if necessary
 try:
@@ -436,8 +437,8 @@ class TestFileOperations(unittest.TestCase):
         input_ = host.file('dummy', 'r')
         data = input_.read(3)
         xrl_obj = input_.xreadlines()
-        self.failUnless(xrl_obj.__class__ is ftputil._XReadlines)
-        self.failUnless(xrl_obj._ftp_file.__class__ is ftputil._FTPFile)
+        self.failUnless(xrl_obj.__class__ is ftp_file._XReadlines)
+        self.failUnless(xrl_obj._ftp_file.__class__ is ftp_file._FTPFile)
         data = xrl_obj[0]
         self.assertEqual(data, 'e 1\n')
         # try to skip an index
