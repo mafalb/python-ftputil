@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.73 2003/10/05 15:53:52 schwa Exp $
+# $Id: _test_ftputil.py,v 1.74 2003/10/05 17:11:21 schwa Exp $
 
 import ftplib
 import operator
@@ -98,6 +98,7 @@ class TimeShiftMockSession(_mock_ftplib.MockSession):
 
 #
 # customized `FTPHost` class for conditional upload/download tests
+#  and time shift tests
 #
 class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
     def upload(self, source, target, mode=''):
