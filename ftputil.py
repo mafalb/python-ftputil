@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.113 2003/03/16 19:08:30 schwa Exp $
+# $Id: ftputil.py,v 1.114 2003/03/16 19:13:36 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -517,8 +517,8 @@ class FTPHost:
 
     def _parse_unix_line(self, line):
         """
-        Return _Stat instance corresponding to the given text line.
-        Exceptions are caught in _parse_line.
+        Return `_Stat` instance corresponding to the given text line.
+        Exceptions are caught in `_parse_line`.
         """
         metadata, nlink, user, group, size, month, day, \
           year_or_time, name = line.split(None, 8)
@@ -653,7 +653,7 @@ class FTPHost:
                   "can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
         ftp_error._try_with_oserror( self._session.dir, dirname,
-                           lambda line: lines.append(line) )
+                                     lambda line: lines.append(line) )
         # search for name to be stat'ed without full parsing
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
