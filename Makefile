@@ -29,10 +29,11 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.10 2004/02/27 23:34:52 schwa Exp $
+# $Id: Makefile,v 1.11 2004/02/27 23:41:46 schwa Exp $
 
 
 SHELL=/bin/sh
+PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html
 
 .PHONY: dist extdist test docs clean register patch
@@ -73,4 +74,6 @@ extdist: test dist localcopy register
 
 clean:
 	rm -f ${DOC_FILES}
+# use absolute path to ensure we delete the right directory
+	rm -rf ${PROJECT_DIR}/build
 
