@@ -30,12 +30,32 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import ftplib
-
+import os
 
 class FTPIOError(IOError):
     def __init__(self, msg, ftp_exception=None):
         self.ftp_exception = ftp_exception
         IOError(self, msg)
+
+# converters for native line ends to normalized ones in Python
+_linesep = os.linesep
+if _linesep == '\n':
+    _native_to_python_linesep = \
+                        lambda text: text
+elif _linesep == '\r\n':
+    _native_to_python_linesep = \
+                        lambda text: text.replace('\r', '')
+elif _linesep == '\r':
+    _native_to_python_linesep = \
+                        lambda text: text.replace('\r', '\n')
+else:
+    def _native_to_python_linesep(text):
+        raise NotImplementedError("Can't do line ending "
+              "conversion for %s" % _linesep)
+
+# converter for Python line ends in native ones
+_python_to_native_linesep = \
+  lambda text: text.replace('\n', _linesep)
 
 
 class _FTPFile:
@@ -49,37 +69,66 @@ class _FTPFile:
         # this should be returned if someone asks
         self.mode = mode
         self._binary = 'b' in mode
-        if mode == 'r':
-            # the FTP server ensures the correct mode via
-            #  the previous TYPE command
-            mode = 'rb'
         self._fp = conn.makefile(mode)
         
-    def _normalize_linefeeds(text):
-        r'''Return data with occurences of \r removed.'''
-        return data.replace('\r', '')
-
+    #
+    # Read and write operations with support for
+    # line separator conversion for text modes.
+    #
+    # Note that we must convert line endings because
+    # the FTP server expects the native line separator
+    # format sent on ASCII transfers.
+    #
     def read(self, *args, **kwargs):
-        '''Return read bytes, normalized if in ASCII
+        '''Return read bytes, normalized if in text
         transfer mode.'''
-        text = apply(self._fp.read, args, kwargs)
+        data = apply(self._fp.read, args, kwargs)
         if self._binary:
-            return text
-        else:
-            return self._normalize_linefeeds(text)
+            return data
+        return _native_to_python_linesep(data)
 
     def readlines(self, *args, **kwargs):
-        '''Return read lines, normalized if in ASCII
+        '''Return read lines, normalized if in text
         transfer mode.'''
         lines = apply(self._fp.readlines, args, kwargs)
-        return [self._normalize_linefeeds(line)
-                for line in lines]
+        if self._binary:
+            return lines
+        # more memory-friendly than
+        #  return [... for line in lines]
+        for i in range( len(lines) ):
+            lines[i] = _native_to_python_linesep(lines[i])
+        return lines
         
+    def xreadlines(self):
+        '''Return an appropriate xreadlines object with
+        built-in line separator conversion support.'''
+        if self._binary:
+            return self._fp.xreadlines()
+        raise NotImplementedError(
+              "xreadlines not yet supported")
+
+    def write(self, data):
+        '''Write data to file. Do linesep conversion for
+        text mode.'''
+        if not self._binary:
+            data = _python_to_native_linesep(data)
+        self._fp.write(data)
+
+    def writelines(self, lines):
+        '''Write lines to file. Do linesep conversion for
+        text mode.'''
+        if not self._binary:
+            for i in range( len(lines) ):
+                lines[i] = _python_to_native_linesep(lines[i])
+        self._fp.writelines(lines)
+    
+    #
+    # other attributes
+    #
     def __getattr__(self, attr_name):
         '''Delegate unknown attribute requests to the file.'''
-        if attr_name in ( 'flush isatty fileno read readline '
-          'readlines xreadlines seek tell truncate write '
-          'writelines closed name softspace'.split() ):
+        if attr_name in ( 'flush isatty fileno seek tell '
+          'truncate closed name softspace'.split() ):
             return eval('self._fp.%s' % attr_name)
         else:
             raise AttributeError("'FTPFile' object has no "
@@ -114,16 +163,16 @@ class FTPHost:
         FTP host.'''
         if '+' in mode:
             raise FTPIOError("append modes not supported")
-        if mode not in ( 'r rb br w wb bw'.split() ):
+        if mode not in ('r', 'rb', 'w', 'wb'):
             raise FTPIOError("invalid mode")
         # select ASCII or binary mode
         transfer_type = ('A', 'I')['b' in mode]
         command = 'TYPE %s' % transfer_type
-        # logic taken from ftplib;
+        # this logic taken from ftplib;
         #  why this strange distinction?
         if mode == 'r':
             self._host.sendcmd(command)
-        else:
+        else:  # rb, w, wb
             self._host.voidcmd(command)
         # make transfer command
         command_type = ('STOR', 'RETR')['r' in mode]
