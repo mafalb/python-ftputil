@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.57 2002/04/01 13:58:28 schwa Exp $
+# $Id: _test_ftputil.py,v 1.58 2002/04/01 15:06:36 schwa Exp $
 
 import unittest
 import stat
@@ -150,8 +150,6 @@ class TestStat(unittest.TestCase):
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
-        self.assertEqual(stat_result.st_name, 'index.html')
-        self.assertEqual(stat_result.st_target, None)
 
     def test_lstat_one_dir(self):
         """Test lstat for a directory."""
@@ -167,8 +165,8 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_atime, None)
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         self.assertEqual(stat_result.st_ctime, None)
-        self.assertEqual(stat_result.st_name, 'scios2')
-        self.assertEqual(stat_result.st_target, None)
+        self.assertEqual( stat_result, (17901, None, None, 6, '45854', '200',
+                                        512, None, 937785600.0, None) )
 
     def test_lstat_via_stat_module(self):
         """Test lstat indirectly via stat module."""
@@ -176,11 +174,23 @@ class TestStat(unittest.TestCase):
         stat_result = host.lstat('/home/sschwarzer/')
         self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
 
-#     def test_stat_following_link(self):
-#         """Test stat when invoked on a link."""
-#         host = ftp_host_factory()
-#         stat_result = host.lstat('/home/a_link')
-#         self.failUnless(stat_result.st_name, 
+    def test_stat_following_link(self):
+        """Test stat when invoked on a link."""
+        host = ftp_host_factory()
+        # simple link
+        stat_result = host.stat('/home/link')
+        self.assertEqual(stat_result.st_size, 4604)
+        # link pointing to a link
+        stat_result = host.stat('/home/python/link_link')
+        self.assertEqual(stat_result.st_size, 4604)
+        stat_result = host.stat('../python/link_link')
+        self.assertEqual(stat_result.st_size, 4604)
+        # recursive link structures
+        self.assertRaises(ftputil.PermanentError, host.stat,
+                          '../python/bad_link')
+        self.assertRaises(ftputil.PermanentError, host.stat,
+                          '/home/bad_link')
+
 
 class TestListdir(unittest.TestCase):
     """Test FTPHost.listdir."""
@@ -227,9 +237,8 @@ class TestPath(unittest.TestCase):
         self.failIf( host.path.islink(testfile) )
         # test a link
         testlink = '/home/sschwarzer/osup'
-        #XXX uncomment these two when following links is implemented
-        #self.failIf( host.path.isdir(testlink) )
-        #self.failIf( host.path.isfile(testlink) )
+        self.failIf( host.path.isdir(testlink) )
+        self.failIf( host.path.isfile(testlink) )
         self.failUnless( host.path.islink(testlink) )
 
 
