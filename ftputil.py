@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.76 2002/03/31 23:19:01 schwa Exp $
+# $Id: ftputil.py,v 1.77 2002/04/01 13:40:05 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -464,20 +464,6 @@ class FTPHost:
                 break
             target.write(buf)
 
-    def copyfile(self, src, dst):
-        """Copy data from src to dst (adapted from shutil.copyfile)."""
-        fsrc = None
-        fdst = None
-        try:
-            fsrc = self.file(src, 'rb')
-            fdst = self.file(dst, 'wb')
-            self.copyfileobj(fsrc, fdst)
-        finally:
-            if fdst:
-                fdst.close()
-            if fsrc:
-                fsrc.close()
-
     def __get_modes(self, mode):
         """Return modes for source and target file."""
         if mode == 'b':
@@ -514,31 +500,31 @@ class FTPHost:
     def upload_if_newer(self, source, target, mode=''):
         """
         Upload a file only if it's newer than the target on the
-        remote host.
+        remote host or if the target file does not exist.
         """
         source_timestamp = os.path.getmtime(source)
         if self.path.exists(target):
             target_timestamp = self.path.getmtime(target)
         else:
-            # _very_ old file
+            # every timestamp is newer than this one
             target_timestamp = 0.0
         if source_timestamp > target_timestamp:
             self.upload(source, target, mode)
-        
+
     def download_if_newer(self, source, target, mode=''):
         """
         Download a file only if it's newer than the target on the
-        local host or the target file does not exist.
+        local host or if the target file does not exist.
         """
         source_timestamp = self.path.getmtime(source)
         if os.path.exists(target):
             target_timestamp = os.path.getmtime(target)
         else:
-            # _very_ old file
+            # every timestamp is newer than this one
             target_timestamp = 0.0
         if source_timestamp > target_timestamp:
             self.download(source, target, mode)
-        
+
     def close(self):
         """Close host connection."""
         if not self.closed:
