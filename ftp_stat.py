@@ -33,13 +33,15 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.32 2003/10/30 19:54:17 schwa Exp $
+# $Id: ftp_stat.py,v 1.33 2004/02/26 22:57:06 schwa Exp $
 
 import stat
 import sys
 import time
 
 import ftp_error
+
+from true_false import *
 
 
 # Set up the base class for the stat results, depending on the
