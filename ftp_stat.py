@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.17 2003/10/04 14:39:23 schwa Exp $
+# $Id: ftp_stat.py,v 1.18 2003/10/04 14:43:44 schwa Exp $
 
 import stat
 import sys
@@ -97,13 +97,16 @@ class _Stat:
         return stat_results
 
     def _host_dir(self, path):
-        """Return a list of lines, as fetched by FTP's `DIR` command."""
+        """
+        Return a list of lines, as fetched by FTP's `DIR` command,
+        when applied to `path`.
+        """
         return self._host._dir(path)
 
     def listdir(self, path):
         """
         Return a list with directories, files etc. in the directory
-        named path.
+        named `path`.
         """
         # we _can't_ put this check into `FTPHost._dir`, see its docstring
         path = self._path.abspath(path)
@@ -289,7 +292,7 @@ class _MSStat(_Stat):
         # st_mode
         st_mode = 0400   # default to read access only;
                          #  in fact, we can't tell
-        if dir_or_size == '<DIR>':
+        if dir_or_size == "<DIR>":
             st_mode = st_mode | stat.S_IFDIR
         else:
             st_mode = st_mode | stat.S_IFREG
@@ -300,7 +303,7 @@ class _MSStat(_Stat):
         st_uid = None
         st_gid = None
         # st_size
-        if dir_or_size != '<DIR>':
+        if dir_or_size != "<DIR>":
             try:
                 st_size = int(dir_or_size)
             except ValueError:
