@@ -34,6 +34,7 @@ import ftputil
 import getpass
 import stat
 import os
+import sys
 
 
 class Base(unittest.TestCase):
@@ -179,6 +180,12 @@ class TestStat(Base):
     def test_listdir(self):
         '''Test FTPHost.listdir.'''
         host = self.host
+        # try to list a directory which isn't there
+        self.assertRaises(ftputil.PermanentError,
+                          host.listdir, 'notthere')
+        # try to list a "directory" which is a file
+        self.assertRaises(ftputil.PermanentError,
+                          host.listdir, 'ftputil2.py')
         # do we have two files?
         self.assertEqual( len(host.listdir(host.curdir)), 2 )
         # have they the expected names?
@@ -202,15 +209,23 @@ class TestStat(Base):
 class TestPath(Base):
     '''Test operations in FTPHost.path.'''
 
-    def test_isdir(self):
-        '''Test FTPHost._Path.isdir.'''
+    def test_isdir_isfile_islink(self):
+        '''Test FTPHost._Path.isdir/isfile/islink.'''
         host = self.host
         host.chdir(self.testdir)
+        # test a path which isn't there
+        self.failIf( host.path.isdir('notthere') )
+        self.failIf( host.path.isfile('notthere') )
+        self.failIf( host.path.islink('notthere') )
         # test a directory
         self.failUnless( host.path.isdir(self.testdir) )
+        self.failIf( host.path.isfile(self.testdir) )
+        self.failIf( host.path.islink(self.testdir) )
         # test a file
-        host.upload( 'ftputil.py', 'ftputil2.py', 'b' )
+        host.upload('ftputil.py', 'ftputil2.py', 'b')
         self.failIf( host.path.isdir('ftputil2.py') )
+        self.failUnless( host.path.isfile('ftputil2.py') )
+        self.failIf( host.path.islink(self.testdir) )
         # clean up
         host.remove('ftputil2.py')
         host.chdir(self.rootdir)
