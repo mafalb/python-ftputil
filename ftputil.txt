@@ -224,12 +224,14 @@ upload_if_newer(source, target, mode='')
     is similar to the upload method. The only difference is that the
     upload is only invoked if the time of the last modification for
     the source file is more recent than that of the target file, or
-    the target doesn't exist at all.
+    the target doesn't exist at all. If an upload actually occured,
+    the return value is a true value, else a false value.
 
 download_if_newer(source, target, mode='')
     corresponds to upload_if_newer but performs a download from the
     server to the local host. Read the descriptions of download and
-    upload_if_newer for more.
+    upload_if_newer for more. If a download actually occured,
+    the return value is a true value, else a false value.
 
 close()
     closes the connection to the remote host. After this, no more
@@ -277,10 +279,10 @@ lstat(path)
 
     - The result is derived by parsing the output of a DIR command on
       the server. Therefore, the result from FTPHost.lstat can not
-      contain nore information than the received text. In particular:
+      contain more information than the received text. In particular:
 
     - User and group ids can only be determined as strings, not as
-      numbers, and that only, if the server supplies them. This is
+      numbers, and that only if the server supplies them. This is
       usually the case with Unix servers but may not be for other FTP
       server programs.
 
@@ -293,11 +295,11 @@ lstat(path)
     - Links can only be recognized on servers that provide this
       information in the DIR output.
 
-    - Items that can't be determined at all, are set to None.
+    - Items that can't be determined at all are set to None.
 
     - There's a special problem with stat'ing the root directory. In
       this case, a RootDirError is raised. This has to do with the
-      algorithm used by (l)stat and a know of no one which solves
+      algorithm used by (l)stat and I know of no approach which solves
       this problem.
 
     Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
@@ -439,6 +441,6 @@ Van Rossum G, Drake Jr FL. 2001.
 ----------------------------------------------------------------------
 AUTHOR
 
-ftputil is written by Stefan Schwarzer <s.schwarzer@ndh.net>.
+ftputil is written by Stefan Schwarzer <sschwarzer@sschwarzer.net>.
 Feedback is appreciated.
 
