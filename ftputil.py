@@ -192,10 +192,13 @@ class _FTPFile:
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
-        self.closed = 0
         self._conn = _try_with_ioerror(
                      self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
+        # this comes last so that close does not try to
+        #  close _FTPFile objects without _conn and _fo
+        #  attributes
+        self.closed = 0
 
     #
     # Read and write operations with support for
@@ -253,9 +256,9 @@ class _FTPFile:
         '''Write lines to file. Do linesep conversion for
         text mode.'''
         if not self._binmode:
-            # more memory-friendly than [... for line in lines]
-            for i in range( len(lines) ):
-                lines[i] = _python_to_crlf_linesep(lines[i])
+            for line in lines:
+                self._fo.write( _python_to_crlf_linesep(line) )
+            return
         self._fo.writelines(lines)
 
     #
@@ -279,7 +282,11 @@ class _FTPFile:
             self.closed = 1
 
     def __del__(self):
-        self.close()
+        try:
+            self.close()
+        except:
+            # don't want warnings if constructor had failed
+            pass
 
 
 ############################################################
@@ -384,7 +391,7 @@ class FTPHost:
         try:
             self.close()
         except:
-            # don't want warnings if constructor failed
+            # don't want warnings if constructor had failed
             pass
 
     #
