@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.72 2002/03/29 18:17:14 schwa Exp $
+# $Id: ftputil.py,v 1.73 2002/03/30 14:49:17 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -78,7 +78,7 @@ Note: ftputil currently is not threadsafe. More specifically,
 # Ideas for future development:
 # - provide sensible "fallback" when imported with Python versions
 #   before 2.2 (or make all Python 2.1-compatible)
-#   Note: trying to subclass the builtin tuple before Python 2.2 raises 
+#   Note: trying to subclass the builtin tuple before Python 2.2 raises
 #         TypeError: base is not a class object
 # - follow links in FTPHost.path.stat implementation!
 # - conditional upload/download (only when the source file
@@ -403,7 +403,7 @@ class FTPHost:
             self._parser = self._parse_robin_line
         else:
             self._parser = self._parse_unix_line
-    
+
     def _make_session(self):
         """
         Return a new session object according to the current state
@@ -783,7 +783,6 @@ class _Path:
         self.isabs        = pp.isabs
         self.commonprefix = pp.commonprefix
         self.join         = pp.join
-        self.split        = pp.split
         self.splitdrive   = pp.splitdrive
         self.splitext     = pp.splitext
         self.normcase     = pp.normcase
@@ -794,6 +793,11 @@ class _Path:
         if not self.isabs(path):
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
+
+    def split(self, path):
+        if path.endswith('/'):
+            path = path[:-1]
+        return posixpath.split(path)
 
     def exists(self, path):
         try:
