@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.81 2002/04/01 15:07:39 schwa Exp $
+# $Id: ftputil.py,v 1.82 2002/04/01 16:22:57 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -76,15 +76,9 @@ Note: ftputil currently is not threadsafe. More specifically,
 """
 
 # Ideas for future development:
-# - provide sensible "fallback" when imported with Python versions
-#   before 2.2 (or make all Python 2.1-compatible)
-#   Note: trying to subclass the builtin tuple before Python 2.2 raises
-#         TypeError: base is not a class object
-# - follow links in FTPHost.path.stat implementation!
-# - conditional upload/download (only when the source file
-#   is newer than the target file, depends on FTPHost.stat)
-
 # - write documentation
+# - allow to set an offset for the time difference of local
+#   and remote host
 # - handle connection timeouts
 # - caching of FTPHost.stat results??
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
@@ -644,7 +638,7 @@ class FTPHost:
             # year_or_time is really a year
             year, hour, minute = int(year_or_time), 0, 0
             st_mtime = time.mktime( (year, month, day, hour,
-                       minute, 0, 0, 0, 0) )
+                       minute, 0, 0, 0, -1) )
         else:
             # year_or_time is a time hh:mm
             hour, minute = year_or_time.split(':')
@@ -652,11 +646,11 @@ class FTPHost:
             # try the current year
             year = time.localtime()[0]
             st_mtime = time.mktime( (year, month, day, hour,
-                       minute, 0, 0, 0, 0) )
+                       minute, 0, 0, 0, -1) )
             if st_mtime > time.time():
                 # if it's in the future use previous year
                 st_mtime = time.mktime( (year-1, month, day,
-                           hour, minute, 0, 0, 0, 0) )
+                           hour, minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
         # st_name
@@ -709,7 +703,7 @@ class FTPHost:
         if am_pm == 'P':
             hour = 12 + hour
         st_mtime = time.mktime( (year, month, day, hour,
-                   minute, 0, 0, 0, 0) )
+                   minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
         result = _Stat( (st_mode, st_ino, st_dev, st_nlink,
