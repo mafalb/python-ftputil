@@ -9,9 +9,13 @@ Name
 Description
 -----------
 
-The ftputil module is a high-level interface to the ftplib module. The
-``FTPHost`` objects generated from it allow many operations similar to
-those of ``os`` and ``os.path``.
+The ftputil module is a high-level interface to the ftplib_ module. The
+`FTPHost objects`_ generated from it allow many operations similar to
+those of os_ and `os.path`_.
+
+.. _ftplib: http://www.python.org/doc/current/lib/module-ftplib.html
+.. _os: http://www.python.org/doc/current/lib/module-os.html
+.. _`os.path`: http://www.python.org/doc/current/lib/module-os.path.html
 
 Examples::
 
@@ -30,12 +34,16 @@ Examples::
     source.close()
     target.close()
 
-Also, there are ``FTPHost.lstat`` and ``FTPHost.stat`` to request size and
+Also, there are `FTPHost.lstat`_ and `FTPHost.stat`_ to request size and
 modification time of a file. The latter can also follow links, similar
-to os.stat. Even ``FTPHost.path.walk`` works.
+to `os.stat`_. Even `FTPHost.path.walk`_ works.
 
-The distribution contains a regression test module and a custom
-UserTuple class to provide stat results with Python 2.1.
+.. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
+
+The distribution contains a `regression test module`_ and a custom
+UserTuple_ class to provide stat_ results with Python 2.1.
+
+.. _stat: http://www.python.org/doc/current/lib/module-stat.html
 
 Module contents
 ---------------
@@ -53,9 +61,9 @@ The exceptions are organized as follows::
         FTPIOError(FTPError)
         RootDirError(FTPError)
 
-``FTPError`` is the root of the exception hierarchy of the module.
+**FTPError** is the root of the exception hierarchy of the module.
 
-``FTPOSError`` is derived from ``OSError``. This is for similarity between the
+**FTPOSError** is derived from ``OSError``. This is for similarity between the
 os module and ``FTPHost`` objects. Compare
 
 ::
@@ -102,17 +110,18 @@ similarity between ``OSError`` and ``FTPOSError`` is that the latter holds the
 FTP server return code in the errno attribute of the exception object
 and the error text in strerror.
 
-TemporaryError is raised for FTP return codes from the 4xx category.
+**TemporaryError** is raised for FTP return codes from the 4xx category.
 This corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
-``ftplib.error_temp`` are *not* identical). ``PermanentError`` is raised for
-5xx return codes from the FTP server (again, that's similar but *not*
-identical to ``ftplib.error_perm``).
+``ftplib.error_temp`` are *not* identical).
 
-``ParserError`` is used for errors during the parsing of directory
+**PermanentError** is raised for 5xx return codes from the FTP server
+(again, that's similar but *not* identical to ``ftplib.error_perm``).
+
+**ParserError** is used for errors during the parsing of directory
 listings from the server. This exception is used by the ``FTPHost``
 methods ``stat``, ``lstat``, and ``listdir``.
 
-``FTPIOError`` denotes an I/O error on the remote host. This appears
+**FTPIOError** denotes an I/O error on the remote host. This appears
 mainly with file-like objects which are retrieved by invoking
 ``FTPHost.file`` (``FTPHost.open`` is an alias). Compare
 
@@ -144,7 +153,7 @@ with
 As you can see, both code snippets are similar. (However, the error
 codes aren't the same.)
 
-``RootDirError`` is a special case. Due to the implementation of the
+**RootDirError** is a special case. Due to the implementation of the
 lstat method it is not possible to do a ``stat`` call  on the root directory
 ``/``. If you know *any* way to do it, please let me know. :-)
 
@@ -202,8 +211,8 @@ wrapper class::
 
 ``curdir``, ``pardir``, ``sep``
     are strings which denote the current and the parent directory on
-    the remote server. sep identifies the path separator. Though RFC
-    959 (File Transfer Protocol) notes that these values may be server
+    the remote server. sep identifies the path separator. Though `RFC
+    959`_ (File Transfer Protocol) notes that these values may be server
     dependent, the Unix counterparts seem to work well in practice,
     even for non-Unix servers.
 
@@ -288,6 +297,8 @@ wrapper class::
     returns a list containing the names of the files and directories
     in the given path; similar to ``os.listdir``.
 
+.. _`FTPHost.lstat`:
+
 ``lstat(path)``
     returns an object similar that from ``os.lstat`` (a "tuple" with
     additional attributes; see the documentation of the ``os`` module for
@@ -319,12 +330,18 @@ wrapper class::
       algorithm used by ``(l)stat`` and I know of no approach which solves
       this problem.
 
+.. _`RFC 959`: http://www.ietf.org/rfc/rfc959.txt
+
 .. update for other servers
+
+..
 
     Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
     a format commonly used by Unix servers is assumed. If you need to
     parse output from another server type, please contact me under the
     email address at the end of this text.
+
+.. _`FTPHost.stat`:
 
 ``stat(path)``
     return ``stat`` information also for files which are pointed to by a
@@ -336,9 +353,10 @@ wrapper class::
 ~~~~~~~~~~~~~~~~
 
 ``FTPHost`` objects contain an attribute named path, similar to
-``os.path``. (See there for documentation.) The following methods can
-be applied to the remote host with the same semantics as for
-``os.path``:
+`os.path`_. The following methods can be applied to the remote host
+with the same semantics as for ``os.path``:
+
+.. _`FTPHost.path.walk`:
 
 ::
 
@@ -361,9 +379,6 @@ be applied to the remote host with the same semantics as for
     splitext(path)
     walk(path, func, arg)
 
-See the section on the ``os.path`` module in the Library Reference,
-http://www.python.org/doc/current/lib/module-os.path.html
-
 ``FTPFile`` objects
 -------------------
 
@@ -379,9 +394,11 @@ semantics as for local files::
     writelines(string_sequence)
     xreadlines()
 
-and the attribute closed. For details, see the section "File objects"
-in the Library Reference,
-http://www.python.org/doc/current/lib/bltin-file-objects.html
+and the attribute closed. For details, see the section `File objects`_
+in the Library Reference.
+
+.. _`file objects`:
+   http://www.python.org/doc/current/lib/bltin-file-objects.html
 
 Note that ftputil supports both binary and text mode with the
 appropriate line ending conversions.
@@ -426,6 +443,9 @@ Bugs and limitations
 Files
 -----
 
+.. _UserTuple:
+.. _`regression test module`:
+
 ``ftputil.py``
     is the main module file.
 
@@ -447,20 +467,20 @@ Files
     ``_mock_ftplib`` is a "mock" variant of the ``ftplib`` module. See
     below for details.
 
-See also
---------
+References
+----------
 
-Mackinnon T, Freeman S, Craig P. 2000.
-    `Endo-Testing: Unit Testing with Mock Objects`.
-    http://www.mockobjects.com/misc/mockobjects.pdf
+- Mackinnon T, Freeman S, Craig P. 2000. `Endo-Testing:
+  Unit Testing with Mock Objects`_.
 
-Postel J, Reynolds J. 1985.
-    `RFC 959 - File Transfer Protocol (FTP)`.
-    http://www.ietf.org/rfc/rfc959.txt
+- Postel J, Reynolds J. 1985. `RFC 959 - File Transfer Protocol (FTP)`_.
 
-Van Rossum G, Drake Jr FL. 2001.
-    `Python Library Reference`.
-    http://www.python.org/doc/current/lib/lib.html
+- Van Rossum G, Drake Jr FL. 2001. `Python Library Reference`_.
+
+.. _`Endo-Testing: Unit Testing with Mock Objects`:
+   http://www.mockobjects.com/misc/mockobjects.pdf
+.. _`RFC 959 - File Transfer Protocol (FTP)`: http://www.ietf.org/rfc/rfc959.txt
+.. _`Python Library Reference`: http://www.python.org/doc/current/lib/lib.html
 
 Author
 ------
