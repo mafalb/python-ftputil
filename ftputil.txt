@@ -418,7 +418,12 @@ Time shift correction
 
   Setting this value is important if `upload_if_newer`_ and
   `download_if_newer`_ should work correctly even if the time zone of the
-  FTP server differs from that of the client (where ``ftputil`` runs).
+  FTP server differs from that of the client (where ``ftputil`` runs). Note
+  that the time shift value *can* be negative.
+
+  If the time shift value is invalid, e. g. no multiple of a full hour or its
+  absolute (unsigned) value larger than 24 hours, a ``TimeShiftError`` is
+  raised.
 
   See also `synchronize_times`_ for a way to set the time shift with a simple
   method call.
@@ -444,7 +449,9 @@ Time shift correction
     the FTP server.
 
   If you can't fulfill these conditions, you can nevertheless set the time
-  shift value manually with `set_time_shift`_.
+  shift value manually with `set_time_shift`_. Trying to call
+  ``synchronize_times`` if the above conditions aren't true results in a
+  ``TimeShiftError`` exception.
 
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
