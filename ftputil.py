@@ -100,7 +100,6 @@ class FTPError:
     '''General error class'''
 
     def __init__(self, ftp_exception):
-        Exception.__init__(self, ftp_exception)
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
@@ -240,9 +239,9 @@ class _FTPFile:
             return data
         data = _crlf_to_python_linesep(data)
         if args == ():
-            return _crlf_to_python_linesep(data)
+            return data
         # If the read data contains \r characters the number
-        #  of read characters will be too little! Thus we
+        #  of read characters will be too small! Thus we
         #  (would) have to continue to read until we have
         #  fetched the requested number of bytes (or run out
         #  of source data).
@@ -307,11 +306,11 @@ class _FTPFile:
     def writelines(self, lines):
         '''Write lines to file. Do linesep conversion for
         text mode.'''
-        if not self._binmode:
-            for line in lines:
-                self._fo.write( _python_to_crlf_linesep(line) )
+        if self._binmode:
+            self._fo.writelines(lines)
             return
-        self._fo.writelines(lines)
+        for line in lines:
+            self._fo.write( _python_to_crlf_linesep(line) )
 
     #
     # other attributes
@@ -319,11 +318,10 @@ class _FTPFile:
     def __getattr__(self, attr_name):
         '''Delegate unknown attribute requests to the file.'''
         if attr_name in ( 'flush isatty fileno seek tell '
-          'truncate name softspace'.split() ):
+                          'truncate name softspace'.split() ):
             return getattr(self._fo, attr_name)
-        else:
-            raise AttributeError("'FTPFile' object has no "
-                  "attribute '%s'" % attr_name)
+        raise AttributeError("'FTPFile' object has no "
+              "attribute '%s'" % attr_name)
 
     def close(self):
         '''Close the FTPFile.'''
@@ -387,8 +385,11 @@ class FTPHost:
         #  at least with Unix and Windows servers
         self.curdir, self.pardir, self.sep = '.', '..', '/'
         # check if we have a Microsoft ROBIN server
-        response = _try_with_oserror(
-                   self._session.voidcmd, 'STAT')
+        try:
+            response = _try_with_oserror(
+                       self._session.voidcmd, 'STAT')
+        except FTPOSError:
+            response = ''
         if response.find('ROBIN Microsoft') != -1:
             self._parser = self._parse_robin_line
         else:
@@ -652,7 +653,7 @@ class FTPHost:
         else:
             return stat_result
 
-    def copyfileobj(self, source, target, length=8*1024):
+    def copyfileobj(self, source, target, length=64*1024):
         '''Copy data from file-like object source to file-like
         object target.'''
         # inspired by shutil.copyfileobj (I don't use the
