@@ -1,0 +1,39 @@
+
+----------------------------------------------------------------------
+Hello Pythoneers :)
+
+I would like to announce ftputil.py, a module which provides a
+more friendly interface for FTP sessions than the ftplib module.
+
+The FTPHost objects generated from it allow many operations similar
+to those of os and os.path. Examples:
+
+  # download some files from the login directory
+  import ftputil
+  host = ftputil.FTPHost('ftp.domain.com', 'user', 'secret')
+  names = host.listdir(host.curdir)
+  for name in names:
+      if host.path.isreg(name):
+          host.download(name, name, 'b')  # remote, local, binary mode
+
+  # make a new directory and copy a remote file into it
+  host.mkdir('newdir')
+  source = host.file('index.html', 'r')  # file-like object
+  target = host.file('newdir/index.html', 'w')  # file-like object
+  host.copyfileobj(source, target)  # mimics shutil.copyfileobj
+  source.close()
+  target.close()
+
+Even host.path.walk works. :-) But slow. ;-)
+
+ftputil.py can be downloaded from
+http://www.ndh.net/home/sschwarzer/download/ftputil.py
+
+I would like to get your suggestions and comments. :-)
+
+Stefan
+
+
+P.S.: Thanks to Pedro Rodriguez for his helpful answer to my question
+in comp.lang.python :-)
+----------------------------------------------------------------------
