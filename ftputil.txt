@@ -179,6 +179,8 @@ and are described here:
 ``FTPHost`` objects
 -------------------
 
+.. _`FTPHost construction`:
+
 Construction
 ~~~~~~~~~~~~
 
@@ -283,8 +285,8 @@ Files and directories
 
   makes the given directory on the remote host. In the current
   implementation, this doesn't construct "intermediate" directories
-  which don't already exist. The mode parameter is ignored. This is
-  for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is
+  which don't already exist. The ``mode`` parameter is ignored. This
+  is for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is
   passed into a function instead of the os module (see the subsection
   on Python exceptions above for an explanation).
 
@@ -357,6 +359,10 @@ Uploading and downloading files
 Stat'ing files and directories
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
+If calling ``lstat`` or ``stat`` yields wrong modification dates or
+times, look at the methods that deal with time zone differences
+(`time shift`_).
+
 .. _`FTPHost.lstat`:
 
 - ``lstat(path)``
@@ -384,7 +390,7 @@ Stat'ing files and directories
   - Links can only be recognized on servers that provide this
     information in the ``DIR`` output.
 
-  - Items that can't be determined at all are set to None.
+  - Items that can't be determined at all are set to ``None``.
 
   - There's a special problem with stat'ing the root directory. In
     this case, a ``RootDirError`` is raised. This has to do with the
@@ -517,7 +523,38 @@ in the Library Reference.
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
 
-.. Add "Tips and tricks" section
+Tips and tricks
+---------------
+
+Connecting on another port
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default, an instantiated ``FTPHost`` object connects on the usual
+FTP ports. If you have to use a different port, refer to the
+section `FTPHost construction`_.
+
+You can use the same approach to connect in active or passive mode, as
+you like.
+
+Conditional upload and download to/from a server in a different time zone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You may find that ``ftputil`` uploads or downloads files
+unnecessarily. This can occur when the FTP server is in a different
+time zone than the client on which ``ftputil`` runs. Please see the
+the section on setting the `time shift`_. It may even be sufficient to
+call `synchronize_times`_.
+
+Wrong dates or times when stat'ing on a server in a different time zone
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please see the previous tip.
+
+I don't find an answer to my problem in this document
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please send me an email with your question, and I'll see what I can do
+for you. :-)
 
 Bugs and limitations
 --------------------
@@ -541,6 +578,9 @@ Bugs and limitations
   than one byte per character. Please email me your experiences
   (address below), if you have to work with multibyte text streams in
   FTP sessions.
+
+- Currently, it is not possible to continue an interrupted upload or
+  download. Contact me if you have problems with that.
 
 - The ``UserTuple`` class, provided in ``UserTuple.py``, is not thoroughly
   tested. If you encouter problems, please notify me.
