@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.20 2002/04/03 21:47:41 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.21 2003/03/15 18:50:17 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -44,9 +44,9 @@ import StringIO
 
 DEBUG = 0
 
-# Use a global dictionary of the form {path: mock_file, ...}
-#  to make "volatile" mock files accessible. This is used for
-#  testing the contents of a file after an FTPHost.upload call.
+# Use a global dictionary of the form `{path: mock_file, ...}` to
+#  make "volatile" mock files accessible. This is used for testing
+#  the contents of a file after an `FTPHost.upload` call.
 mock_files = {}
 
 def content_of(path):
@@ -55,11 +55,11 @@ def content_of(path):
 
 class MockFile(StringIO.StringIO):
     """
-    Mock class for the file objects _contained in_ _FTPFile
-    objects (not _FTPFile objects themselves!).
+    Mock class for the file objects _contained in_ `_FTPFile` objects
+    (not `_FTPFile` objects themselves!).
 
-    Unless StringIO.StringIO instances, MockFile objects can be
-    queried for their contents after been closed.
+    Unless `StringIO.StringIO` instances, `MockFile` objects can be
+    queried for their contents after they have been closed.
     """
     def __init__(self, path, content=''):
         global mock_files
@@ -81,7 +81,7 @@ class MockFile(StringIO.StringIO):
 class MockSocket:
     """
     Mock class which is used to return something from
-    MockSession.transfercmd.
+    `MockSession.transfercmd`.
     """
     def __init__(self, path, mock_file_content=''):
         if DEBUG:
@@ -98,7 +98,7 @@ class MockSocket:
 
 class MockSession:
     """
-    Mock class which works like ftplib.FTP for the purpose of the
+    Mock class which works like `ftplib.FTP` for the purpose of the
     unit tests.
     """
     # used by MockSession.cwd and MockSession.pwd
@@ -137,8 +137,8 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 
     def __init__(self, host='', user='', password=''):
         self.closed = 0
-        # count successful transfercmd invocations to ensure
-        #  that each has a corresponding voidresp
+        # count successful transfercmd invocations to ensure that
+        #  each has a corresponding `voidresp`
         self._transfercmds = 0
 
     def _remove_trailing_slash(self, path):
