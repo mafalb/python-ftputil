@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.6 2003/10/04 14:07:53 schwa Exp $
+# $Id: ftp_path.py,v 1.7 2003/10/04 14:38:01 schwa Exp $
 
 import posixpath
 import stat
@@ -93,29 +93,29 @@ class _Path:
     def isfile(self, path):
         try:
             stat_result = self._host.stat(path)
+            return stat.S_ISREG(stat_result.st_mode)
         except ftp_error.RootDirError:
             return False
         except ftp_error.FTPOSError:
             return False
-        return stat.S_ISREG(stat_result.st_mode)
 
     def isdir(self, path):
         try:
             stat_result = self._host.stat(path)
+            return stat.S_ISDIR(stat_result.st_mode)
         except ftp_error.RootDirError:
             return True
         except ftp_error.FTPOSError:
             return False
-        return stat.S_ISDIR(stat_result.st_mode)
 
     def islink(self, path):
         try:
             stat_result = self._host.lstat(path)
+            return stat.S_ISLNK(stat_result.st_mode)
         except ftp_error.RootDirError:
             return False
         except ftp_error.FTPOSError:
             return False
-        return stat.S_ISLNK(stat_result.st_mode)
 
     def walk(self, top, func, arg):
         """
