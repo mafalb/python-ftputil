@@ -1,3 +1,16 @@
+ftputil 2.0.3 is now available at
+http://www.sschwarzer.net/python/python_software.html#ftputil .
+
+This release fixes (for most cases) some problems when logging into an
+FTP server with an inaccessible login directory, i. e. `getcwd()`
+returns "/some/login/dir" but `chdir("/some/login/dir")` fails.
+
+Thanks go to Valeriy Pogrebitskiy for investigating and reporting
+these problems.
+
+Stefan
+
+----------------------------------------------------------------------
 Here's ftputil 2.0 !
 
 ftputil is a high-level alternative to Python's ftplib module. With
