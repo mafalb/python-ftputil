@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.64 2003/03/15 21:22:31 schwa Exp $
+# $Id: _test_ftputil.py,v 1.65 2003/03/15 21:40:05 schwa Exp $
 
 import unittest
 import stat
@@ -93,8 +93,6 @@ class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
 
 class TimeShiftMockSession(_mock_ftplib.MockSession):
-    current_dir = '/login/dir'
-
     def delete(self, file_name):
         pass
 
@@ -602,7 +600,7 @@ class TestTimeShift(unittest.TestCase):
         self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 10*60)
         self.assertRaises(ftputil.TimeShiftError, assert_time_shift,
                           -3600-10*60)
-        
+
     def test_synchronize_time(self):
         """Test time synchronization with server."""
         host = ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
