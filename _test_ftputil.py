@@ -29,13 +29,14 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.44 2002/03/30 18:56:56 schwa Exp $
+# $Id: _test_ftputil.py,v 1.45 2002/03/30 21:22:24 schwa Exp $
 
 import unittest
 import stat
 import os
 import time
 import operator
+import random
 
 import ftplib
 import ftputil
@@ -239,9 +240,8 @@ class TestFileOperations(unittest.TestCase):
         data = '\000a\001b\r\n\002c\003\n\004\r\005'
         output = host.file('dummy', 'wb')
         output.write(data)
-        # must be checked _before_ close
-        child_data = host.file_content_for_child(0)
         output.close()
+        child_data = host.file_content_for_child(0)
         expected_data = data
         self.assertEqual(child_data, expected_data)
 
@@ -251,8 +251,8 @@ class TestFileOperations(unittest.TestCase):
         data = ' \nline 2\nline 3'
         output = host.file('dummy', 'w')
         output.write(data)
-        child_data = host.file_content_for_child(0)
         output.close()
+        child_data = host.file_content_for_child(0)
         expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
 
@@ -263,8 +263,8 @@ class TestFileOperations(unittest.TestCase):
         backup_data = data[:]
         output = host.file('dummy', 'w')
         output.writelines(data)
-        child_data = host.file_content_for_child(0)
         output.close()
+        child_data = host.file_content_for_child(0)
         expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
         # ensure that the original data was not modified
@@ -370,16 +370,41 @@ class TestFileOperations(unittest.TestCase):
         self.assertRaises(ftputil.FTPIOError, host.file,
                           'notthere', 'r')
 
-#
-#     def test_upload_download(self):
-#         """Test FTPHost.upload/download."""
-#         host = self.host
-#         local_source = 'ftputil.py'
-#         local_test_path = '__test.dat'
-#         remote_path = host.path.join(self.testdir,
-#                                      'ftputil2.py')
+    def random_data(self, pool, size=10000):
+        """
+        Return a sequence of characters consisting of those from
+        the pool of integer numbers.
+        """
+        character_list = []
+        for i in range(size):
+            ordinal = random.choice(pool)
+            character_list.append( chr(ordinal) )
+        result = ''.join(character_list)
+        return result
+        
+    def ascii_data(self):
+        """Return an ASCII character string."""
+        pool = range(32, 128)
+        pool.append( ord('\n') )
+        return self.random_data(pool)
+        
+    def binary_data(self):
+        """Return an binary character string."""
+        pool = range(0, 256)
+        return self.random_data(pool)
+
+#     def test_ascii_upload(self):
+#         """Test ASCII mode upload."""
+#         # generate file
+#         source_file = open('__test_source', 'wb')
+#         source_file.write( self.ascii_data() )
+#         source_file.close()
+#         # upload
+#         host = ftp_host_factory()
+#         local_source = '__test_source'
 #         # test ascii up/download
-#         host.upload(local_source, remote_path)
+#         host.upload(local_source, 'dummy')
+#         
 #         host.download(remote_path, local_test_path)
 #         # compare local data
 #         input_ = file(local_source)
