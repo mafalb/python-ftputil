@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.107 2003/03/15 22:22:11 schwa Exp $
+# $Id: ftputil.py,v 1.108 2003/03/15 22:35:37 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -82,11 +82,12 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 from __future__ import nested_scopes
 
 import ftplib
-import stat
-import time
 import os
-import sys
 import posixpath
+import stat
+import sys
+import threading
+import time
 
 if sys.version_info[:2] >= (2, 2):
     _StatBase = tuple
@@ -132,8 +133,8 @@ class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
 class ParserError(FTPOSError): pass
 
-#XXX Do you know better names for _try_with_oserror and
-#    _try_with_ioerror?
+#XXX Do you know better names for `_try_with_oserror` and
+#    `_try_with_ioerror`?
 def _try_with_oserror(callee, *args, **kwargs):
     """
     Try the callee with the given arguments and map resulting
@@ -384,6 +385,7 @@ class FTPHost:
         self.path = _Path(self)
         # associated `FTPHost` objects for data transfer
         self._children = []
+        self.__children_lock = threading.Lock()
         self.closed = False
         # set curdir, pardir etc. for the remote host; RFC 959 states
         #  that this is, strictly spoken, dependent on the server OS
@@ -449,16 +451,19 @@ class FTPHost:
         This method tries to reuse a child but will generate a new one
         if none is available.
         """
-        #TODO make requesting a child (whether cached or not) thread-safe
-        host = self._available_child()
-        if host is None:
-            host = self._copy()
-            self._children.append(host)
-            host._file = _FTPFile(host)
-        basedir = self.getcwd()
-        host.chdir(basedir)
-        host._file._open(path, mode)
-        return host._file
+        self.__children_lock.acquire()
+        try:
+            host = self._available_child()
+            if host is None:
+                host = self._copy()
+                self._children.append(host)
+                host._file = _FTPFile(host)
+            basedir = self.getcwd()
+            host.chdir(basedir)
+            host._file._open(path, mode)
+            return host._file
+        finally:
+            self.__children_lock.release()
 
     def open(self, path, mode='r'):
         return self.file(path, mode)
