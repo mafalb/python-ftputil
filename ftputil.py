@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.145 2003/12/28 19:17:29 schwa Exp $
+# $Id: ftputil.py,v 1.146 2003/12/30 20:41:45 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -541,7 +541,7 @@ class FTPHost:
         """
         ftp_error._try_with_oserror(self._session.mkd, path)
 
-    def rmdir(self, path, remove_only_empty=True):
+    def rmdir(self, path, _remove_only_empty=True):
         """
         Remove the _empty_ directory `path` on the remote host.
 
@@ -553,7 +553,7 @@ class FTPHost:
         longer possible and should be avoided.
 
         If you really need the old behaviour, pass in an argument
-        `remove_only_empty=False` and `rmdir` will delegate to the
+        `_remove_only_empty=False` and `rmdir` will delegate to the
         FTP server, as before. Note, however, that deleting non-empty
         directories may be disallowed in future versions of ftputil.
         """
@@ -561,7 +561,7 @@ class FTPHost:
         # non-empty directories with `rmdir`, some (most?) FTP servers
         # allow to delete non-empty directories via their `RMD`
         # command. See the compatibilty note in the docstring.
-        if remove_only_empty and self.listdir(path):
+        if _remove_only_empty and self.listdir(path):
             path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         ftp_error._try_with_oserror(self._session.rmd, path)
