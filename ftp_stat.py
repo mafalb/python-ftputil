@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.24 2003/10/25 23:06:00 schwa Exp $
+# $Id: ftp_stat.py,v 1.25 2003/10/29 22:59:51 schwa Exp $
 
 import stat
 import sys
@@ -241,10 +241,13 @@ class _UnixStat(_Stat):
         except KeyError:
             raise ftp_error.ParserError("invalid month name '%s'" % month)
         day = int(day)
+        def my_mktime(time_tuple):
+            print "mktime argument:", time_tuple
+            return time.mktime(time_tuple)
         if year_or_time.find(':') == -1:
             # `year_or_time` is really a year
             year, hour, minute = int(year_or_time), 0, 0
-            st_mtime = time.mktime( (year, month, day, hour,
+            st_mtime = my_mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
         else:
             # `year_or_time` is a time hh:mm
@@ -252,7 +255,7 @@ class _UnixStat(_Stat):
             year, hour, minute = None, int(hour), int(minute)
             # try the current year
             year = time.localtime()[0]
-            st_mtime = time.mktime( (year, month, day, hour,
+            st_mtime = my_mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
             # rhs of comparison: transform client time to server time
             #  (as on the lhs), so both can be compared with respect
@@ -267,7 +270,7 @@ class _UnixStat(_Stat):
             #  can only be exact up a minute
             if st_mtime > time.time() + self._host.time_shift() + 60.0:
                 # if it's in the future, use previous year
-                st_mtime = time.mktime( (year-1, month, day,
+                st_mtime = my_mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
