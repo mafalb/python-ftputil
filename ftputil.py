@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.139 2003/10/10 17:50:01 schwa Exp $
+# $Id: ftputil.py,v 1.140 2003/10/10 18:11:28 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -107,7 +107,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0b1'
+__version__ = '2.0b2'
 
 
 #####################################################################
@@ -501,7 +501,8 @@ class FTPHost:
     def upload_if_newer(self, source, target, mode=''):
         """
         Upload a file only if it's newer than the target on the
-        remote host or if the target file does not exist.
+        remote host or if the target file does not exist. See the
+        method `upload` for the meaning of the parameters.
 
         If an upload was necessary, return `True`, else return
         `False`.
@@ -513,7 +514,8 @@ class FTPHost:
     def download_if_newer(self, source, target, mode=''):
         """
         Download a file only if it's newer than the target on the
-        local host or if the target file does not exist.
+        local host or if the target file does not exist. See the
+        method `download` for the meaning of the parameters.
 
         If a download was necessary, return `True`, else return
         `False`.
