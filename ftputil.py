@@ -165,26 +165,26 @@ class _FTPFile:
     # the FTP server expects \r\n to be sent on text
     # transfers.
     #
-    def read(self, *args, **kwargs):
+    def read(self, *args):
         '''Return read bytes, normalized if in text
         transfer mode.'''
-        data = self._fo.read(*args, **kwargs)
+        data = self._fo.read(*args)
         if self._binmode:
             return data
         return _crlf_to_python_linesep(data)
 
-    def readline(self, *args, **kwargs):
+    def readline(self, *args):
         '''Return one read line, normalized if in text
         transfer mode.'''
-        data = self._fo.readline(*args, **kwargs)
+        data = self._fo.readline(*args)
         if self._binmode:
             return data
         return _crlf_to_python_linesep(data)
 
-    def readlines(self, *args, **kwargs):
+    def readlines(self, *args):
         '''Return read lines, normalized if in text
         transfer mode.'''
-        lines = self._fo.readlines(*args, **kwargs)
+        lines = self._fo.readlines(*args)
         if self._binmode:
             return lines
         # more memory-friendly than
