@@ -29,7 +29,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-'''
+# $Id: ftputil.py,v 1.71 2002/03/29 16:19:49 schwa Exp $
+
+"""
 ftputil - higher level support for FTP sessions
 
 FTPHost objects
@@ -71,11 +73,12 @@ Note: ftputil currently is not threadsafe. More specifically,
       you can use different FTPHost objects in different
       threads but not using a single FTPHost object in
       different threads.
-'''
+"""
 
 # Ideas for future development:
 # - provide sensible "fallback" when imported with Python versions
 #   before 2.2 (or make all Python 2.1-compatible)
+# - handle connection timeouts
 # - follow links in FTPHost.path.stat implementation!
 # - write documentation
 # - conditional upload/download (only when the source file
@@ -103,7 +106,7 @@ __version__ = '1.0.7rc1'
 # Exception classes and wrappers
 
 class FTPError:
-    '''General error class'''
+    """General error class"""
 
     def __init__(self, ftp_exception):
         self.args = (ftp_exception,)
@@ -125,9 +128,11 @@ class ParserError(FTPOSError): pass
 #XXX Do you know better names for _try_with_oserror and
 #    _try_with_ioerror?
 def _try_with_oserror(callee, *args, **kwargs):
-    '''Try the callee with the given arguments and map resulting
+    """
+    Try the callee with the given arguments and map resulting
     exceptions from ftplib.all_errors to FTPOSError and its
-    derived classes.'''
+    derived classes.
+    """
     try:
         return callee(*args, **kwargs)
     except ftplib.error_temp, obj:
@@ -141,8 +146,10 @@ def _try_with_oserror(callee, *args, **kwargs):
 class FTPIOError(FTPError, IOError): pass
 
 def _try_with_ioerror(callee, *args, **kwargs):
-    '''Try the callee with the given arguments and map resulting
-    exceptions from ftplib.all_errors to FTPIOError.'''
+    """
+    Try the callee with the given arguments and map resulting
+    exceptions from ftplib.all_errors to FTPIOError.
+    """
     try:
         return callee(*args, **kwargs)
     except ftplib.all_errors:
@@ -167,14 +174,14 @@ _python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 
 # helper class for xreadline protocol for ASCII transfers
 class _XReadlines:
-    '''Represents xreadline objects for ASCII transfers.'''
+    """Represents xreadline objects for ASCII transfers."""
 
     def __init__(self, ftp_file):
         self._ftp_file = ftp_file
         self._next_index = 0
 
     def __getitem__(self, index):
-        '''Return next line with specified index.'''
+        """Return next line with specified index."""
         if index != self._next_index:
             raise RuntimeError( "_XReadline access index "
                   "out of order (expected %s but got %s)" %
@@ -184,21 +191,23 @@ class _XReadlines:
             raise IndexError("_XReadline object out of data")
         self._next_index = self._next_index + 1
         return line
-        
+
 
 class _FTPFile:
-    '''Represents a file-like object connected to an
-    FTP host. File and socket are closed appropriately if
-    the close operation is requested.'''
+    """
+    Represents a file-like object connected to an FTP host.
+    File and socket are closed appropriately if the close
+    operation is requested.
+    """
 
     def __init__(self, host):
-        '''Construct the file(-like) object.'''
+        """Construct the file(-like) object."""
         self._host = host
         self._session = host._session
         self.closed = 1   # yet closed
 
     def _open(self, path, mode):
-        '''Open the remote file with given pathname and mode.'''
+        """Open the remote file with given pathname and mode."""
         # check mode
         if 'a' in mode:
             raise FTPIOError("append mode not supported")
@@ -236,8 +245,7 @@ class _FTPFile:
     # transfers.
     #
     def read(self, *args):
-        '''Return read bytes, normalized if in text
-        transfer mode.'''
+        """Return read bytes, normalized if in text transfer mode."""
         data = self._fo.read(*args)
         if self._binmode:
             return data
@@ -271,8 +279,7 @@ class _FTPFile:
         return ''.join(chunks)
 
     def readline(self, *args):
-        '''Return one read line, normalized if in text
-        transfer mode.'''
+        """Return one read line, normalized if in text transfer mode."""
         data = self._fo.readline(*args)
         if self._binmode:
             return data
@@ -282,8 +289,7 @@ class _FTPFile:
         return _crlf_to_python_linesep(data)
 
     def readlines(self, *args):
-        '''Return read lines, normalized if in text
-        transfer mode.'''
+        """Return read lines, normalized if in text transfer mode."""
         lines = self._fo.readlines(*args)
         if self._binmode:
             return lines
@@ -294,22 +300,22 @@ class _FTPFile:
         return lines
 
     def xreadlines(self):
-        '''Return an appropriate xreadlines object with
-        built-in line separator conversion support.'''
+        """
+        Return an appropriate xreadlines object with
+        built-in line separator conversion support.
+        """
         if self._binmode:
             return self._fo.xreadlines()
         return _XReadlines(self)
 
     def write(self, data):
-        '''Write data to file. Do linesep conversion for
-        text mode.'''
+        """Write data to file. Do linesep conversion for text mode."""
         if not self._binmode:
             data = _python_to_crlf_linesep(data)
         self._fo.write(data)
 
     def writelines(self, lines):
-        '''Write lines to file. Do linesep conversion for
-        text mode.'''
+        """Write lines to file. Do linesep conversion for text mode."""
         if self._binmode:
             self._fo.writelines(lines)
             return
@@ -320,7 +326,7 @@ class _FTPFile:
     # other attributes
     #
     def __getattr__(self, attr_name):
-        '''Delegate unknown attribute requests to the file.'''
+        """Delegate unknown attribute requests to the file."""
         if attr_name in ( 'flush isatty fileno seek tell '
                           'truncate name softspace'.split() ):
             return getattr(self._fo, attr_name)
@@ -328,7 +334,7 @@ class _FTPFile:
               "attribute '%s'" % attr_name)
 
     def close(self):
-        '''Close the FTPFile.'''
+        """Close the FTPFile."""
         if not self.closed:
             self._fo.close()
             _try_with_ioerror(self._conn.close)
@@ -343,7 +349,7 @@ class _FTPFile:
 # FTPHost class with several methods similar to those of os
 
 class FTPHost:
-    '''FTP host class'''
+    """FTP host class"""
 
     # Implementation notes:
     #
@@ -368,7 +374,7 @@ class FTPHost:
     # associated _FTPFile has been closed.
 
     def __init__(self, *args, **kwargs):
-        '''Abstract initialization of FTPHost object.'''
+        """Abstract initialization of FTPHost object."""
         self._session = _try_with_oserror(ftplib.FTP,
                         *args, **kwargs)
         # simulate os.path
@@ -396,27 +402,31 @@ class FTPHost:
             self._parser = self._parse_unix_line
 
     def _copy(self):
-        '''Return a copy of this FTPHost object.'''
+        """Return a copy of this FTPHost object."""
         # The copy includes a new ftplib.FTP instance
         #  (aka session) but doesn't copy the state of
         #  self.getcwd().
         return FTPHost(*self._args, **self._kwargs)
 
     def _available_child(self):
-        '''Return an available (i. e. one whose _file object
-        is closed) child (FTPHost object) from the pool of
-        children or None if there aren't any.'''
+        """
+        Return an available (i. e. one whose _file object is closed)
+        child (FTPHost object) from the pool of children or None if
+        there aren't any.
+        """
         for host in self._children:
             if host._file.closed:
                 return host
         return None
 
     def file(self, path, mode='r'):
-        '''Return an open file(-like) object which is
-        associated with this FTPHost object.
+        """
+        Return an open file(-like) object which is associated with
+        this FTPHost object.
 
-        This method tries to reuse a child but will generate
-        a new one if none is available.'''
+        This method tries to reuse a child but will generate a new one
+        if none is available.
+        """
         host = self._available_child()
         if host is None:
             host = self._copy()
@@ -428,7 +438,7 @@ class FTPHost:
         return host._file
 
     def close(self):
-        '''Close host connection.'''
+        """Close host connection."""
         if not self.closed:
             # close associated children
             for host in self._children:
@@ -451,38 +461,41 @@ class FTPHost:
     # miscellaneous utility methods resembling those in os
     #
     def getcwd(self):
-        '''Return the current path name.'''
+        """Return the current path name."""
         return _try_with_oserror(self._session.pwd)
 
     def chdir(self, path):
-        '''Change the directory on the host.'''
+        """Change the directory on the host."""
         _try_with_oserror(self._session.cwd, path)
 
     def mkdir(self, path, mode=None):
-        '''Make the directory path on the remote host. The
-        argument mode is ignored and only "supported" for
-        similarity with os.mkdir.'''
+        """
+        Make the directory path on the remote host. The argument mode
+        is ignored and only "supported" for similarity with os.mkdir.
+        """
         _try_with_oserror(self._session.mkd, path)
 
     def rmdir(self, path):
-        '''Remove the directory on the remote host.'''
+        """Remove the directory on the remote host."""
         _try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
-        '''Remove the given file.'''
+        """Remove the given file."""
         _try_with_oserror(self._session.delete, path)
 
     def unlink(self, path):
-        '''Remove the given file.'''
+        """Remove the given file."""
         self.remove(path)
 
     def rename(self, src, dst):
-        '''Rename the src on the FTP host to dst.'''
+        """Rename the src on the FTP host to dst."""
         _try_with_oserror(self._session.rename, src, dst)
 
     def listdir(self, path):
-        '''Return a list with directories, files etc. in the
-        directory named path.'''
+        """
+        Return a list with directories, files etc. in the directory
+        named path.
+        """
         path = self.path.abspath(path)
         if not self.path.isdir(path):
             raise PermanentError(
@@ -496,7 +509,7 @@ class FTPHost:
         return names
 
     def _stat_candidates(self, lines, wanted_name):
-        '''Return candidate lines for further analysis.'''
+        """Return candidate lines for further analysis."""
         return [line  for line in lines
                 if line.find(wanted_name) != -1]
 
@@ -506,8 +519,10 @@ class FTPHost:
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
     def _parse_unix_line(self, line):
-        '''Return _Stat instance corresponding to the given
-        text line. Exceptions are caught in _parse_line.'''
+        """
+        Return _Stat instance corresponding to the given text line.
+        Exceptions are caught in _parse_line.
+        """
         metadata, nlink, user, group, size, month, day, \
           year_or_time, name = line.split(None, 8)
         # st_mode
@@ -568,9 +583,11 @@ class FTPHost:
                        st_mtime, st_ctime, st_name) )
 
     def _parse_robin_line(self, line):
-        '''Return _Stat instance corresponding to the given
-        text line from a MS ROBIN FTP server. Exceptions are
-        caught in _parse_line.'''
+        """
+        Return _Stat instance corresponding to the given text line
+        from a MS ROBIN FTP server. Exceptions are caught in
+        _parse_line.
+        """
         date, time_, dir_or_size, name = line.split(None, 3)
         # st_mode
         st_mode = 0400   # default to read access only;
@@ -613,8 +630,7 @@ class FTPHost:
                        st_mtime, st_ctime, st_name) )
 
     def _parse_line(self, line, fail=1):
-        '''Return _Stat instance corresponding to the given
-        text line.'''
+        """Return _Stat instance corresponding to the given text line."""
         try:
             return self._parser(line)
         except (ValueError, IndexError):
@@ -625,8 +641,7 @@ class FTPHost:
                 return None
 
     def lstat(self, path):
-        '''Return an object similar to that returned
-        by os.stat.'''
+        """Return an object similar to that returned by os.stat."""
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
@@ -645,7 +660,7 @@ class FTPHost:
               "550 %s: no such file or directory" % path)
 
     def stat(self, path):
-        '''Return info from a stat call.'''
+        """Return info from a stat call."""
         stat_result = self.lstat(path)
         if stat.S_ISLNK(stat_result.st_mode):
             raise NotImplementedError("following links "
@@ -654,8 +669,7 @@ class FTPHost:
             return stat_result
 
     def copyfileobj(self, source, target, length=64*1024):
-        '''Copy data from file-like object source to file-like
-        object target.'''
+        "Copy data from file-like object source to file-like object target."
         # inspired by shutil.copyfileobj (I don't use the
         #  shutil code directly because it might change)
         while 1:
@@ -666,8 +680,7 @@ class FTPHost:
 
     #TODO Test this
     def copyfile(self, src, dst):
-        '''Copy data from src to dst (adapted from
-        shutil.copyfile).'''
+        """Copy data from src to dst (adapted from shutil.copyfile)."""
         fsrc = None
         fdst = None
         try:
@@ -681,17 +694,18 @@ class FTPHost:
                 fsrc.close()
 
     def __get_modes(self, mode):
-        '''Return modes for source and target file.'''
+        """Return modes for source and target file."""
         if mode == 'b':
             return 'rb', 'wb'
         else:
             return 'r', 'w'
 
     def upload(self, source, target, mode=''):
-        '''Upload a file from the local source (name) to the
-        remote target (name). The argument mode is an empty
-        string or 'a' for text copies, or 'b' for binary
-        copies.'''
+        """
+        Upload a file from the local source (name) to the remote
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
         source_mode, target_mode = self.__get_modes(mode)
         source = open(source, source_mode)
         target = self.file(target, target_mode)
@@ -700,10 +714,11 @@ class FTPHost:
         target.close()
 
     def download(self, source, target, mode=''):
-        '''Download a file from the remote source (name) to
-        the local target (name). The argument mode is an empty
-        string or 'a' for text copies, or 'b' for binary
-        copies.'''
+        """
+        Download a file from the remote source (name) to the local
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
         source_mode, target_mode = self.__get_modes(mode)
         source = self.file(source, source_mode)
         target = open(target, target_mode)
@@ -717,9 +732,11 @@ class FTPHost:
 #  and os.path module contents.
 
 class _Stat(UserList.UserList):
-    '''Support class resembling a tuple like that which is
-    returned from os.(l)stat. Deriving from the tuple type
-    will only work in Python 2.2+'''
+    """
+    Support class resembling a tuple like that which is returned
+    from os.(l)stat. Deriving from the tuple type will only work
+    in Python 2.2+
+    """
 
     _index_mapping = {'st_mode':  0, 'st_ino':   1,
       'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
@@ -735,9 +752,11 @@ class _Stat(UserList.UserList):
 
 
 class _Path:
-    '''Support class resembling os.path, accessible from the
+    """
+    Support class resembling os.path, accessible from the
     FTPHost() object e. g. as FTPHost().path.abspath(path).
-    Hint: substitute os with the FTPHost() object.'''
+    Hint: substitute os with the FTPHost() object.
+    """
 
     def __init__(self, host):
         self._host = host
@@ -755,7 +774,7 @@ class _Path:
         self.normpath     = pp.normpath
 
     def abspath(self, path):
-        '''Return an absolute path.'''
+        """Return an absolute path."""
         if not self.isabs(path):
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
@@ -797,7 +816,8 @@ class _Path:
         return stat.S_ISLNK(stat_result.st_mode)
 
     def walk(self, top, func, arg):
-        """Directory tree walk with callback function.
+        """
+        Directory tree walk with callback function.
 
         For each directory in the directory tree rooted at top
         (including top itself, but excluding '.' and '..'), call
@@ -811,7 +831,8 @@ class _Path:
         visiting.  No semantics are defined for, or required of, arg,
         beyond that arg is always passed to func.  It can be used,
         e.g., to pass a filename pattern, or a mutable object designed
-        to accumulate statistics.  Passing None for arg is common."""
+        to accumulate statistics.  Passing None for arg is common.
+        """
         # This code (and the above documentation) is taken from
         #  posixpath.py, with slight modifications
         try:

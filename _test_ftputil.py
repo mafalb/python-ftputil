@@ -37,9 +37,8 @@ import os
 import time
 import operator
 
-
 class Base(unittest.TestCase):
-    '''Base class for some test classes.'''
+    """Base class for some test classes."""
 
     def setUp(self):
         self.host = ftputil.FTPHost(host_name, user, password)
@@ -56,10 +55,10 @@ class Base(unittest.TestCase):
 
 
 class TestLogin(unittest.TestCase):
-    '''Test invalid logins.'''
+    """Test invalid logins."""
 
     def test_invalid_login(self):
-        '''Login to invalid host must fail.'''
+        """Login to invalid host must fail."""
         # plain FTPOSError, no derived class
         self.assertRaises(ftputil.FTPOSError, ftputil.FTPHost,
           'nonexistent.ho.st.na.me', 'me', 'password')
@@ -71,10 +70,10 @@ class TestLogin(unittest.TestCase):
 
 
 class TestRemoveAndRename(Base):
-    '''Removing and renaming files.'''
+    """Removing and renaming files."""
 
     def test_remove(self):
-        '''Test FTPHost.remove.'''
+        """Test FTPHost.remove."""
         host = self.host
         # try to remove a file which is not there
         self.assertRaises( ftputil.PermanentError, host.remove,
@@ -93,7 +92,7 @@ class TestRemoveAndRename(Base):
                      self.testdir, 'ftputil2.py') ) )
 
     def test_rename(self):
-        '''Test FTPHost.rename.'''
+        """Test FTPHost.rename."""
         host = self.host
         # try to rename a file which is not there
         host.chdir(self.testdir)
@@ -111,17 +110,17 @@ class TestRemoveAndRename(Base):
 
 
 class TestDirectories(Base):
-    '''Getting, making, changing, deleting directories.'''
+    """Getting, making, changing, deleting directories."""
 
     def test_getcwd_and_change(self):
-        '''Test FTPHost.getcwd and FTPHost.chdir.'''
+        """Test FTPHost.getcwd and FTPHost.chdir."""
         host = self.host
         self.assertEqual( host.getcwd(), self.rootdir )
         host.chdir(self.testdir)
         self.assertEqual( host.getcwd(), self.testdir )
 
     def test_mkdir(self):
-        '''Test FTPHost.mkdir.'''
+        """Test FTPHost.mkdir."""
         host = self.host
         # use invalid directory name (__test2 doesn't exist)
         self.assertRaises( ftputil.PermanentError, host.mkdir,
@@ -137,7 +136,7 @@ class TestDirectories(Base):
         host.rmdir( host.path.join(self.testdir, '__test2') )
 
     def test_rmdir(self):
-        '''Test FTPHost.rmdir.'''
+        """Test FTPHost.rmdir."""
         host = self.host
         # try to remove nonexistent directory
         self.assertRaises( ftputil.PermanentError, host.rmdir,
@@ -163,7 +162,7 @@ class TestDirectories(Base):
 
 
 class TestStat(Base):
-    '''Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.'''
+    """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir."""
 
     def setUp(self):
         Base.setUp(self)
@@ -179,7 +178,7 @@ class TestStat(Base):
         Base.tearDown(self)
 
     def test_listdir(self):
-        '''Test FTPHost.listdir.'''
+        """Test FTPHost.listdir."""
         host = self.host
         # try to list a directory which isn't there
         self.assertRaises(ftputil.PermanentError,
@@ -196,7 +195,7 @@ class TestStat(Base):
                          host.listdir(host.curdir) )
 
     def test_lstat(self):
-        '''Test FTPHost.lstat.'''
+        """Test FTPHost.lstat."""
         host = self.host
         # test status of __test2
         stat_result = host.lstat('__test2')
@@ -208,10 +207,10 @@ class TestStat(Base):
 
 
 class TestPath(Base):
-    '''Test operations in FTPHost.path.'''
+    """Test operations in FTPHost.path."""
 
     def test_isdir_isfile_islink(self):
-        '''Test FTPHost._Path.isdir/isfile/islink.'''
+        """Test FTPHost._Path.isdir/isfile/islink."""
         host = self.host
         host.chdir(self.testdir)
         # test a path which isn't there
@@ -232,7 +231,7 @@ class TestPath(Base):
         host.chdir(self.rootdir)
 
     def test_getmtime(self):
-        '''Test FTPHost._Path.getmtime.'''
+        """Test FTPHost._Path.getmtime."""
         host = self.host
         host.chdir(self.testdir)
         # test a directory
@@ -253,7 +252,7 @@ class TestPath(Base):
         host.chdir(self.rootdir)
 
     def test_getsize(self):
-        '''Test FTPHost._Path.getsize.'''
+        """Test FTPHost._Path.getsize."""
         host = self.host
         host.chdir(self.testdir)
         # test a directory
@@ -273,11 +272,13 @@ class TestPath(Base):
 
 
 class TestFileOperations(Base):
-    '''Test operations with file-like objects (including
-    uploads and downloads.)'''
+    """
+    Test operations with file-like objects (including
+    uploads and downloads).
+    """
 
     def test_caching(self):
-        '''Test if _FTPFile cache of FTPHost object works.'''
+        """Test if _FTPFile cache of FTPHost object works."""
         host = ftputil.FTPHost(host_name, user, password)
         self.assertEqual( len(host._children), 0 )
         path1 = host.path.join(self.testdir, '__test1.dat')
@@ -312,13 +313,13 @@ class TestFileOperations(Base):
         host.remove(path2)
         
     def write_test_data(self, data, mode):
-        '''Write test data to the remote host.'''
+        """Write test data to the remote host."""
         output = self.host.file(self.remote_name, mode)
         output.write(data)
         output.close()
 
     def binary_write(self):
-        '''Write binary data to the host and read it back.'''
+        """Write binary data to the host and read it back."""
         host = self.host
         local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
         # write data in binary mode
@@ -333,8 +334,7 @@ class TestFileOperations(Base):
         self.assertEqual(local_data, remote_data)
 
     def ascii_write(self):
-        '''Write an ASCII to the host and check the written
-        file.'''
+        """Write an ASCII to the host and check the written file."""
         host = self.host
         local_data = ' \nline 2\nline 3'
         # write data in ASCII mode
@@ -348,7 +348,7 @@ class TestFileOperations(Base):
         self.assertEqual(local_data, remote_data)
 
     def ascii_writelines(self):
-        '''Write data via writelines and read it back.'''
+        """Write data via writelines and read it back."""
         host = self.host
         local_data = [' \n', 'line 2\n', 'line 3']
         # write data in ASCII mode
@@ -363,7 +363,7 @@ class TestFileOperations(Base):
         self.assertEqual( ''.join(local_data), remote_data )
 
     def test_write_to_host(self):
-        '''Test _FTPFile.write*'''
+        """Test _FTPFile.write*"""
         host = self.host
         host.chdir(self.testdir)
         self.remote_name = '__test.dat'
@@ -378,8 +378,9 @@ class TestFileOperations(Base):
         host.chdir(self.rootdir)
 
     def ascii_read(self):
-        '''Write some ASCII data to the host and use plain
-        read operations to get it back.'''
+        """Write some ASCII data to the host and use plain
+        read operations to get it back.
+        """
         host = self.host
         # write some data
         local_data = 'line 1\nanother line\nyet another line'
@@ -408,8 +409,9 @@ class TestFileOperations(Base):
         self.assertEqual(data, local_data)
 
     def ascii_readline(self):
-        '''Write some ASCII data to the host and use readline
-        operations to get it back.'''
+        """Write some ASCII data to the host and use readline
+        operations to get it back.
+        """
         host = self.host
         # write some data
         local_data = 'line 1\nanother line\nyet another line'
@@ -429,8 +431,9 @@ class TestFileOperations(Base):
         input_.close()
 
     def binary_readline(self):
-        '''Write some ASCII data to the host and use binary
-        readline operations to get it back.'''
+        """Write some ASCII data to the host and use binary
+        readline operations to get it back.
+        """
         host = self.host
         # write some data
         local_data = \
@@ -453,8 +456,9 @@ class TestFileOperations(Base):
         input_.close()
 
     def ascii_readlines(self):
-        '''Write some ASCII data to the host and use readline
-        operations to get it back.'''
+        """Write some ASCII data to the host and use readline
+        operations to get it back.
+        """
         host = self.host
         # write some data
         local_data = 'line 1\nanother line\nyet another line'
@@ -468,8 +472,9 @@ class TestFileOperations(Base):
         input_.close()
 
     def ascii_xreadlines(self):
-        '''Write some ASCII data to the host and use an
-        xreadline-like object to retrieve it.'''
+        """Write some ASCII data to the host and use an
+        xreadline-like object to retrieve it.
+        """
         host = self.host
         # write data
         local_data = 'line 1\nanother line\nyet another line'
@@ -497,7 +502,7 @@ class TestFileOperations(Base):
                           xrl_obj, 3)
 
     def test_read_from_host(self):
-        '''Test _FTPFile.read*'''
+        """Test _FTPFile.read*"""
         host = self.host
         host.chdir(self.testdir)
         self.remote_name = '__test.dat'
@@ -514,7 +519,7 @@ class TestFileOperations(Base):
         host.chdir(self.rootdir)
 
     def test_remote_copy(self):
-        '''Make a copy on the remote host.'''
+        """Make a copy on the remote host."""
         host = self.host
         host.chdir(self.testdir)
         self.remote_name = '__test.dat'
@@ -545,7 +550,7 @@ class TestFileOperations(Base):
         host.chdir(self.rootdir)
 
     def test_upload_download(self):
-        '''Test FTPHost.upload/download.'''
+        """Test FTPHost.upload/download."""
         host = self.host
         local_source = 'ftputil.py'
         local_test_path = '__test.dat'
