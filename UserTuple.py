@@ -2,6 +2,10 @@
 A more or less complete user-defined wrapper around tuple objects.
 Adopted version of the standard library's UserList.
 """
+# $Id: UserTuple.py,v 1.5 2002/03/29 16:28:54 schwa Exp $
+
+# Ideas for future development:
+#   - Rewrite tests to use mock FTP sessions
 
 #XXX tuple instances (in Python 2.2) contain also:
 #   __class__, __delattr__, __getattribute__, __hash__, __new__,
