@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_path.py,v 1.3 2003/10/30 19:25:57 schwa Exp $
+# $Id: _test_ftp_path.py,v 1.4 2003/10/30 20:08:11 schwa Exp $
 
 import unittest
 
@@ -51,23 +51,23 @@ class TestPath(unittest.TestCase):
         host = _test_base.ftp_host_factory()
         host.chdir(testdir)
         # test a path which isn't there
-        self.failIf( host.path.isdir('notthere') )
-        self.failIf( host.path.isfile('notthere') )
-        self.failIf( host.path.islink('notthere') )
+        self.failIf(host.path.isdir('notthere'))
+        self.failIf(host.path.isfile('notthere'))
+        self.failIf(host.path.islink('notthere'))
         # test a directory
-        self.failUnless( host.path.isdir(testdir) )
-        self.failIf( host.path.isfile(testdir) )
-        self.failIf( host.path.islink(testdir) )
+        self.failUnless(host.path.isdir(testdir))
+        self.failIf(host.path.isfile(testdir))
+        self.failIf(host.path.islink(testdir))
         # test a file
         testfile = '/home/sschwarzer/index.html'
-        self.failIf( host.path.isdir(testfile) )
-        self.failUnless( host.path.isfile(testfile) )
-        self.failIf( host.path.islink(testfile) )
+        self.failIf(host.path.isdir(testfile))
+        self.failUnless(host.path.isfile(testfile))
+        self.failIf(host.path.islink(testfile))
         # test a link
         testlink = '/home/sschwarzer/osup'
-        self.failIf( host.path.isdir(testlink) )
-        self.failIf( host.path.isfile(testlink) )
-        self.failUnless( host.path.islink(testlink) )
+        self.failIf(host.path.isdir(testlink))
+        self.failIf(host.path.isfile(testlink))
+        self.failUnless(host.path.islink(testlink))
 
     def test_abnormal_isdir_isfile_islink(self):
         """Test abnormal `FTPHost._Path.isdir/isfile/islink`."""

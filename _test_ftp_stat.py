@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.9 2003/10/29 23:01:50 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.10 2003/10/30 20:08:11 schwa Exp $
 
 import stat
 import time
@@ -49,13 +49,13 @@ def test_stat():
 
 class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
-        parser = parser_class( _test_base.ftp_host_factory() )
+        parser = parser_class(_test_base.ftp_host_factory())
         for line, expected_stat_result in zip(lines, expected_stat_results):
             stat_result = parser.parse_line(line)
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
-        parser = parser_class( _test_base.ftp_host_factory() )
+        parser = parser_class(_test_base.ftp_host_factory())
         for line in lines:
             self.assertRaises(ftp_error.ParserError, parser.parse_line, line)
 
@@ -155,7 +155,7 @@ class TestStatParsers(unittest.TestCase):
         time shift and the supposed time shift, which is rounded
         to full hours.
         """
-        parser = ftp_stat._UnixStat( _test_base.ftp_host_factory() )
+        parser = ftp_stat._UnixStat(_test_base.ftp_host_factory())
         parser._host.set_time_shift(supposed_time_shift)
         server_time = time.time() + supposed_time_shift + deviation
         stat_result = parser.parse_line(self.dir_line(server_time))
@@ -208,18 +208,18 @@ class TestLstatAndStat(unittest.TestCase):
         try:
             self.stat.lstat('/')
         except ftputil.RootDirError, exc_obj:
-            self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
+            self.failIf(isinstance(exc_obj, ftputil.FTPOSError))
 
     def test_lstat_one_file(self):
         """Test `lstat` for a file."""
         stat_result = self.stat.lstat('/home/sschwarzer/index.html')
-        self.assertEqual( oct(stat_result.st_mode), '0100644' )
+        self.assertEqual(oct(stat_result.st_mode), '0100644')
         self.assertEqual(stat_result.st_size, 4604)
 
     def test_lstat_one_dir(self):
         """Test `lstat` for a directory."""
         stat_result = self.stat.lstat('/home/sschwarzer/scios2')
-        self.assertEqual( oct(stat_result.st_mode), '042755' )
+        self.assertEqual(oct(stat_result.st_mode), '042755')
         self.assertEqual(stat_result.st_ino, None)
         self.assertEqual(stat_result.st_dev, None)
         self.assertEqual(stat_result.st_nlink, 6)
@@ -234,15 +234,15 @@ class TestLstatAndStat(unittest.TestCase):
                         stat_result.st_mtime == 937778400.0)
         self.assertEqual(stat_result.st_ctime, None)
         # same here (or similarly)
-        self.failUnless( stat_result == (17901, None, None, 6, '45854', '200',
-                                         512, None, 937785600.0, None) or
-                         stat_result == (17901, None, None, 6, '45854', '200',
-                                         512, None, 937778400.0, None) )
+        self.failUnless(stat_result == (17901, None, None, 6, '45854', '200',
+                                        512, None, 937785600.0, None) or
+                        stat_result == (17901, None, None, 6, '45854', '200',
+                                        512, None, 937778400.0, None))
 
     def test_lstat_via_stat_module(self):
         """Test `lstat` indirectly via `stat` module."""
         stat_result = self.stat.lstat('/home/sschwarzer/')
-        self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
+        self.failUnless(stat.S_ISDIR(stat_result.st_mode))
 
     def test_stat_following_link(self):
         """Test `stat` when invoked on a link."""
@@ -273,7 +273,7 @@ class TestListdir(unittest.TestCase):
     def test_succeeding_listdir(self):
         """Test succeeding `FTPHost.listdir`."""
         # do we have all expected "files"?
-        self.assertEqual( len(self.stat.listdir('.')), 9 )
+        self.assertEqual(len(self.stat.listdir('.')), 9)
         # have they the expected names?
         expected = ('chemeng download image index.html os2 '
                     'osup publications python scios2').split()

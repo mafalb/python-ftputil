@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.74 2003/10/05 17:11:21 schwa Exp $
+# $Id: _test_ftputil.py,v 1.75 2003/10/30 20:08:11 schwa Exp $
 
 import ftplib
 import operator
@@ -59,14 +59,14 @@ def random_data(pool, size=10000):
     character_list = []
     for i in range(size):
         ordinal = random.choice(pool)
-        character_list.append( chr(ordinal) )
+        character_list.append(chr(ordinal))
     result = ''.join(character_list)
     return result
 
 def ascii_data():
     """Return an ASCII character string."""
     pool = range(32, 128)
-    pool.append( ord('\n') )
+    pool.append(ord('\n'))
     return random_data(pool)
 
 def binary_data():
@@ -86,7 +86,7 @@ class ReadMockSession(_mock_ftplib.MockSession):
     mock_file_content = 'line 1\r\nanother line\r\nyet another line'
 
 class AsciiReadMockSession(_mock_ftplib.MockSession):
-    mock_file_content = '\r\n'.join( map( str, range(20) ) )
+    mock_file_content = '\r\n'.join(map(str, range(20)))
 
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
@@ -144,22 +144,22 @@ class TestFileOperations(unittest.TestCase):
     def test_caching(self):
         """Test whether `_FTPFile` cache of `FTPHost` object works."""
         host = _test_base.ftp_host_factory()
-        self.assertEqual( len(host._children), 0 )
+        self.assertEqual(len(host._children), 0)
         path1 = 'path1'
         path2 = 'path2'
         # open one file and inspect cache
         file1 = host.file(path1, 'w')
         child1 = host._children[0]
-        self.assertEqual( len(host._children), 1 )
+        self.assertEqual(len(host._children), 1)
         self.failIf(child1._file.closed)
         # open another file
         file2 = host.file(path2, 'w')
         child2 = host._children[1]
-        self.assertEqual( len(host._children), 2 )
+        self.assertEqual(len(host._children), 2)
         self.failIf(child2._file.closed)
         # close first file
         file1.close()
-        self.assertEqual( len(host._children), 2 )
+        self.assertEqual(len(host._children), 2)
         self.failUnless(child1._file.closed)
         self.failIf(child2._file.closed)
         # re-open first child's file
@@ -236,7 +236,7 @@ class TestFileOperations(unittest.TestCase):
         expected_data = AsciiReadMockSession.mock_file_content.\
                         replace('\r\n', '\n')
         input_ = host.file('dummy', 'r')
-        data = input_.read( len(expected_data) )
+        data = input_.read(len(expected_data))
         self.assertEqual(data, expected_data)
 
     def test_binary_readline(self):
@@ -437,7 +437,7 @@ class TestTimeShift(unittest.TestCase):
         test_data = [
           (0, 0), (0.1, 0), (-0.1, 0), (1500, 0), (-1500, 0),
           (1800, 3600), (-1800, -3600), (2000, 3600), (-2000, -3600),
-          (5*3600-100, 5*3600), (-5*3600+100, -5*3600) ]
+          (5*3600-100, 5*3600), (-5*3600+100, -5*3600)]
         for time_shift, expected_time_shift in test_data:
             calculated_time_shift = rounded_time_shift(time_shift)
             self.assertEqual(calculated_time_shift, expected_time_shift)
@@ -450,7 +450,7 @@ class TestTimeShift(unittest.TestCase):
         # valid time shifts
         test_data = [23*3600, -23*3600, 3600+30, -3600+30]
         for time_shift in test_data:
-            self.failUnless( assert_time_shift(time_shift) is None )
+            self.failUnless(assert_time_shift(time_shift) is None)
         # invalid time shift (exceeds one day)
         self.assertRaises(ftputil.TimeShiftError, assert_time_shift, 25*3600)
         self.assertRaises(ftputil.TimeShiftError, assert_time_shift, -25*3600)
@@ -464,11 +464,11 @@ class TestTimeShift(unittest.TestCase):
         host = _test_base.ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
                session_factory=TimeShiftMockSession)
         # valid time shift
-        host.path.set_mtime( time.time() + 3630 )
+        host.path.set_mtime(time.time() + 3630)
         host.synchronize_times()
-        self.assertEqual( host.time_shift(), 3600 )
+        self.assertEqual(host.time_shift(), 3600)
         # invalid time shift
-        host.path.set_mtime( time.time() + 3600+10*60 )
+        host.path.set_mtime(time.time() + 3600+10*60)
         self.assertRaises(ftputil.TimeShiftError, host.synchronize_times)
 
 
