@@ -79,19 +79,20 @@ import time
 import sys
 import posixpath
 
-__all__ = ['FTPOSError', 'TemporaryError', 'PermanentError',
-           'ParserError', 'FTPIOError', 'FTPHost']
+__all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
+           'PermanentError', 'ParserError', 'FTPIOError',
+           'FTPHost']
 __version__ = '1.0.3'
 
 
 #####################################################################
 # Exception classes
 
-class FTPOSError(OSError):
-    '''Error class resembling OSError.'''
+class FTPError(Exception):
+    '''General error class'''
 
     def __init__(self, ftp_exception):
-        OSError.__init__(self, ftp_exception)
+        Exception.__init__(self, ftp_exception)
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
@@ -103,13 +104,12 @@ class FTPOSError(OSError):
     def __str__(self):
         return self.strerror
 
+class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
 class ParserError(FTPOSError): pass
 
-class FTPIOError(IOError):
-    '''Error class resembling IOError.'''
-    pass
+class FTPIOError(FTPError, IOError): pass
 
 
 #####################################################################
@@ -153,13 +153,21 @@ class _FTPFile:
         # select ASCII or binary mode
         transfer_type = ('A', 'I')[self._binmode]
         command = 'TYPE %s' % transfer_type
-        self._session.voidcmd(command)
+        try:
+            self._session.voidcmd(command)
+        except ftplib.all_errors:
+            ftp_error = sys.exc_info()[1]
+            raise FTPIOError(ftp_error)
         # make transfer command
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
         self.closed = 0
-        self._conn = self._session.transfercmd(command)
+        try:
+            self._conn = self._session.transfercmd(command)
+        except ftplib.all_errors:
+            ftp_error = sys.exc_info()[1]
+            raise FTPIOError(ftp_error)
         self._fo = self._conn.makefile(mode)
 
     #
