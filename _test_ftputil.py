@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.51 2002/03/30 22:36:31 schwa Exp $
+# $Id: _test_ftputil.py,v 1.52 2002/03/30 22:46:43 schwa Exp $
 
 import unittest
 import stat
@@ -69,6 +69,7 @@ def binary_data():
     pool = range(0, 256)
     return random_data(pool)
 
+
 #
 # several customized MockSession classes
 #
@@ -89,6 +90,7 @@ class BinaryDownloadMockSession(_mock_ftplib.MockSession):
 #
 # factory to produce FTPHost-like classes from a given FTPHost
 #  class and a given MockSession class
+#
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
                      ftp_host_class=ftputil.FTPHost):
     return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
