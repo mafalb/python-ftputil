@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.112 2003/03/16 18:53:00 schwa Exp $
+# $Id: ftputil.py,v 1.113 2003/03/16 19:08:30 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -85,8 +85,8 @@ from __future__ import nested_scopes
 import ftplib
 import ftp_error
 import ftp_file
+import ftp_path
 import os
-import posixpath
 import stat
 import sys
 import time
@@ -143,7 +143,7 @@ class FTPHost:
         # make a session according to these arguments
         self._session = self._make_session()
         # simulate os.path
-        self.path = _Path(self)
+        self.path = ftp_path._Path(self)
         # associated `FTPHost` objects for data transfer
         self._children = []
         self.closed = False
@@ -703,114 +703,6 @@ class _Stat(_StatBase):
             raise AttributeError("'_Stat' object has no attribute '%s'" %
                                  attr_name)
 
-
-class _Path:
-    """
-    Support class resembling os.path, accessible from the `FTPHost`
-    object, e. g. as `FTPHost().path.abspath(path)`.
-    Hint: substitute `os` with the `FTPHost` object.
-    """
-
-    def __init__(self, host):
-        self._host = host
-        # delegate these to posixpath
-        pp = posixpath
-        self.dirname      = pp.dirname
-        self.basename     = pp.basename
-        self.isabs        = pp.isabs
-        self.commonprefix = pp.commonprefix
-        self.join         = pp.join
-        self.splitdrive   = pp.splitdrive
-        self.splitext     = pp.splitext
-        self.normcase     = pp.normcase
-        self.normpath     = pp.normpath
-
-    def abspath(self, path):
-        """Return an absolute path."""
-        if not self.isabs(path):
-            path = self.join( self._host.getcwd(), path )
-        return self.normpath(path)
-
-    def split(self, path):
-        return posixpath.split(path)
-
-    def exists(self, path):
-        try:
-            self._host.lstat(path)
-            return True
-        except ftp_error.RootDirError:
-            return True
-        except ftp_error.FTPOSError:
-            return False
-
-    def getmtime(self, path):
-        return self._host.stat(path).st_mtime
-
-    def getsize(self, path):
-        return self._host.stat(path).st_size
-
-    # check whether a path is a regular file/dir/link;
-    #  for the first two cases follow links (like in `os.path`)
-    def isfile(self, path):
-        try:
-            stat_result = self._host.stat(path)
-        except ftp_error.RootDirError:
-            return False
-        except ftp_error.FTPOSError:
-            return False
-        return stat.S_ISREG(stat_result.st_mode)
-
-    def isdir(self, path):
-        try:
-            stat_result = self._host.stat(path)
-        except ftp_error.RootDirError:
-            return True
-        except ftp_error.FTPOSError:
-            return False
-        return stat.S_ISDIR(stat_result.st_mode)
-
-    def islink(self, path):
-        try:
-            stat_result = self._host.lstat(path)
-        except ftp_error.RootDirError:
-            return False
-        except ftp_error.FTPOSError:
-            return False
-        return stat.S_ISLNK(stat_result.st_mode)
-
-    def walk(self, top, func, arg):
-        """
-        Directory tree walk with callback function.
-
-        For each directory in the directory tree rooted at top
-        (including top itself, but excluding '.' and '..'), call
-        func(arg, dirname, fnames). dirname is the name of the
-        directory, and fnames a list of the names of the files and
-        subdirectories in dirname (excluding '.' and '..').  func may
-        modify the fnames list in-place (e.g. via del or slice
-        assignment), and walk will only recurse into the
-        subdirectories whose names remain in fnames; this can be used
-        to implement a filter, or to impose a specific order of
-        visiting.  No semantics are defined for, or required of, arg,
-        beyond that arg is always passed to func.  It can be used,
-        e.g., to pass a filename pattern, or a mutable object designed
-        to accumulate statistics.  Passing None for arg is common.
-        """
-        # This code (and the above documentation) is taken from
-        #  posixpath.py, with slight modifications
-        try:
-            names = self._host.listdir(top)
-        except OSError:
-            return
-        func(arg, top, names)
-        for name in names:
-            name = self.join(top, name)
-            try:
-                st = self._host.lstat(name)
-            except OSError:
-                continue
-            if stat.S_ISDIR(st[stat.ST_MODE]):
-                self.walk(name, func, arg)
 
 # Unix format
 # total 14
