@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.138 2003/10/10 17:48:07 schwa Exp $
+# $Id: ftputil.py,v 1.139 2003/10/10 17:50:01 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -169,10 +169,7 @@ class FTPHost:
     def __emits_ms_format(self):
         """
         Return a true value if the FTP server seems to emit Microsoft
-        directory listing format. Else return a false value.
-
-        `stat_response` is the output string from the FTP `STAT`
-        command.
+        directory listing format; else return a false value.
         """
         #XXX if these servers can be configured to change their
         #  directory output format, we will need a more sophisticated
