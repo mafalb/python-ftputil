@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.45 2002/03/30 21:22:24 schwa Exp $
+# $Id: _test_ftputil.py,v 1.46 2002/03/30 21:54:38 schwa Exp $
 
 import unittest
 import stat
@@ -54,29 +54,8 @@ class AsciiReadMockSession(_mock_ftplib.MockSession):
     mock_file_content = '\r\n'.join( map( str, range(20) ) )
 
 
-class InspectableFTPHost(ftputil.FTPHost):
-    def file_content_for_child(self, child_index):
-        """
-        Return content for the associated file object of a child
-        FTPHost object.
-
-        Usage of the getvalue() method implies that the file object
-        really is a StringIO.StringIO object. In fact, this kind of
-        file object is established by the MockSocket class which in
-        turn is used by the MockSession class.
-
-        Unfortunately, this method requires deep knowledge of the
-        internal implementation of the FTPHost and _FTPFile classes.
-        """
-        child = self._children[child_index]
-        ftp_file = child._file
-        file_object = ftp_file._fo
-        file_content = file_object.getvalue()
-        return file_content
-
-
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
-                     ftp_host_class=InspectableFTPHost):
+                     ftp_host_class=ftputil.FTPHost):
     return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
                           session_factory=session_factory)
 
@@ -241,7 +220,7 @@ class TestFileOperations(unittest.TestCase):
         output = host.file('dummy', 'wb')
         output.write(data)
         output.close()
-        child_data = host.file_content_for_child(0)
+        child_data = _mock_ftplib.content_of('dummy')
         expected_data = data
         self.assertEqual(child_data, expected_data)
 
@@ -252,7 +231,7 @@ class TestFileOperations(unittest.TestCase):
         output = host.file('dummy', 'w')
         output.write(data)
         output.close()
-        child_data = host.file_content_for_child(0)
+        child_data = _mock_ftplib.content_of('dummy')
         expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
 
@@ -264,7 +243,7 @@ class TestFileOperations(unittest.TestCase):
         output = host.file('dummy', 'w')
         output.writelines(data)
         output.close()
-        child_data = host.file_content_for_child(0)
+        child_data = _mock_ftplib.content_of('dummy')
         expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
         # ensure that the original data was not modified
@@ -393,18 +372,22 @@ class TestFileOperations(unittest.TestCase):
         pool = range(0, 256)
         return self.random_data(pool)
 
-#     def test_ascii_upload(self):
-#         """Test ASCII mode upload."""
-#         # generate file
-#         source_file = open('__test_source', 'wb')
-#         source_file.write( self.ascii_data() )
-#         source_file.close()
-#         # upload
-#         host = ftp_host_factory()
-#         local_source = '__test_source'
-#         # test ascii up/download
-#         host.upload(local_source, 'dummy')
-#         
+    def test_ascii_upload(self):
+        """Test ASCII mode upload."""
+        local_source = '__test_source'
+        # generate file
+        data = self.ascii_data()
+        source_file = open(local_source, 'w')
+        source_file.write(data)
+        source_file.close()
+        # upload
+        host = ftp_host_factory()
+        host.upload(local_source, 'dummy')
+        # check uploaded content
+        data = data.replace('\n', '\r\n')
+        file_content = _mock_ftplib.content_of('dummy')
+        self.assertEqual(data, file_content)
+
 #         host.download(remote_path, local_test_path)
 #         # compare local data
 #         input_ = file(local_source)
