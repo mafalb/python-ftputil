@@ -214,7 +214,7 @@ class FTPHost:
         self._args = args
         self._kwargs = kwargs
         # associated FTPHost objects for data transfers
-        self._clones = []
+        self._children = []
         self.closed = 0
 
     def _copy(self):
@@ -224,10 +224,10 @@ class FTPHost:
         #  self.getcwd()
         return FTPHost(*self._args, **self._kwargs)
         
-    def _available_clone(self):
+    def _available_child(self):
         '''Return a closed file object from the pool or
         None if there aren't any.'''
-        for host in self._clones:
+        for host in self._children:
             if host._file.closed:
                 return host
         return None
@@ -235,10 +235,10 @@ class FTPHost:
     def file(self, path, mode='r'):
         '''Return an open file(-like) object which is
         associated with this FTPHost object.'''
-        host = self._available_clone()
+        host = self._available_child()
         if host is None:
             host = self._copy()
-            self._clones.append(host)
+            self._children.append(host)
         basedir = self.getcwd()
         host.chdir(basedir)
         host._file = _FTPFile(host)
@@ -249,11 +249,13 @@ class FTPHost:
         '''Close host connection.'''
         if not self.closed:
             # close associated clones
-            for host in self._clones:
+            for host in self._children:
+                # only children have _file attributes
+                host._file.close()
                 host.close()
             # now deal with our-self
             self._session.close()
-            self._clones = []
+            self._children = []
             self.closed = 1
 
     def __del__(self):
