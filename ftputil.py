@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.133 2003/10/04 21:09:12 schwa Exp $
+# $Id: ftputil.py,v 1.134 2003/10/04 21:47:28 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -77,9 +77,7 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 """
 
 # TODO
-# - move "stat stuff" into an own module `ftp_stat.py`
-# - fix defects regarding time shift/stat calculations
-# - package ftputil for distutils
+# currently nothing :o)
 #
 # Ideas for future development:
 # - handle connection timeouts
@@ -185,14 +183,14 @@ class FTPHost:
 
         `server_platform` is one of the following strings:
 
-        "posix", "unix": Use one of those if the directory listing
-        from the server looks like
+        "unix": Use this if the directory listing from the server
+        looks like
 
         drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
         -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
 
-        "ms", "windows": Use one of those if the directory listing
-        from the server looks like
+        "ms": Use this if the directory listing from the server looks
+        like
 
         12-07-01  02:05PM       <DIR>          XPLaunch
         07-17-00  02:08PM             12266720 digidash.exe
@@ -200,10 +198,8 @@ class FTPHost:
         If the argument is none of the above strings, a `ValueError`
         is raised.
         """
-        parsers = {"posix"  : ftp_stat._UnixStat,
-                   "unix"   : ftp_stat._UnixStat,
-                   "ms"     : ftp_stat._MSStat,
-                   "windows": ftp_stat._MSStat}
+        parsers = {"unix"   : ftp_stat._UnixStat,
+                   "ms"     : ftp_stat._MSStat}
         if parsers.has_key(server_platform):
             self._stat = parsers[server_platform](self)
         else:
