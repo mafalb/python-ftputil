@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.52 2002/03/30 22:46:43 schwa Exp $
+# $Id: _test_ftputil.py,v 1.53 2002/03/30 22:48:53 schwa Exp $
 
 import unittest
 import stat
@@ -170,8 +170,7 @@ class TestListdir(unittest.TestCase):
     def test_failing_listdir(self):
         """Test failing FTPHost.listdir."""
         host = ftp_host_factory()
-        self.assertRaises(ftputil.PermanentError,
-                          host.listdir, 'notthere')
+        self.assertRaises(ftputil.PermanentError, host.listdir, 'notthere')
 
     def test_succeeding_listdir(self):
         """Test succeeding FTPHost.listdir."""
@@ -369,29 +368,24 @@ class TestFileOperations(unittest.TestCase):
         input_ = host.file('dummy', 'r')
         data = input_.read(3)
         xrl_obj = input_.xreadlines()
-        self.failUnless(xrl_obj.__class__ is
-                        ftputil._XReadlines)
-        self.failUnless(xrl_obj._ftp_file.__class__ is
-                        ftputil._FTPFile)
+        self.failUnless(xrl_obj.__class__ is ftputil._XReadlines)
+        self.failUnless(xrl_obj._ftp_file.__class__ is ftputil._FTPFile)
         data = xrl_obj[0]
         self.assertEqual(data, 'e 1\n')
         # try to skip an index
-        self.assertRaises(RuntimeError, operator.__getitem__,
-                          xrl_obj, 2)
+        self.assertRaises(RuntimeError, operator.__getitem__, xrl_obj, 2)
         # continue reading
         data = xrl_obj[1]
         self.assertEqual(data, 'another line\n')
         data = xrl_obj[2]
         self.assertEqual(data, 'yet another line')
         # try to read beyond EOF
-        self.assertRaises(IndexError, operator.__getitem__,
-                          xrl_obj, 3)
+        self.assertRaises(IndexError, operator.__getitem__, xrl_obj, 3)
 
     def test_read_unknown_file(self):
         """Test whether reading a file which isn't there fails."""
         host = ftp_host_factory()
-        self.assertRaises(ftputil.FTPIOError, host.file,
-                          'notthere', 'r')
+        self.assertRaises(ftputil.FTPIOError, host.file, 'notthere', 'r')
 
 
 class TestUploadAndDownload(unittest.TestCase):
