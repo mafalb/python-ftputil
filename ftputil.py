@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.159 2004/07/12 22:01:46 schwa Exp $
+# $Id: ftputil.py,v 1.160 2004/07/12 22:09:42 schwa Exp $
 
 """
 ftputil - high-level FTP client library
@@ -100,7 +100,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0.3b'
+__version__ = '2.0.3b2'
 
 
 #####################################################################
