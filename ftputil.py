@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.104 2003/03/15 21:54:05 schwa Exp $
+# $Id: ftputil.py,v 1.105 2003/03/15 21:57:39 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -637,6 +637,14 @@ class FTPHost:
         source.close()
         target.close()
 
+    def __shifted_local_mtime(self, file_name):
+        """
+        Return last modification of a local file, corrected with
+        respect to the time shift between client and server.
+        """
+        local_mtime = os.path.getmtime(file_name)
+        return local_mtime + self.time_shift()
+
     def upload_if_newer(self, source, target, mode=''):
         """
         Upload a file only if it's newer than the target on the
@@ -645,12 +653,7 @@ class FTPHost:
         If an upload was necessary, return `True`, else return
         `False`.
         """
-        # get local modification time
-        source_timestamp = os.path.getmtime(source)
-        # consider time shift (local times difference between client
-        #  and server)
-        source_timestamp = source_timestamp + self.time_shift()
-        # get remote modification time
+        source_timestamp = self.__shifted_local_mtime(source)
         if self.path.exists(target):
             target_timestamp = self.path.getmtime(target)
         else:
@@ -673,11 +676,7 @@ class FTPHost:
         # get remote modification time
         source_timestamp = self.path.getmtime(source)
         if os.path.exists(target):
-            # get local modification time
-            target_timestamp = os.path.getmtime(target)
-            # consider time shift (local times difference between
-            #  client and server)
-            target_timestamp = target_timestamp + self.time_shift()
+            target_timestamp = self.__shifted_local_mtime(target)
         else:
             # every timestamp is newer than this one
             target_timestamp = 0.0
