@@ -29,9 +29,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.6 2003/06/09 19:31:11 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.7 2003/10/05 17:10:39 schwa Exp $
 
 import stat
+import time
 import unittest
 
 import _test_base
@@ -107,6 +108,79 @@ class TestStatParsers(unittest.TestCase):
           "07-17-00  02:08AM           1226672x test.exe"
           ]
         self._test_invalid_lines(ftp_stat._MSStat, lines)
+
+    #
+    # the following code checks if the decision logic in the Unix
+    #  line parser for determining the year works
+    #
+    def datetime_string(self, time_float):
+        """
+        Return a datetime string generated from the value in
+        `time_float`. The parameter value is a floating point value
+        as returned by `time.time()`. The returned string is built as
+        if it were from a Unix FTP server (format: MMM dd hh:mm")
+        """
+        time_tuple = time.localtime(time_float)
+        return time.strftime("%b %d %H:%M", time_tuple)
+
+    def dir_line(self, time_float):
+        """
+        Return a directory line as from a Unix FTP server. Most of
+        the contents are fixed, but the timestamp is made from
+        `time_float` (seconds since the epoch, as from `time.time()`).
+        """
+        line_template = "-rw-r--r--   1   45854   200   4604   %s   index.html"
+        return line_template % self.datetime_string(time_float)
+
+    def assert_equal_times(self, time1, time2):
+        """
+        Check if both times (seconds since the epoch) are equal. For
+        the purpose of this test, two times are "equal" if they
+        differ no more than one minute from each other.
+
+        If the test fails, an exception is raised by the inherited
+        `failIf` method.
+        """
+        abs_difference = abs(time1 - time2)
+        try:
+            self.failIf(abs_difference > 60.0)
+        except AssertionError:
+            print "Difference is", abs_difference, "seconds"
+            raise
+
+    def _test_time_shift(self, supposed_time_shift, deviation=0.0):
+        """
+        Check if the stat parser considers the time shift value
+        correctly. `deviation` is the difference between the actual
+        time shift and the supposed time shift, which is rounded
+        to full hours.
+        """
+        parser = ftp_stat._UnixStat( _test_base.ftp_host_factory() )
+        parser._host.set_time_shift(supposed_time_shift)
+        server_time = time.time() + supposed_time_shift + deviation
+        stat_result = parser.parse_line(self.dir_line(server_time))
+        self.assert_equal_times(stat_result.st_mtime, server_time)
+
+    def test_time_shifts(self):
+        """Test correct year depending on time shift value."""
+        # 1. test: client and server share the same local time
+        self._test_time_shift(0.0)
+        # 2. test: server is three hours ahead of client
+        self._test_time_shift(3 * 60 * 60)
+        # 3. test: client is three hours ahead of server
+        self._test_time_shift(- 3 * 60 * 60)
+        # 4. test: server is supposed to be three hours ahead, but
+        #  is ahead three hours and one minute
+        self._test_time_shift(3 * 60 * 60, 60)
+        # 5. test: server is supposed to be three hours ahead, but
+        #  is ahead three hours minus one minute
+        self._test_time_shift(3 * 60 * 60, -60)
+        # 6. test: client is supposed to be three hours ahead, but
+        #  is ahead three hours and one minute
+        self._test_time_shift(-3 * 60 * 60, -60)
+        # 7. test: client is supposed to be three hours ahead, but
+        #  is ahead three hours minus one minute
+        self._test_time_shift(-3 * 60 * 60, 60)
 
 
 class TestLstatAndStat(unittest.TestCase):
