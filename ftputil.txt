@@ -431,7 +431,7 @@ format, which mostly succeeds. However, if you get strange results
   ``server_format`` is one of the strings "unix" or "ms". To choose
   the correct format, you have to start a command line FTP client and
   request a directory listing (most clients do this with the ``DIR``
-  command.
+  command).
 
   If the resulting lines look like
 
