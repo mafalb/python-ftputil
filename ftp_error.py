@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2004, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 ftp_error.py - exception classes and wrappers
 """
 
-# $Id: ftp_error.py,v 1.3 2004/07/09 21:47:15 schwa Exp $
+# $Id: ftp_error.py,v 1.4 2004/07/09 21:48:34 schwa Exp $
 
 import ftplib
 import sys
