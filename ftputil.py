@@ -203,9 +203,7 @@ class FTPHost:
     '''FTP host class'''
 
     def __init__(self, *args, **kwargs):
-        '''Abstract initialization of FTPHost object. At this
-        stage I don't know if I need a new FTP connection for
-        each file transfer.'''
+        '''Abstract initialization of FTPHost object.'''
         self._ftplib_host = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
