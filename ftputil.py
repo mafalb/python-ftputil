@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.155 2004/07/09 20:51:34 schwa Exp $
+# $Id: ftputil.py,v 1.156 2004/07/09 21:51:24 schwa Exp $
 
 """
 ftputil - high-level FTP client library
@@ -95,6 +95,8 @@ from ftp_error import *
 from true_false import *
 
 
+# it's recommended to use the error classes via the `ftp_error` module;
+#  they're only here for backward compatibility
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
@@ -583,25 +585,34 @@ class FTPHost:
         # use `lines=lines` for Python versions which don't support
         #  "nested scopes"
         callback = lambda line, lines=lines: lines.append(line)
+        # see below for this decision logic
         if path.find(" ") == -1:
             # use straight-forward approach, without changing directories
             ftp_error._try_with_oserror(self._session.dir, path, callback)
         else:
-            # because of a bug in `ftplib` (or even in FTP servers?),
+            # remember old working directory
+            old_dir = self.getcwd()
+            # bail out with an internal error rather than modifying the
+            #  current directory without hope of restoration
+            try:
+                self.chdir(old_dir)
+            except ftp_error.PermanentError:
+                # `old_dir` is an inaccessible login directory
+                raise ftp_error.InaccessibleLoginDirError(
+                      "directory '%s' is not accessible" % old_dir)
+            # because of a bug in `ftplib` (or even in FTP servers?)
             #  the straight-forward code
             #    ftp_error._try_with_oserror(self._session.dir, path, callback)
             #  fails if some of the path components but the last contain
             #  whitespace; therefore, I change the current directory
             #  before listing in the "last" directory
             try:
-                # remember old working directory
-                old_dir = self.getcwd()
                 # invoke the listing in the "previous-to-last" directory
                 head, tail = self.path.split(path)
                 self.chdir(head)
                 ftp_error._try_with_oserror(self._session.dir, tail, callback)
             finally:
-                # try to re-establish the old directory
+                # restore the old directory
                 self.chdir(old_dir)
         return lines
 
