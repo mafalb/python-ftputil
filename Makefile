@@ -29,12 +29,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: Makefile,v 1.11 2004/02/27 23:41:46 schwa Exp $
+# $Id: Makefile,v 1.12 2004/04/18 19:08:03 schwa Exp $
 
 
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html
+WWW_DIR=${HOME}/www
 
 .PHONY: dist extdist test docs clean register patch
 .SUFFIXES: .txt .html
@@ -63,8 +64,9 @@ dist: clean patch docs
 
 localcopy:
 	@echo "Copying archive and documentation to local webspace"
-	cp -p dist/ftputil-`cat VERSION`.tar.gz ${HOME}/www/download
-	cp -p ftputil.html ${HOME}/www/python
+	cp -p dist/ftputil-`cat VERSION`.tar.gz ${WWW_DIR}/download
+	cp -p ftputil.html ${WWW_DIR}/python
+	touch ${WWW_DIR}/python/python_software.tmpl
 
 register:
 	@echo "Registering new version with PyPI"
