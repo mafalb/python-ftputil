@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.23 2003/10/25 22:26:20 schwa Exp $
+# $Id: ftp_stat.py,v 1.24 2003/10/25 23:06:00 schwa Exp $
 
 import stat
 import sys
@@ -159,8 +159,7 @@ class _Stat:
                     return stat_result
             except ftp_error.ParserError:
                 pass
-        # if the basename wasn't found in any line, raise an
-        #  exception
+        # if the basename wasn't found in any line, raise an exception
         raise ftp_error.PermanentError(
               "550 %s: no such file or directory" % path)
 
