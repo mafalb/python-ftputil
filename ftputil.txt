@@ -47,6 +47,7 @@ The exceptions are organized as follows:
             PermanentError(FTPOSError)
             ParserError(FTPOSError)
         FTPIOError(FTPError)
+        RootDirError(FTPError)
 
 FTPError is the root of the exception hierarchy of the module.
 
@@ -124,6 +125,10 @@ with
 
 As you can see, both code snippets are similar. (However, the error
 codes aren't the same.)
+
+RootDirError is a special case. Due to the implementation of the
+lstat method it is not possible to do a stat on the root directory /.
+If you know _any_ way to do it, please let me know. :-)
 
 ----------------------------------------------------------------------
 FTPHost OBJECTS
@@ -259,8 +264,13 @@ lstat(path)
 
     - Links can only be recognized on servers that provide this
       information in the DIR output.
-      
+
     - Items that can't be determined at all, are set to None.
+
+    - There's a special problem with stat'ing the root directory. In
+      this case, a RootDirError is raised. This has to do with the
+      algorithm used by (l)stat and a know of no one which solves
+      this problem.
 
     Currently, ftputil recognizes the MS Robin FTP server. Otherwise,
     a format commonly used by Unix servers is assumed. If you need to
@@ -332,6 +342,11 @@ BUGS AND LIMITATIONS
   2.0, and, yet better, also have a patch, contact me under the
   below-mentioned email address.
 
+- Due to the implementation of lstat it can not return a sensible
+  value for the root directory /. If you know an implementation that
+  can do this, please let me know. The root directory is handled
+  appropriately in FTPHost.path.exists/isfile/isdir/islink, though.
+
 - Depending on local time and/or daylight saving time settings
   different local hosts may interpret the modification times in the
   FTP server output differently. If there's a need for it, I would
@@ -359,7 +374,7 @@ FILES
 
 ftputil.py
     is the main module file.
-    
+
 UserTuple.py
     may be used as the base class for _Stat. If you have at least
     Python version 2.2 you can safely delete the UserTuple module.
