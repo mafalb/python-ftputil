@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.22 2003/10/25 21:33:56 schwa Exp $
+# $Id: ftp_stat.py,v 1.23 2003/10/25 22:26:20 schwa Exp $
 
 import stat
 import sys
@@ -155,11 +155,10 @@ class _Stat:
         for line in candidates:
             try:
                 stat_result = self.parse_line(line)
-            except ftp_error.ParserError:
-                pass
-            else:
                 if stat_result._st_name == basename:
                     return stat_result
+            except ftp_error.ParserError:
+                pass
         # if the basename wasn't found in any line, raise an
         #  exception
         raise ftp_error.PermanentError(
