@@ -645,11 +645,29 @@ raise an exception, it may be because of a wrongly determined
 directory format. Please see the discussion of
 `set_directory_format`_.
 
+Is there a mailing list on ``ftputil``?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, you can subscribe at http://codespeak.net/mailman/listinfo/ftputil
+or read the archives at http://codespeak.net/pipermail/ftputil/ .
+
+Where can I get the latest version?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See http://www.sschwarzer.net/python/python_software.html#ftputil .
+Announcements will also be sent to the mailing list (see the question
+above). Announcements on major updates will also be posted to the
+newsgroup `comp.lang.python`_ .
+
+.. _`comp.lang.python`: news:comp.lang.python
+
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please send me an email with your question, and I'll see what I can do
-for you. :-)
+Please send me an email with your question, and I'll see what I can
+do for you. :-) Probably a better way is to send your question to the
+mailing list at ftputil@codespeak.net; potentially more people might
+be able to help you.
 
 Bugs and limitations
 --------------------
@@ -701,7 +719,7 @@ References
 
 - Postel J, Reynolds J. 1985. `RFC 959 - File Transfer Protocol (FTP)`_.
 
-- Van Rossum G, Drake Jr FL. 2001. `Python Library Reference`_.
+- Van Rossum G, Drake Jr FL. 2003. `Python Library Reference`_.
 
 .. _`Endo-Testing: Unit Testing with Mock Objects`:
    http://www.connextra.com/aboutUs/mockobjects.pdf
