@@ -1,13 +1,25 @@
 Things to do for a new release:
 
-- update info on new version in README.txt
+- update info on new version in `README.txt`
 
 - increase version number in
-  - VERSION
-  - ftputil.py (__version__)
-  - ftputil.txt
+  - `VERSION`
+  - `ftputil.py` (`__version__`)
+  - `ftputil.txt`
 
-- change date at top of ftputil.txt
+- change date at top of `ftputil.txt`
 
-- make test && make dist
+- `make test && make dist`
+
+- copy distribution file to download directory (`~/www/download`)
+
+- copy new documentation file to `~/www/python/ftputil.html`
+
+- update version summary in file `~/www/python/python_software.tmpl`
+
+- update the files on the remote WWW server (e. g. with `sitecopy`)
+
+- for changes in minor version (i. e. not only a bugfix release),
+  send announcement to comp.lang.python; update file `announcements`
+  accordingly
 
