@@ -80,7 +80,7 @@ import sys
 import posixpath
 
 __all__ = ['FTPOSError', 'FTPIOError', 'FTPHost']
-__version__ = '1.0.1'
+__version__ = '1.0.2'
 
 
 #####################################################################
