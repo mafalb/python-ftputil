@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.47 2002/03/30 22:08:45 schwa Exp $
+# $Id: _test_ftputil.py,v 1.48 2002/03/30 22:11:59 schwa Exp $
 
 import unittest
 import stat
@@ -64,13 +64,13 @@ def random_data(pool, size=10000):
         character_list.append( chr(ordinal) )
     result = ''.join(character_list)
     return result
-    
+
 def ascii_data():
     """Return an ASCII character string."""
     pool = range(32, 128)
     pool.append( ord('\n') )
     return random_data(pool)
-    
+
 def binary_data():
     """Return an binary character string."""
     pool = range(0, 256)
@@ -79,7 +79,7 @@ def binary_data():
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
 
-    
+
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
                      ftp_host_class=ftputil.FTPHost):
     return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
@@ -197,42 +197,38 @@ class TestFileOperations(unittest.TestCase):
     Test operations with file-like objects (including
     uploads and downloads).
     """
+    def test_caching(self):
+        """Test if _FTPFile cache of FTPHost object works."""
+        host = ftp_host_factory()
+        self.assertEqual( len(host._children), 0 )
+        path1 = 'path1'
+        path2 = 'path2'
+        # open one file and inspect cache
+        file1 = host.file(path1, 'w')
+        child1 = host._children[0]
+        self.assertEqual( len(host._children), 1 )
+        self.failIf(child1._file.closed)
+        # open another file
+        file2 = host.file(path2, 'w')
+        child2 = host._children[1]
+        self.assertEqual( len(host._children), 2 )
+        self.failIf(child2._file.closed)
+        # close first file
+        file1.close()
+        self.assertEqual( len(host._children), 2 )
+        self.failUnless(child1._file.closed)
+        self.failIf(child2._file.closed)
+        # re-open first child's file
+        file1 = host.file(path1, 'w')
+        child1_1 = file1._host
+        # check if it's reused
+        self.failUnless(child1 is child1_1)
+        self.failIf(child1._file.closed)
+        self.failIf(child2._file.closed)
+        # close second file
+        file2.close()
+        self.failUnless(child2._file.closed)
 
-#     def test_caching(self):
-#         """Test if _FTPFile cache of FTPHost object works."""
-#         host = FTPHostWrapper(host_name, user, password)
-#         self.assertEqual( len(host._children), 0 )
-#         path1 = host.path.join(self.testdir, '__test1.dat')
-#         path2 = host.path.join(self.testdir, '__test2.dat')
-#         # open one file and inspect cache
-#         file1 = host.file(path1, 'w')
-#         child1 = host._children[0]
-#         self.assertEqual( len(host._children), 1 )
-#         self.failIf(child1._file.closed)
-#         # open another file
-#         file2 = host.file(path2, 'w')
-#         child2 = host._children[1]
-#         self.assertEqual( len(host._children), 2 )
-#         self.failIf(child2._file.closed)
-#         # close first file
-#         file1.close()
-#         self.assertEqual( len(host._children), 2 )
-#         self.failUnless(child1._file.closed)
-#         self.failIf(child2._file.closed)
-#         # re-open first child's file
-#         file1 = host.file(path1, 'w')
-#         child1_1 = file1._host
-#         # check if it's reused
-#         self.failUnless(child1 is child1_1)
-#         self.failIf(child1._file.closed)
-#         self.failIf(child2._file.closed)
-#         # close second file
-#         file2.close()
-#         self.failUnless(child2._file.closed)
-#         # clean up
-#         host.remove(path1)
-#         host.remove(path2)
-#
     def test_write_to_directory(self):
         """Test whether attempting to write to a directory fails."""
         host = ftp_host_factory()
