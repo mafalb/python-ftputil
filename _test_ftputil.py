@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.58 2002/04/01 15:06:36 schwa Exp $
+# $Id: _test_ftputil.py,v 1.59 2002/04/01 16:24:05 schwa Exp $
 
 import unittest
 import stat
@@ -163,6 +163,9 @@ class TestStat(unittest.TestCase):
         self.assertEqual(stat_result.st_gid, '200')
         self.assertEqual(stat_result.st_size, 512)
         self.assertEqual(stat_result.st_atime, None)
+        # The comparison with the value 937785600.0 may fail in
+        #  some Python environments. It seems that this depends on
+        #  how time.mktime interprets the dst flag.
         self.assertEqual(stat_result.st_mtime, 937785600.0)
         self.assertEqual(stat_result.st_ctime, None)
         self.assertEqual( stat_result, (17901, None, None, 6, '45854', '200',
