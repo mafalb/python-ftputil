@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2004, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,10 +29,12 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_path.py,v 1.4 2003/10/30 20:08:11 schwa Exp $
+# $Id: _test_ftp_path.py,v 1.5 2004/07/09 21:49:24 schwa Exp $
 
+import ftplib
 import unittest
 
+import _mock_ftplib
 import _test_base
 import ftp_error
 import ftputil
@@ -43,6 +45,13 @@ class FailingFTPHost(ftputil.FTPHost):
         raise ftp_error.FTPOSError("simulate a failure, e. g. timeout")
 
 
+# mock session, used for testing an inaccessible login directory
+class SessionWithInaccessibleLoginDirectory(_mock_ftplib.MockSession):
+    def cwd(self, dir):
+        # assume that `dir` is the inaccessible login directory
+        raise ftplib.error_perm("can't change into this directory")
+
+        
 class TestPath(unittest.TestCase):
     """Test operations in `FTPHost.path`."""
     def test_regular_isdir_isfile_islink(self):
@@ -68,6 +77,24 @@ class TestPath(unittest.TestCase):
         self.failIf(host.path.isdir(testlink))
         self.failIf(host.path.isfile(testlink))
         self.failUnless(host.path.islink(testlink))
+
+    def test_workaround_for_spaces(self):
+        """Test whether the workaround for space-containing paths is used."""
+        testdir = '/home/sschwarzer'
+        host = _test_base.ftp_host_factory()
+        host.chdir(testdir)
+        # test a file containing spaces
+        testfile = '/home/dir with spaces/file with spaces'
+        self.failIf(host.path.isdir(testfile))
+        self.failUnless(host.path.isfile(testfile))
+        self.failIf(host.path.islink(testfile))
+
+    def test_inaccessible_home_directory_and_whitespace_workaround(self):
+        "Test combination of inaccessible home directory + whitespace in path."
+        host = _test_base.ftp_host_factory(
+               session_factory=SessionWithInaccessibleLoginDirectory)
+        self.assertRaises(ftp_error.InaccessibleLoginDirError,
+                          host._dir, '/home dir')
 
     def test_abnormal_isdir_isfile_islink(self):
         """Test abnormal `FTPHost._Path.isdir/isfile/islink`."""
