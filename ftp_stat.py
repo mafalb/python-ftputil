@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.30 2003/10/30 19:51:09 schwa Exp $
+# $Id: ftp_stat.py,v 1.31 2003/10/30 19:52:31 schwa Exp $
 
 import stat
 import sys
@@ -104,10 +104,10 @@ class _Stat:
 
     def listdir(self, path):
         """
-        Return a list with directories, files etc. in the directory
+        Return a list of directories, files etc. in the directory
         named `path`.
         """
-        # we _can't_ put this check into `FTPHost._dir`, see its docstring
+        # we _can't_ put this check into `FTPHost._dir`; see its docstring
         path = self._path.abspath(path)
         if not self._path.isdir(path):
             raise ftp_error.PermanentError("550 %s: no such directory" % path)
@@ -130,8 +130,7 @@ class _Stat:
         #  (however, the string may be _anywhere_ on the line but not
         #  necessarily the file's basename; e. g. the string could
         #  occur as the name of the file's group)
-        return [ line  for line in lines
-                 if line.find(wanted_name) != -1 ]
+        return [line  for line in lines  if line.find(wanted_name) != -1]
 
     def lstat(self, path, _exception_for_missing_path=True):
         """
