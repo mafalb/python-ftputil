@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.71 2002/03/29 16:19:49 schwa Exp $
+# $Id: ftputil.py,v 1.72 2002/03/29 18:17:14 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -78,11 +78,14 @@ Note: ftputil currently is not threadsafe. More specifically,
 # Ideas for future development:
 # - provide sensible "fallback" when imported with Python versions
 #   before 2.2 (or make all Python 2.1-compatible)
-# - handle connection timeouts
+#   Note: trying to subclass the builtin tuple before Python 2.2 raises 
+#         TypeError: base is not a class object
 # - follow links in FTPHost.path.stat implementation!
-# - write documentation
 # - conditional upload/download (only when the source file
 #   is newer than the target file, depends on FTPHost.stat)
+
+# - write documentation
+# - handle connection timeouts
 # - caching of FTPHost.stat results??
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
@@ -375,13 +378,13 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         """Abstract initialization of FTPHost object."""
-        self._session = _try_with_oserror(ftplib.FTP,
-                        *args, **kwargs)
-        # simulate os.path
-        self.path = _Path(self)
-        # store arguments for later copy operations
+        # store arguments for later operations
         self._args = args
         self._kwargs = kwargs
+        # make a session according to these arguments
+        self._session = self._make_session()
+        # simulate os.path
+        self.path = _Path(self)
         # associated FTPHost objects for data transfer
         self._children = []
         self.closed = 0
@@ -400,12 +403,25 @@ class FTPHost:
             self._parser = self._parse_robin_line
         else:
             self._parser = self._parse_unix_line
+    
+    def _make_session(self):
+        """
+        Return a new session object according to the current state
+        of this FTPHost instance.
+        """
+        args = self._args[:]
+        kwargs = self._kwargs.copy()
+        if kwargs.has_key('session_factory'):
+            factory = kwargs['session_factory']
+            del kwargs['session_factory']
+        else:
+            factory = ftplib.FTP
+        return _try_with_oserror(factory, *args, **kwargs)
 
     def _copy(self):
         """Return a copy of this FTPHost object."""
-        # The copy includes a new ftplib.FTP instance
-        #  (aka session) but doesn't copy the state of
-        #  self.getcwd().
+        # The copy includes a new session factory return value
+        #  (aka session) but doesn't copy the state of self.getcwd().
         return FTPHost(*self._args, **self._kwargs)
 
     def _available_child(self):
