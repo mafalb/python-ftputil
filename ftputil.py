@@ -77,12 +77,17 @@ import posixpath
 
 
 #####################################################################
-# Simple assignments
+# OS-dependent strings, currently not used! (defaulting to Posix)
 
-curdir = '.'
-pardir = '..'
-sep = '/'
-altsep = None
+_unix_strings = ('.', '..', '/', '\n')
+_dos_strings = ('.', '..', '\\', '\r\n')
+_mac_strings = (':', '::', ':', '\r')
+_strings_dict = {'msdos': _dos_strings,
+                 'pcdos': _dos_strings,
+                 'os/2': _dos_strings,
+                 'win32': _dos_strings,
+                 'windows_nt': _dos_strings,
+                 'macos': _mac_strings}
 
 
 #####################################################################
@@ -281,9 +286,18 @@ class FTPHost:
         # store arguments for later copy operations
         self._args = args
         self._kwargs = kwargs
-        # associated FTPHost objects for data transfers
+        # associated FTPHost objects for data transfer
         self._children = []
         self.closed = 0
+        # set curdir, pardir etc. for the remote OS
+        self._set_os_strings()
+
+    def _set_os_strings(self):
+        '''Set strings like curdir, pardir etc.'''
+        # system_string = self._try(
+        #                 self._session.voidcmd, 'SYST')
+        # system_string = system_string.split()[1].lower()
+        self.curdir, self.pardir, self.sep = _unix_strings[:3]
 
     def _copy(self):
         '''Return a copy of this FTPHost object.'''
@@ -304,15 +318,16 @@ class FTPHost:
     def file(self, path, mode='r'):
         '''Return an open file(-like) object which is
         associated with this FTPHost object.
+
         This method tries to reuse a child but will generate
-        a new if none is available.'''
+        a new one if none is available.'''
         host = self._available_child()
         if host is None:
             host = self._copy()
             self._children.append(host)
+            host._file = _FTPFile(host)
         basedir = self.getcwd()
         host.chdir(basedir)
-        host._file = _FTPFile(host)
         host._file._open(path, mode)
         return host._file
 
@@ -382,7 +397,7 @@ class FTPHost:
         '''Return candidate lines for further analysis.'''
         result = []
         for line in lines:
-            if line.find(wanted_name) > -1:
+            if line.find(wanted_name) != -1:
                 result.append(line)
         return result
         
@@ -394,11 +409,27 @@ class FTPHost:
         dirname, basename = self.path.split(path)
         self._session.dir( dirname,
                            lambda line: lines.append(line) )
+        # example for testing
+        lines = ['total 14',
+'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
+'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
+'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
+'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
+'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
+'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
+'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
+'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
+'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
+'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
+'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
+        # remove "total" line
+        lines = [line  for line in lines
+                 if not line.lower().startswith('total')]
         # search for name to be stat'ed
         candidates = self._stat_candidates(lines, basename)
-        # scan candidates
+        # parse candidates
         for line in candidates:
-            pass
+            
 
 
 class _Stat(tuple):
