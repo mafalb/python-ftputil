@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.111 2003/03/16 18:40:47 schwa Exp $
+# $Id: ftputil.py,v 1.112 2003/03/16 18:53:00 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -93,6 +93,8 @@ import time
 
 # make exceptions available in this module for backwards compatibilty
 from ftp_error import *
+# `True`, `False`
+from true_false import *
 
 
 if sys.version_info[:2] >= (2, 2):
@@ -105,12 +107,6 @@ __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
 __version__ = '1.1.4'
-
-# define `True` and `False` if necessary
-try:
-    True, False
-except NameError:
-    True, False = (1 == 1), (1 == 0)
 
 
 #####################################################################

@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.66 2003/03/16 18:41:36 schwa Exp $
+# $Id: _test_ftputil.py,v 1.67 2003/03/16 18:53:00 schwa Exp $
 
 import operator
 import os
@@ -43,11 +43,8 @@ import ftp_file
 import ftplib
 import ftputil
 
-# define `True` and `False` if necessary
-try:
-    True, False
-except NameError:
-    True, False = (1 == 1), (1 == 0)
+# `True`, `False`
+from true_false import *
 
 
 #
