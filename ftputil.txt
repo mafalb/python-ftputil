@@ -165,16 +165,18 @@ wrapper class:
 import ftplib
 import ftputil
 
+EXAMPLE_PORT = 50001
+
 class MySession(ftplib.FTP):
     def __init__(self, host, userid, password, port):
-        """Act like ftplib.FTP's constructor but connect to port x."""
+        """Act like ftplib.FTP's constructor but connect to other port."""
         ftplib.FTP.__init__(self)
         self.connect(host, port)
         self.login(userid, password)
 
 # try not to use MySession() as factory, - use the class itself
 host = ftputil.FTPHost(host, userid, password,
-                       port=PORT, session_factory=MySession)
+                       port=EXAMPLE_PORT, session_factory=MySession)
 # use `host` as usual
 -----
 
