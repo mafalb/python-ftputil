@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.21 2002/03/29 18:18:27 schwa Exp $
+# $Id: _test_ftputil.py,v 1.22 2002/03/29 18:33:55 schwa Exp $
 
 # Ideas for future development:
 #   - Rewrite tests to use mock FTP sessions
@@ -45,11 +45,11 @@ import operator
 
 class FTPHostWrapper(ftputil.FTPHost):
     def __init__(self, *args, **kwargs):
-        import ftplib
-        #kwargs['session_factory'] = ftplib.FTP
+        import _mock_ftplib
+        kwargs['session_factory'] = _mock_ftplib.FTP
         ftputil.FTPHost.__init__(self, *args, **kwargs)
 
-        
+
 class Base(unittest.TestCase):
     """Base class for some test classes."""
 
@@ -324,7 +324,7 @@ class TestFileOperations(Base):
         # clean up
         host.remove(path1)
         host.remove(path2)
-        
+
     def write_test_data(self, data, mode):
         """Write test data to the remote host."""
         output = self.host.file(self.remote_name, mode)
