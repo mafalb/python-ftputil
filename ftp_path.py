@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.9 2003/10/30 19:25:57 schwa Exp $
+# $Id: ftp_path.py,v 1.10 2003/10/30 19:55:22 schwa Exp $
 
 import posixpath
 import stat
@@ -69,7 +69,7 @@ class _Path:
     def abspath(self, path):
         """Return an absolute path."""
         if not self.isabs(path):
-            path = self.join( self._host.getcwd(), path )
+            path = self.join(self._host.getcwd(), path)
         return self.normpath(path)
 
     def exists(self, path):
