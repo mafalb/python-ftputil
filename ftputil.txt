@@ -338,6 +338,14 @@ UserTuple.py
     may be used as the base class for _Stat. If you have at least
     Python version 2.2 you can safely delete the UserTuple module.
 
+ftputil.txt
+    is this file.
+
+ftputil_pydoc.txt
+    is the development documentation for ftputil, generated with
+    Pythons pydoc utility. If you only want to _use_ ftputil, you
+    probably don't need this file.
+
 _test_ftputil.py
 _mock_ftplib.py
     are needed for the unit tests of ftputil. If you don't want to
