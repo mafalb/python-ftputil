@@ -727,7 +727,7 @@ class _Stat(UserList.UserList):
       'st_mtime': 8,  'st_ctime': 9, 'st_name': 10}
 
     def __getattr__(self, attr_name):
-        if attr_name in self._index_mapping.keys():
+        if self._index_mapping.has_key(attr_name):
             return self[ self._index_mapping[attr_name] ]
         else:
             raise AttributeError("'_Stat' object has "
