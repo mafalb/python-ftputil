@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.105 2003/03/15 21:57:39 schwa Exp $
+# $Id: ftputil.py,v 1.106 2003/03/15 22:05:51 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -611,18 +611,26 @@ class FTPHost:
         else:
             return 'r', 'w'
 
-    def upload(self, source, target, mode=''):
+    def __copy_file(self, source, target, mode, source_open, target_open):
         """
         Upload a file from the local source (name) to the remote
         target (name). The argument mode is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source = open(source, source_mode)
-        target = self.file(target, target_mode)
+        source = source_open(source, source_mode)
+        target = target_open(target, target_mode)
         self.copyfileobj(source, target)
         source.close()
         target.close()
+
+    def upload(self, source, target, mode=''):
+        """
+        Upload a file from the local source (name) to the remote
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
+        self.__copy_file(source, target, mode, open, self.file)
 
     def download(self, source, target, mode=''):
         """
@@ -630,12 +638,7 @@ class FTPHost:
         target (name). The argument mode is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        source_mode, target_mode = self.__get_modes(mode)
-        source = self.file(source, source_mode)
-        target = open(target, target_mode)
-        self.copyfileobj(source, target)
-        source.close()
-        target.close()
+        self.__copy_file(source, target, mode, self.file, open)
 
     def __shifted_local_mtime(self, file_name):
         """
