@@ -92,7 +92,8 @@ class _FTPFile:
         self._conn = conn
         self._mode = mode
         self._binary = 'b' in mode
-        #XXX needed? self._writemode = 'w' in mode
+        self._writemode = 'w' in mode
+        self.closed = 0
         self._fp = conn.makefile(mode)
 
     #
@@ -169,10 +170,13 @@ class _FTPFile:
                   "attribute '%s'" % attr_name)
 
     def close(self):
-        '''Close the FTPFile. We need no 'if'; the file and the
-        socket object can be closed multiply without harm.'''
-        #XXX self._fp.close()
+        '''Close the FTPFile.'''
+        if self.closed:
+            return
+        self._fp.close()
         self._conn.close()
+        self._host.voidresp()
+        self.closed = 1
 
     def __del__(self):
         # not strictly necessary; file and socket are
@@ -191,21 +195,35 @@ class FTPHost:
         stage I don't know if I need a new FTP connection for
         each file transfer.'''
         self._host = apply(ftplib.FTP, args, kwargs)
+        # simulate os.path
+        self.path = _Path(self)
+        # store arguments for later copy operations
+        self._args = args
+        self._kwargs = kwargs
 
+    def _copy(self):
+        '''Return a copy of this FTPHost object. This includes
+        opening an additional FTP control connection and
+        changing to the path which is currently set in self.'''
+        copy = FTPHost(self._args, self._kwargs)
+        current_dir = self.getcwd()
+        copy.chdir(current_dir)
+        return copy
+        
     def file(self, path, mode='r'):
         '''Return a file(-like) object that is connected to an
         FTP host.'''
         if '+' in mode:
             raise FTPIOError("append modes not supported")
         if mode not in ('r', 'rb', 'w', 'wb'):
-            raise FTPIOError("invalid mode")
+            raise FTPIOError("invalid mode '%s'" % mode)
         # select ASCII or binary mode
         transfer_type = ('A', 'I')['b' in mode]
         command = 'TYPE %s' % transfer_type
         # this logic taken from ftplib;
         #  why this strange distinction?
         if mode == 'r':
-            self._host.sendcmd(command)
+            self._host.voidcmd(command)
         else:  # rb, w, wb
             self._host.voidcmd(command)
         # make transfer command
@@ -213,7 +231,6 @@ class FTPHost:
         command = '%s %s' % (command_type, path)
         # get connection and file object
         conn = self._host.transfercmd(command)
-        self._host.voidresp()
         ftp_file = _FTPFile(self._host, conn, mode)
         return ftp_file
 
@@ -262,86 +279,119 @@ class FTPHost:
         '''Rename the src on the FTP host to dst.'''
         self._host.rename(src, dst)
 
-    def stat(self, path):
+    def _stat_candidates(self, lines, wanted_name):
+        '''Return candidate lines for further analysis.
+        Warning: This implementation will dismiss names
+        with whitespace in them!'''
+        if wanted_name.find(' ') > -1:
+            raise NotImplementedError("Names to stat "
+                  "'%s' must not contain whitespace" %
+                  wanted_name)
+        result = []
+        for line in lines:
+            parts = line.split()
+            if parts[-2] == '->':
+                # we found a link; name before "->" counts
+                name = parts[-3]
+            else:
+                name = parts[-1]
+            if name == wanted_name:
+                result.append(line)
+        return result
+        
+    def lstat(self, path):
         '''Return an object similar to that returned
         by os.stat.'''
-        pass
+        # get output from DIR
+        lines = []
+        dirname, basename = self.path.split(path)
+        self._host.dir( dirname,
+                        lambda line: lines.append(line) )
+        # search for name to be stat'ed
+        candidates = self._stat_candidates(lines, basename)
+        # scan candidates
+        for line in candidates:
+            pass
 
-    #
-    # miscellaneous utility methods resembling those in os.path
-    #
-    class _EmptyClass:
-        pass
 
-    def _init_path_methods(self):
-        self.path = _EmptyClass()
-        self.path.abspath      = self._abspath
-        self.path.basename     = self._basename
-        self.path.commonprefix = self._commonprefix
-        self.path.dirname      = self._dirname
-        self.path.exists       = self._exists
-        self.path.getmtime     = self._getmtime
-        self.path.getsize      = self._getsize
-        self.path.isabs        = self._isabs
-        self.path.isfile       = self._isfile
-        self.path.isdir        = self._isdir
-        self.path.join         = self._join
-        self.path.normcase     = self._normcase
-        self.path.normpath     = self._normpath
-        self.path.split        = self._split
-        self.path.splitdrive   = self._splitdrive
-        self.path.splitext     = self._splitext
-        self.path.walk         = self._walk
+class _Stat(tuple):
+    '''Support class resembling a tuple like that which is
+    returned from os.(l)stat. Deriving from the tuple type
+    will only work with Python 2.2+'''
+    
+    _index_mapping = {'st_mode':  0, 'st_ino':   1, 
+      'st_dev':   2,  'st_nlink': 3, 'st_uid':   4,
+      'st_gid':   5,  'st_size':  6, 'st_atime': 7,
+      'st_mtime': 8,  'st_ctime': 9}
 
-    def _abspath(self, path):
-        return posixpath.abspath(path)
+    def __getattr__(self, attr_name):
+        if attr_name in self._index_mapping:
+            return self[ self._index_mapping[attr_name] ]
+        else:
+            raise AttributeError("'ftputil._Stat' object has "
+                  "no attribute '%s'" % attr_name)
 
-    def _basename(self, path):
+
+class _Path:
+    '''Support class resembling os.path, accessible from the
+    FTPHost() object e. g. as FTPHost().path.abspath(path).
+    Hint: substitute os with the FTPHost() object.'''
+
+    def __init__(self, host):
+        self._host = host
+
+    def abspath(self, path):
+        '''Return an absolute path.'''
+        if not self.isabs(path):
+            path = self.join( self._host.getcwd(), path )
+        return self.normpath(path)
+
+    def basename(self, path):
         return posixpath.basename(path)
 
-    def _commonprefix(self, path_list):
+    def commonprefix(self, path_list):
         return posixpath.commonprefix(path_list)
 
-    def _dirname(self, path):
+    def dirname(self, path):
         return posixpath.dirname(path)
 
-    def _exists(self, path):
+    def exists(self, path):
         pass
 
-    def _getmtime(self, path):
+    def getmtime(self, path):
         # implement this by parsing DIR output?
         pass
 
-    def _getsize(self, path):
+    def getsize(self, path):
         pass
 
-    def _isabs(self, path):
+    def isabs(self, path):
         return posixpath.isabs(path)
 
-    def _isfile(self, path):
+    def isfile(self, path):
         pass
 
-    def _isdir(self, path):
+    def isdir(self, path):
         pass
 
-    def _join(self, *paths):
-        return posixpath.join(paths)
+    def join(self, *paths):
+        return posixpath.join(*paths)
 
-    def _normcase(self, path):
-        return posixpath.normcase(path)
+    def normcase(self, path):
+        return path
 
-    def _normpath(self, path):
+    def normpath(self, path):
         return posixpath.normpath(path)
 
-    def _split(self, path):
+    def split(self, path):
         return posixpath.split(path)
 
-    def _splitdrive(self, path):
+    def splitdrive(self, path):
         return posixpath.splitdrive(path)
 
-    def _splitext(self, path):
+    def splitext(self, path):
         return posixpath.splitext(path)
 
-    def _walk(self, visit, arg):
+    def walk(self, visit, arg):
         pass
 
