@@ -92,12 +92,6 @@ class FTPOSError(OSError):
 
     def __init__(self, ftp_exception):
         OSError.__init__(self, ftp_exception)
-        if type(ftp_exception) is type(''):
-            # strings, e. g. for parsing errors
-            self.ftp_exception = None
-        else:
-            # assume ftplib errors
-            self.ftp_exception = ftp_exception
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
         try:
