@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.126 2003/06/09 18:29:32 schwa Exp $
+# $Id: ftputil.py,v 1.127 2003/06/09 19:05:12 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -96,7 +96,6 @@ import ftp_path
 import ftp_stat
 import ftplib
 import os
-import stat
 import sys
 import time
 
