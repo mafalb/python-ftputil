@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.142 2003/10/25 18:13:12 schwa Exp $
+# $Id: ftputil.py,v 1.143 2003/10/30 19:25:57 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -593,9 +593,9 @@ class FTPHost:
     def listdir(self, path):
         return self._stat.listdir(path)
 
-    def lstat(self, path):
-        return self._stat.lstat(path)
+    def lstat(self, path, _exception_for_missing_path=True):
+        return self._stat.lstat(path, _exception_for_missing_path)
 
-    def stat(self, path):
-        return self._stat.stat(path)
+    def stat(self, path, _exception_for_missing_path=True):
+        return self._stat.stat(path, _exception_for_missing_path)
 
