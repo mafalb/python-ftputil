@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.12 2003/12/30 20:50:39 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.13 2003/12/30 21:05:09 schwa Exp $
 
 from __future__ import division
 
@@ -76,7 +76,7 @@ class TestStatParsers(unittest.TestCase):
         lines = [
           "drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
           # the results for this line will change with the actual time
-          "-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html",
+          "-rw-r--r--   1 45854    200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2 45854    200           512 May 29  2000 os2",
           "lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> "
                                                                   "../os2"
@@ -84,7 +84,7 @@ class TestStatParsers(unittest.TestCase):
         o = time_offset()
         expected_stat_results = [
           (17901, None, None, 2, '45854', '200', 512, None, 957387600+o, None),
-          (33188, None, None, 1, '45854', '200', 4604, None, 1043010660+o,
+          (33188, None, None, 1, '45854', '200', 4604, None, 1071868260+o,
            None),
           (17901, None, None, 2, '45854', '200', 512, None, 959547600+o, None),
           (41471, None, None, 2, '45854', '200', 512, None, 959547600+o, None)
