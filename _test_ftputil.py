@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.22 2002/03/29 18:33:55 schwa Exp $
+# $Id: _test_ftputil.py,v 1.23 2002/03/29 21:50:41 schwa Exp $
 
 # Ideas for future development:
 #   - Rewrite tests to use mock FTP sessions
@@ -42,19 +42,19 @@ import stat
 import os
 import time
 import operator
+import _mock_ftplib
 
 class FTPHostWrapper(ftputil.FTPHost):
-    def __init__(self, *args, **kwargs):
-        import _mock_ftplib
-        kwargs['session_factory'] = _mock_ftplib.FTP
-        ftputil.FTPHost.__init__(self, *args, **kwargs)
+    def __init__(self, session_factory):
+        ftputil.FTPHost.__init__(self, 'dummy_host', 'dummy_user',
+          'dummy_password', session_factory=session_factory)
 
 
 class Base(unittest.TestCase):
     """Base class for some test classes."""
 
     def setUp(self):
-        self.host = FTPHostWrapper(host_name, user, password)
+        self.host = FTPHostWrapper()
         self.rootdir = self.host.getcwd()
         self.testdir = self.host.path.join(
                        self.rootdir, '__test1')
@@ -67,6 +67,7 @@ class Base(unittest.TestCase):
         host.close()
 
 
+
 class TestLogin(unittest.TestCase):
     """Test invalid logins."""
 
@@ -74,12 +75,7 @@ class TestLogin(unittest.TestCase):
         """Login to invalid host must fail."""
         # plain FTPOSError, no derived class
         self.assertRaises(ftputil.FTPOSError, FTPHostWrapper,
-          'nonexistent.ho.st.na.me', 'me', 'password')
-        try:
-            FTPHostWrapper('nonexistent.ho.st.na.me')
-        except ftputil.FTPOSError, obj:
-            pass
-        self.failUnless(obj.__class__ is ftputil.FTPOSError)
+                          _mock_ftplib.FailOnLoginSession)
 
 
 class TestRemoveAndRename(Base):
@@ -597,9 +593,5 @@ class TestFileOperations(Base):
 
 
 if __name__ == '__main__':
-    host_name = 'ftp.ndh.net'
-    user = 'sschwarzer'
-    password = getpass.getpass('Password for %s@%s: ' %
-                               (user, host_name) )
     unittest.main()
 
