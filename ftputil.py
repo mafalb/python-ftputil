@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.114 2003/03/16 19:13:36 schwa Exp $
+# $Id: ftputil.py,v 1.115 2003/03/16 19:21:26 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -86,6 +86,7 @@ import ftplib
 import ftp_error
 import ftp_file
 import ftp_path
+import ftp_stat
 import os
 import stat
 import sys
@@ -96,12 +97,6 @@ from ftp_error import *
 # `True`, `False`
 from true_false import *
 
-
-if sys.version_info[:2] >= (2, 2):
-    _StatBase = tuple
-else:
-    import UserTuple
-    _StatBase = UserTuple.UserTuple
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
@@ -574,9 +569,9 @@ class FTPHost:
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None
-        result = _Stat( (st_mode, st_ino, st_dev, st_nlink,
-                         st_uid, st_gid, st_size, st_atime,
-                         st_mtime, st_ctime) )
+        result = ftp_stat._Stat( (st_mode, st_ino, st_dev, st_nlink,
+                                  st_uid, st_gid, st_size, st_atime,
+                                  st_mtime, st_ctime) )
         result._st_name = st_name
         result._st_target = st_target
         return result
@@ -622,9 +617,9 @@ class FTPHost:
                    minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
-        result = _Stat( (st_mode, st_ino, st_dev, st_nlink,
-                         st_uid, st_gid, st_size, st_atime,
-                         st_mtime, st_ctime) )
+        result = ftp_stat._Stat( (st_mode, st_ino, st_dev, st_nlink,
+                                  st_uid, st_gid, st_size, st_atime,
+                                  st_mtime, st_ctime) )
         # _st_name and _st_target
         result._st_name = name
         result._st_target = None
@@ -679,52 +674,4 @@ class FTPHost:
                 raise ftp_error.PermanentError(
                       "recursive link structure detected")
             visited_paths[path] = True
-
-
-#####################################################################
-# Helper classes `_Stat` and `_Path` to imitate behaviour of `stat`
-#  objects and `os.path` module contents
-
-class _Stat(_StatBase):
-    """
-    Support class resembling a tuple like that which is returned
-    from `os.(l)stat`.
-    """
-
-    _index_mapping = {
-      'st_mode':  0, 'st_ino':   1, 'st_dev':    2, 'st_nlink':    3,
-      'st_uid':   4, 'st_gid':   5, 'st_size':   6, 'st_atime':    7,
-      'st_mtime': 8, 'st_ctime': 9, '_st_name': 10, '_st_target': 11}
-
-    def __getattr__(self, attr_name):
-        if self._index_mapping.has_key(attr_name):
-            return self[ self._index_mapping[attr_name] ]
-        else:
-            raise AttributeError("'_Stat' object has no attribute '%s'" %
-                                 attr_name)
-
-
-# Unix format
-# total 14
-# drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
-# drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
-# drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
-# -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
-# drwxr-sr-x   2 45854    200           512 May 29  2000 os2
-# lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2
-# drwxr-sr-x   2 45854    200           512 May 25  2000 publications
-# drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
-# drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2
-
-# Microsoft ROBIN FTP server
-# 07-04-01  12:57PM       <DIR>          SharePoint_Launch
-# 11-12-01  04:38PM       <DIR>          Solution Sales
-# 06-27-01  01:53PM       <DIR>          SPPS
-# 01-08-02  01:32PM       <DIR>          technet
-# 07-27-01  11:16AM       <DIR>          Test
-# 10-23-01  06:49PM       <DIR>          Wernerd
-# 10-23-01  03:25PM       <DIR>          WindowsXP
-# 12-07-01  02:05PM       <DIR>          XPLaunch
-# 07-17-00  02:08PM             12266720 digidash.exe
-# 07-17-00  02:08PM                89264 O2KKeys.exe
 
