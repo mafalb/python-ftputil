@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.10 2002/03/30 17:40:03 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.11 2002/03/30 18:46:59 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -327,6 +327,8 @@ class MockSocket:
     MockSession.transfercmd.
     """
     def __init__(self, mock_file_content=''):
+        if DEBUG:
+            print 'File content: *%s*' % mock_file_content
         self.mock_file_content = mock_file_content
 
     def makefile(self, mode):
@@ -416,6 +418,10 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
         cmd, path = cmd.split()
         path = self._remove_trailing_slash(path)
         if self.dir_contents.has_key(path):
+            raise ftplib.error_perm
+        # fail if path isn't available (this name is hard-coded here
+        #  and has to be used for the corresponding tests)
+        if cmd == 'RETR' and path == 'notthere':
             raise ftplib.error_perm
         return MockSocket(self.mock_file_content)
 
