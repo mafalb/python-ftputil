@@ -274,8 +274,43 @@ class TestPath(Base):
 
 class TestFileOperations(Base):
     '''Test operations with file-like objects (including
-    uploads and downloads.'''
+    uploads and downloads.)'''
 
+    def test_caching(self):
+        '''Test if _FTPFile cache of FTPHost object works.'''
+        host = ftputil.FTPHost(host_name, user, password)
+        self.assertEqual( len(host._children), 0 )
+        path1 = host.path.join(self.testdir, '__test1.dat')
+        path2 = host.path.join(self.testdir, '__test2.dat')
+        # open one file and inspect cache
+        file1 = host.file(path1, 'w')
+        child1 = host._children[0]
+        self.assertEqual( len(host._children), 1 )
+        self.failIf(child1._file.closed)
+        # open another file
+        file2 = host.file(path2, 'w')
+        child2 = host._children[1]
+        self.assertEqual( len(host._children), 2 )
+        self.failIf(child2._file.closed)
+        # close first file
+        file1.close()
+        self.assertEqual( len(host._children), 2 )
+        self.failUnless(child1._file.closed)
+        self.failIf(child2._file.closed)
+        # re-open first child's file
+        file1 = host.file(path1, 'w')
+        child1_1 = file1._host
+        # check if it's reused
+        self.failUnless(child1 is child1_1)
+        self.failIf(child1._file.closed)
+        self.failIf(child2._file.closed)
+        # close second file
+        file2.close()
+        self.failUnless(child2._file.closed)
+        # clean up
+        host.remove(path1)
+        host.remove(path2)
+        
     def write_test_data(self, data, mode):
         '''Write test data to the remote host.'''
         output = self.host.file(self.remote_name, mode)
@@ -445,6 +480,8 @@ class TestFileOperations(Base):
         xrl_obj = input_.xreadlines()
         self.failUnless(xrl_obj.__class__ is
                         ftputil._XReadlines)
+        self.failUnless(xrl_obj._ftp_file.__class__ is
+                        ftputil._FTPFile)
         data = xrl_obj[0]
         self.assertEqual(data, 'e 1\n')
         # try to skip an index
