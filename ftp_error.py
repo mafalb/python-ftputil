@@ -33,7 +33,7 @@
 ftp_error.py - exception classes and wrappers
 """
 
-# $Id: ftp_error.py,v 1.1 2003/03/16 18:39:07 schwa Exp $
+# $Id: ftp_error.py,v 1.2 2003/10/04 21:45:37 schwa Exp $
 
 import ftplib
 import sys
@@ -41,7 +41,6 @@ import sys
 
 class FTPError:
     """General error class."""
-
     def __init__(self, ftp_exception):
         self.args = (ftp_exception,)
         self.strerror = str(ftp_exception)
