@@ -76,7 +76,7 @@ else:
         raise NotImplementedError("Can't do line ending "
               "conversion for %s" % _linesep)
 
-# converter for Python line ends in native ones
+# converter for Python line ends into native ones
 _python_to_native_linesep = \
   lambda text: text.replace('\n', _linesep)
 
@@ -88,7 +88,6 @@ class _FTPFile:
 
     def __init__(self, host, path, mode):
         '''Construct the file(-like) object.'''
-        # we need only the ftplib.FTP object
         self._session = host._session
         # check mode
         if '+' in mode:
@@ -191,8 +190,6 @@ class _FTPFile:
             self.closed = 1
 
     def __del__(self):
-        # not strictly necessary; file and socket are
-        #  closed on garbage collection, anyway
         self.close()
 
 
@@ -215,14 +212,18 @@ class FTPHost:
         '''Return a copy of this FTPHost object. This includes
         opening an additional FTP control connection and
         changing to the path which is currently set in self.'''
-        copy = FTPHost(*self._args, **self._kwargs)
+        host_copy = FTPHost(*self._args, **self._kwargs)
+        # copy directory status
         current_dir = self.getcwd()
-        copy.chdir(current_dir)
-        return copy
+        host_copy.chdir(current_dir)
+        return host_copy
         
     def file(self, path, mode='r'):
-        '''Return a file(-like) object that is connected to an
-        FTP host.'''
+        '''Return a file(-like) object which is associated
+        with this FTPHost object.'''
+        # look if one of our clones has a non-busy (i. e.
+        #  closed) _FTPFile object; in this case re-use it;
+        #  else make a new session for the requested _FTPFile
         host_copy = self._copy()
         return _FTPFile(host_copy, path, mode)
 
