@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.137 2003/10/05 17:57:28 schwa Exp $
+# $Id: ftputil.py,v 1.138 2003/10/10 17:48:07 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -107,7 +107,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '1.2 beta'
+__version__ = '2.0b1'
 
 
 #####################################################################
@@ -156,17 +156,9 @@ class FTPHost:
         # set default time shift (used in `upload_if_newer` and
         #  `download_if_newer`)
         self.set_time_shift(0.0)
-        # check if we have a Microsoft ROBIN server
-        try:
-            response = ftp_error._try_with_oserror(
-                       self._session.voidcmd, 'STAT')
-        except ftp_error.PermanentError:
-            response = ''
-        #XXX If these servers can be configured to change their
-        #  directory output format, we will need a more sophisticated
-        #  test.
-        if response.find('ROBIN Microsoft') != -1 or \
-           response.find('Bliss_Server Microsoft') != -1:
+        # check whether we have an FTP server which emits Microsoft-
+        #  style directory listings
+        if self.__emits_ms_format():
             self.set_directory_format("ms")
         else:
             self.set_directory_format("unix")
@@ -174,6 +166,31 @@ class FTPHost:
     #
     # setting the directory format for the remote server
     #
+    def __emits_ms_format(self):
+        """
+        Return a true value if the FTP server seems to emit Microsoft
+        directory listing format. Else return a false value.
+
+        `stat_response` is the output string from the FTP `STAT`
+        command.
+        """
+        #XXX if these servers can be configured to change their
+        #  directory output format, we will need a more sophisticated
+        #  test
+        try:
+            stat_response = ftp_error._try_with_oserror(
+                            self._session.voidcmd, 'STAT')
+        except ftp_error.PermanentError:
+            # some FTP servers have the `STAT` command disabled
+            stat_response = ''
+        # check for indicators in `STAT` response
+        ms_indicators = ("ROBIN Microsoft", "Bliss_Server Microsoft",
+                         "Microsoft Windows NT FTP Server status")
+        for indicator in ms_indicators:
+            if stat_response.find(indicator) != -1:
+                return True
+        return False
+
     def set_directory_format(self, server_platform):
         """
         Tell this `FTPHost` object the directory format of the remote
@@ -206,8 +223,8 @@ class FTPHost:
             raise ValueError("invalid server platform '%s'" % server_platform)
 
     #
-    # dealing with child sessions and file-like objects (rather
-    #  low-level)
+    # dealing with child sessions and file-like objects
+    #  (rather low-level)
     #
     def _make_session(self):
         """
