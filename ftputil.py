@@ -404,26 +404,32 @@ class FTPHost:
                 result.append(line)
         return result
         
-    def _parse_line(self, line, path):
+    _line_pattern = re.compile(
+      r'(\S+)\s+'       # directory metadata
+      r'(\d+)\s+'       # inodes?
+      r'(\S+)\s+'       # user
+      r'(\S+)\s+'       # group
+      r'(\d+)\s+'       # size
+      r'(\w{3})\s+'     # month name
+      r'(\d\d?)\s+'     # day
+      r'(\d{4}|\d\d?:\d\d)\s+'  # year or time
+      r'(.*)')          # name
+
+    _month_numbers = {
+      'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
+      'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
+      'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
+
+    def _parse_line(self, line):
         '''Return _Stat instance corresponding to the given
         text line.'''
-        line_pattern = re.compile(
-          r'(\S+)\s+'       # directory metadata
-          r'(\d+)\s+'       # inodes?
-          r'(\S+)\s+'       # user
-          r'(\S+)\s+'       # group
-          r'(\d+)\s+'       # size
-          r'(\w{3})\s+'     # month name
-          r'(\d\d?)\s+'     # day
-          r'(\d{4}|\d\d?:\d\d)\s+'  # year or time
-          r'(.*)'           # name
-        )
         try:
             metadata, nlink, user, group, size, month, day, \
               year_or_time, name = \
-              line_pattern.match(line).groups()
+              self._line_pattern.match(line).groups()
         except (TypeError, ValueError):
-            raise FTPOSError("can't stat path '%s'" % path)
+            # shouldn't happen; provide non-abstract error msg
+            raise FTPOSError("can't parse line '%s'" % line)
         # st_mode
         st_mode = 0
         for bit in metadata[1:10]:
@@ -437,22 +443,23 @@ class FTPHost:
             st_mode = st_mode | stat.S_IFDIR
         elif metadata[0] == 'l':
             st_mode = st_mode | stat.S_IFLNK
-        # st_ino
+        # st_ino, st_dev, st_nlink, st_uid, st_gid,
+        # st_size, st_atime
         st_ino = 0
-        # st_dev
         st_dev = 0
-        # st_nlink
         st_nlink = int(nlink)
-        # st_uid
         st_uid = user
-        # st_gid
         st_gid = group
-        # st_size
         st_size = int(size)
-        # st_atime
         st_atime = 0
         # st_mtime
-        st_mtime = None
+        month = int(month)
+        day = int(day)
+        if year_or_time.find(':') = -1:
+            year, hour, minute = int(year_or_time), 0, 0
+        else:
+            hour, minute = year_or_time.split(':')
+            year, hour, minute = None, int(hour), int(minute)
         # st_ctime
         st_ctime = 0
         # st_name
@@ -487,15 +494,17 @@ class FTPHost:
 'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
 '-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
         # remove "total" line
-        lines = [line  for line in lines
-                 if not line.lower().startswith('total')]
+        if lines and lines[0].startswith('total'):
+            lines = lines[1:]
         # search for name to be stat'ed
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
-            stat_data = self._parse_line(line, path)
+            stat_data = self._parse_line(line)
             if stat_data.st_name == basename:
                 return stat_data
+        raise FTPOSError("no such file or directory: '%s'" %
+                         path)
 
 
 class _Stat(tuple):
@@ -543,7 +552,6 @@ class _Path:
         pass
 
     def getmtime(self, path):
-        # implement this by parsing DIR output?
         pass
 
     def getsize(self, path):
