@@ -349,8 +349,11 @@ class FTPHost:
 
     def listdir(self, path):
         '''Return a list with directories, files etc. in the
-        directory path.'''
-        pass
+        directory named path.'''
+        names = []
+        self._session.dir( dirname, lambda line: names.append(
+                           self._parse_line(line).st_name ) )
+        return names
 
     def mkdir(self, path, mode=None):
         '''Make the directory path on the remote host. The
@@ -458,8 +461,8 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-#        self._session.dir( dirname,
-#                           lambda line: lines.append(line) )
+        self._session.dir( dirname,
+                           lambda line: lines.append(line) )
 #        # example for testing
         lines = ['total 14',
 'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
