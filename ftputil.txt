@@ -655,17 +655,21 @@ information (user id, password, file names, etc.) in the mail.
 
 When reporting a bug, please provide the following information:
 
-- Version of ``ftputil``:
+- version of ``ftputil``
 
-- Version of Python:
+- version of Python
 
-- Operating system and version (output of ``uname -a`` on Unix):
+- type and version of FTP server (should be visible in its "welcome
+  message")
+  
+- operating system and version for server and client (output of
+  ``uname -a`` on Unix)
 
-- Bug description:
+- bug description
 
-- If possible, a short code example which reproduces the bug:
+- if possible, a short code example which reproduces the bug
 
-- If possible, ideas that might help to find the cause of the bug:
+- if possible, ideas that might help to find the cause of the bug
 
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
