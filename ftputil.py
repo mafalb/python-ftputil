@@ -74,23 +74,28 @@ Note: ftputil currently is not threadsafe. More specifically,
 '''
 
 # Ideas for future development:
+# - provide sensible "fallback" when imported with Python versions
+#   before 2.2 (or make all Python 2.1-compatible)
 # - follow links in FTPHost.path.stat implementation!
 # - write documentation
 # - conditional upload/download (only when the source file
 #   is newer than the target file, depends on FTPHost.stat)
 # - caching of FTPHost.stat results??
-# - map FTP error numbers to os error numbers (ENOENT etc.)
+# - map FTP error numbers to os error numbers (ENOENT etc.)?
 
 import ftplib
 import stat
 import time
 import sys
 import posixpath
+import UserList
+
+from __future__ import nested_scopes
 
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'FTPHost']
-__version__ = '1.0.6'
+__version__ = '1.0.7rc1'
 
 
 #####################################################################
@@ -153,12 +158,10 @@ def _try_with_ioerror(callee, *args, **kwargs):
 #  text mode transfers (mode 'r', not 'rb') in socket.makefile
 #  (below) because the server may do charset conversions on
 #  text transfers.
-_crlf_to_python_linesep = \
-  lambda text: text.replace('\r', '')
+_crlf_to_python_linesep = lambda text: text.replace('\r', '')
 
 # converter for Python line ends into \r\n
-_python_to_crlf_linesep = \
-  lambda text: text.replace('\n', '\r\n')
+_python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 
 
 # helper class for xreadline protocol for ASCII transfers
@@ -644,8 +647,8 @@ class FTPHost:
         '''Return info from a stat call.'''
         stat_result = self.lstat(path)
         if stat.S_ISLNK(stat_result.st_mode):
-            raise NotImplementedError("how should links be "
-                  "handled in ftputil.FTPHost.stat?")
+            raise NotImplementedError("following links "
+                  "is not yet implemented")
         else:
             return stat_result
 
@@ -689,7 +692,7 @@ class FTPHost:
         string or 'a' for text copies, or 'b' for binary
         copies.'''
         source_mode, target_mode = self.__get_modes(mode)
-        source = file(source, source_mode)
+        source = open(source, source_mode)
         target = self.file(target, target_mode)
         self.copyfileobj(source, target)
         source.close()
@@ -702,7 +705,7 @@ class FTPHost:
         copies.'''
         source_mode, target_mode = self.__get_modes(mode)
         source = self.file(source, source_mode)
-        target = file(target, target_mode)
+        target = open(target, target_mode)
         self.copyfileobj(source, target)
         source.close()
         target.close()
@@ -712,7 +715,7 @@ class FTPHost:
 # Helper classes _Stat and _Path to imitate behaviour of stat objects
 #  and os.path module contents.
 
-class _Stat(tuple):
+class _Stat(UserList.UserList):
     '''Support class resembling a tuple like that which is
     returned from os.(l)stat. Deriving from the tuple type
     will only work in Python 2.2+'''
@@ -723,7 +726,7 @@ class _Stat(tuple):
       'st_mtime': 8,  'st_ctime': 9, 'st_name': 10}
 
     def __getattr__(self, attr_name):
-        if attr_name in self._index_mapping:
+        if attr_name in self._index_mapping.keys():
             return self[ self._index_mapping[attr_name] ]
         else:
             raise AttributeError("'_Stat' object has "
