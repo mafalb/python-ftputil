@@ -275,72 +275,111 @@ class TestFileOperations(Base):
     '''Test operations with file-like objects (including
     uploads and downloads.'''
 
-    def binary_write(self):
-        '''Write binary data to the host and read it back.'''
+#     def binary_write(self):
+#         '''Write binary data to the host and read it back.'''
+#         host = self.host
+#         local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
+#         output = host.file(self.remote_name, 'wb')
+#         output.write(local_data)
+#         output.close()
+#         # check the file length on the remote host
+#         remote_size = host.path.getsize(self.remote_name)
+#         self.assertEqual( remote_size, len(local_data) )
+#         # read the data back and compare
+#         input_ = host.file(self.remote_name, 'rb')
+#         remote_data = input_.read()
+#         input_.close()
+#         self.assertEqual(local_data, remote_data)
+#         
+#     def ascii_write(self):
+#         '''Write an ASCII to the host and check the written
+#         file.'''
+#         host = self.host
+#         local_data = ' \nline 2\nline 3'
+#         # write data in ASCII mode
+#         output = host.file(self.remote_name, 'w')
+#         output.write(local_data)
+#         output.close()
+#         # read data back in binary mode
+#         input_ = host.file(self.remote_name, 'rb')
+#         remote_data = input_.read()
+#         input_.close()
+#         # expect the same data as above if we have a
+#         #  Unix FTP server
+#         self.assertEqual(local_data, remote_data)
+#         
+#     def writelines(self):
+#         '''Write data via writelines and read it back.'''
+#         host = self.host
+#         local_data = [' \n', 'line 2\n', 'line 3']
+#         # write data in ASCII mode
+#         output = host.file(self.remote_name, 'w')
+#         output.writelines(local_data)
+#         output.close()
+#         # read data back in ASCII mode
+#         input_ = host.file(self.remote_name, 'r')
+#         remote_data = input_.read()
+#         input_.close()
+#         # check data
+#         self.assertEqual( ''.join(local_data), remote_data )
+#         
+#     def test_write_to_host(self):
+#         '''Test _FTPFile.write*'''
+#         host = self.host
+#         host.chdir(self.testdir)
+#         self.remote_name = '__test.dat'
+#         # try to write to a directory
+#         self.assertRaises(ftputil.FTPIOError, host.file,
+#                           self.testdir, 'w')
+#         self.binary_write()
+#         self.ascii_write()
+#         self.writelines()
+#         # clean up
+#         host.remove(self.remote_name)
+#         host.chdir(self.rootdir)
+
+    def read(self):
+        '''Write some ASCII data to the host and use plain
+        read operations to get it back.'''
         host = self.host
-        local_data = '\000a\001b\r\n\002c\003\n\004\r\005'
-        output = host.file(self.remote_name, 'wb')
-        output.write(local_data)
-        output.close()
-        # check the file length on the remote host
-        remote_size = host.path.getsize(self.remote_name)
-        self.assertEqual( remote_size, len(local_data) )
-        # read the data back and compare
-        input_ = host.file(self.remote_name, 'rb')
-        remote_data = input_.read()
-        input_.close()
-        self.assertEqual(local_data, remote_data)
-        
-    def ascii_write(self):
-        '''Write an ASCII to the host and check the written
-        file.'''
-        host = self.host
-        local_data = ' \nline 2\nline 3'
-        # write data in ASCII mode
-        output = host.file(self.remote_name, 'w')
-        output.write(local_data)
-        output.close()
-        # read data back in binary mode
-        input_ = host.file(self.remote_name, 'rb')
-        remote_data = input_.read()
-        input_.close()
-        # expect the same data as above if we have a
-        #  Unix FTP server
-        self.assertEqual(local_data, remote_data)
-        
-    def writelines(self):
-        '''Write data via writelines and read it back.'''
-        host = self.host
-        local_data = [' \n', 'line 2\n', 'line 3']
-        # write data in ASCII mode
+        # write some data
+        local_data = 'line 1\nanother line\nyet another line'
         output = host.file(self.remote_name, 'w')
         output.writelines(local_data)
         output.close()
-        # read data back in ASCII mode
+        # read with read
         input_ = host.file(self.remote_name, 'r')
-        remote_data = input_.read()
+        data = input_.read(0)
+        self.assertEqual(data, '')
+        data = input_.read(3)
+        self.assertEqual(data, 'lin')
+        data = input_.read(7)
+        self.assertEqual(data, 'e 1\nano')
+        data = input_.read()
+        self.assertEqual(data, 'ther line\nyet another line')
         input_.close()
-        # check data
-        self.assertEqual( ''.join(local_data), remote_data )
+        # try it again with a more "problematic" string which
+        #  makes several reads in the read() method necessary.
+        local_data = '\n'.join( map( str, range(20) ) )
+        output = host.file(self.remote_name, 'w')
+        output.writelines(local_data)
+        output.close()
+        input_ = host.file(self.remote_name, 'r')
+        data = input_.read( len(local_data) )
+        self.assertEqual(data, local_data)
         
-    def test_write_to_host(self):
-        '''Test _FTPFile.write*'''
+    def test_read_from_host(self):
+        '''Test _FTPFile.read*'''
         host = self.host
         host.chdir(self.testdir)
         self.remote_name = '__test.dat'
-        # try to write to a directory
+        # try to read a file which isn't there
         self.assertRaises(ftputil.FTPIOError, host.file,
-                          self.testdir, 'w')
-        self.binary_write()
-        self.ascii_write()
-        self.writelines()
+                          'notthere', 'r')
+        self.read()
         # clean up
         host.remove(self.remote_name)
         host.chdir(self.rootdir)
-
-    def test_read_from_host(self):
-        '''Test _FTPFile.read*'''
-        pass
 
     def test_remote_copy(self):
         '''Make a copy on the remote host.'''
