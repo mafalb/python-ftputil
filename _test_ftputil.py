@@ -85,7 +85,7 @@ class TestRemoveAndRename(Base):
         # remove a file and check if it's removed
         host.upload( 'ftputil.py', host.path.join(self.testdir,
                      'ftputil2.py'), 'b' )
-        host.remove( host.path.join(self.testdir,
+        host.unlink( host.path.join(self.testdir,
                                     'ftputil2.py') )
         self.failIf( host.path.exists( host.path.join(
                      self.testdir, 'ftputil2.py') ) )
@@ -200,7 +200,21 @@ class TestStat(Base):
         
 
 class TestPath(Base):
-    pass
+    '''Test operations in FTPHost.path.'''
+
+    def test_isdir(self):
+        '''Test FTPHost._Path.isdir.'''
+        host = self.host
+        host.chdir(self.testdir)
+        # test a directory
+        self.failUnless( host.path.isdir(self.testdir) )
+        # test a file
+        host.upload( 'ftputil.py', 'ftputil2.py', 'b' )
+        self.failIf( host.path.isdir('ftputil2.py') )
+        # clean up
+        host.remove('ftputil2.py')
+        host.chdir(self.rootdir)
+        
 
 class TestFileOperations(Base):
     pass
