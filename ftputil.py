@@ -559,8 +559,7 @@ class FTPHost:
                       "can't parse line '%s'" % line)
             else:
                 return None
-        
-        
+
     def lstat(self, path):
         '''Return an object similar to that returned
         by os.stat.'''
@@ -694,14 +693,28 @@ class _Path:
     def getsize(self, path):
         return self._host.lstat(path).st_size
 
+    # check whether a path is a regular file/dir/link;
+    #  for the first two cases follow links (like in os.path)
     def isfile(self, path):
-        return stat.S_ISREG( self._host.lstat(path).st_mode )
+        try:
+            stat_result = self._host.stat(path)
+        except FTPOSError:
+            return 0
+        return stat.S_ISREG(stat_result.st_mode)
 
     def isdir(self, path):
-        return stat.S_ISDIR( self._host.lstat(path).st_mode )
+        try:
+            stat_result = self._host.stat(path)
+        except FTPOSError:
+            return 0
+        return stat.S_ISDIR(stat_result.st_mode)
 
     def islink(self, path):
-        return stat.S_ISLNK( self._host.lstat(path).st_mode )
+        try:
+            stat_result = self._host.lstat(path)
+        except FTPOSError:
+            return 0
+        return stat.S_ISLNK(stat_result.st_mode)
 
     def walk(self, top, func, arg):
         """Directory tree walk with callback function.
