@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.29 2002/03/30 15:11:29 schwa Exp $
+# $Id: _test_ftputil.py,v 1.30 2002/03/30 15:24:45 schwa Exp $
 
 import unittest
 import stat
@@ -61,16 +61,26 @@ class TestStat(unittest.TestCase):
 
     def test_lstat(self):
         """Test FTPHost.lstat."""
-        # check if stat results are correct
+        # check if stat results are correct (currently only for Unix server)
+        # some file
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/index.html')
         self.assertEqual( oct(stat_result.st_mode), '0100644' )
         self.assertEqual(stat_result.st_size, 4604)
+        # some directory
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/scios2')
         self.assertEqual( oct(stat_result.st_mode), '042755' )
+        self.assertEqual(stat_result.st_ino, None)
+        self.assertEqual(stat_result.st_dev, None)
+        self.assertEqual(stat_result.st_nlink, 6)
+        self.assertEqual(stat_result.st_uid, '45854')
+        self.assertEqual(stat_result.st_gid, '200')
         self.assertEqual(stat_result.st_size, 512)
+        self.assertEqual(stat_result.st_atime, None)
         self.assertEqual(stat_result.st_mtime, 937785600.0)
+        self.assertEqual(stat_result.st_ctime, None)
+        self.assertEqual(stat_result.st_name, 'scios2')
         # test status indirectly via stat module
         host = FTPHostWrapper(_mock_ftplib.MockSession)
         stat_result = host.lstat('/home/sschwarzer/')
@@ -123,12 +133,12 @@ class TestPath(unittest.TestCase):
         self.failUnless( host.path.islink(testlink) )
 
 
-# class TestFileOperations(Base):
-#     """
-#     Test operations with file-like objects (including
-#     uploads and downloads).
-#     """
-#
+class TestFileOperations(unittest.TestCase):
+    """
+    Test operations with file-like objects (including
+    uploads and downloads).
+    """
+
 #     def test_caching(self):
 #         """Test if _FTPFile cache of FTPHost object works."""
 #         host = FTPHostWrapper(host_name, user, password)
@@ -178,7 +188,7 @@ class TestPath(unittest.TestCase):
 #         remote_data = input_.read()
 #         input_.close()
 #         self.assertEqual(local_data, remote_data)
-#
+# 
 #     def ascii_write(self):
 #         """Write an ASCII to the host and check the written file."""
 #         host = self.host
