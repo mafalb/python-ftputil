@@ -29,13 +29,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.23 2003/03/15 21:38:51 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.24 2003/06/08 19:42:06 schwa Exp $
 
 """
-This module implements a mock version of the standard libraries
-ftplib.py module. Some code is taken from there.
+This module implements a mock version of the standard library's
+`ftplib.py` module. Some code is taken from there.
 
-Not all functionality is implemented, only that which is used to
+Not all functionality is implemented, only that what is used to
 run the unit tests.
 """
 
@@ -184,8 +184,8 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
 
     def transfercmd(self, cmd):
         """
-        Return a MockSocket object whose makefile method will return
-        a mock file object.
+        Return a `MockSocket` object whose `makefile` method will
+        return a mock file object.
         """
         if DEBUG:
             print cmd

@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.2 2003/03/16 19:11:15 schwa Exp $
+# $Id: ftp_path.py,v 1.3 2003/06/08 19:42:06 schwa Exp $
 
 import ftp_error
 import posixpath
@@ -45,8 +45,9 @@ from true_false import *
 
 class _Path:
     """
-    Support class resembling os.path, accessible from the `FTPHost`
+    Support class resembling `os.path`, accessible from the `FTPHost`
     object, e. g. as `FTPHost().path.abspath(path)`.
+
     Hint: substitute `os` with the `FTPHost` object.
     """
 

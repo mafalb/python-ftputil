@@ -33,7 +33,7 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id: ftp_file.py,v 1.3 2003/03/16 18:53:00 schwa Exp $
+# $Id: ftp_file.py,v 1.4 2003/06/08 19:42:06 schwa Exp $
 
 import ftp_error
 
@@ -161,7 +161,7 @@ class _FTPFile:
         data = self._fo.readline(*args)
         if self._binmode:
             return data
-        # eventually complete begun newline
+        # possibly, complete begun newline
         if data.endswith('\r'):
             data = data + self.read(1)
         return _crlf_to_python_linesep(data)

@@ -30,10 +30,10 @@
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 """
-ftp_stat.py - stat result class for ftputil
+ftp_stat.py - stat result class for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.1 2003/03/16 19:20:54 schwa Exp $
+# $Id: ftp_stat.py,v 1.2 2003/06/08 19:42:06 schwa Exp $
 
 import sys
 
@@ -47,8 +47,8 @@ else:
 
 class _Stat(_StatBase):
     """
-    Support class resembling a tuple like that which is returned
-    from `os.(l)stat`.
+    Support class resembling a tuple like that returned from
+    `os.(l)stat`.
     """
 
     _index_mapping = {

@@ -29,15 +29,15 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.116 2003/06/08 19:05:38 schwa Exp $
+# $Id: ftputil.py,v 1.117 2003/06/08 19:42:06 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
 
 FTPHost objects
-    This class resembles the os module's interface to ordinary file
-    systems. In addition, it provides a method file which will return
-    file-objects corresponding to remote files.
+    This class resembles the `os` module's interface to ordinary file
+    systems. In addition, it provides a method `file` which will
+    return file-objects corresponding to remote files.
 
     # example session
     host = ftputil.FTPHost('ftp.domain.com', 'me', 'secret')
@@ -59,14 +59,17 @@ FTPHost objects
     host.upload(local_file, remote_file)
     host.download(remote_file, local_file)
 
-    Both accept an additional mode parameter. If it's 'b' the transfer
-    mode will be for binary files.
+    Both accept an additional mode parameter. If it is 'b', the
+    transfer mode will be for binary files.
+
+    For even more functionality refer to the documentation in
+    `ftputil.txt`.
 
 FTPFile objects
-    FTPFile objects are constructed via the file method of FTPHost
-    objects. FTPFile objects support the usual file operations for
-    non-seekable files (read, readline, readlines, xreadlines, write,
-    writelines, close).
+    `FTPFile` objects are constructed via the `file` method of
+    `FTPHost` objects. `FTPFile` objects support the usual file
+    operations for non-seekable files (`read`, `readline`,
+    `readlines`, `xreadlines`, `write`, `writelines`, `close`).
 
 Note: ftputil currently is not threadsafe. More specifically, you can
       use different `FTPHost` objects in different threads but not
@@ -75,7 +78,7 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 
 # Ideas for future development:
 # - handle connection timeouts
-# - what about thread safety? (also have a look at ftplib)
+# - what about thread safety? (also have a look at `ftplib`)
 # - caching of `FTPHost.stat` results? policy?
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
@@ -114,7 +117,7 @@ class FTPHost:
     #
     # Upon every request of a file (`_FTPFile` object) a new FTP
     # session is created ("cloned"), leading to a child session of
-    # the FTPHost object from which the file is requested.
+    # the `FTPHost` object from which the file is requested.
     #
     # This is needed because opening an `_FTPFile` will make the
     # local session object wait for the completion of the transfer.
@@ -156,8 +159,9 @@ class FTPHost:
                        self._session.voidcmd, 'STAT')
         except ftp_error.PermanentError:
             response = ''
-        #XXX If these servers can be configured to change their directory
-        # output format, we will need a more sophisticated test.
+        #XXX If these servers can be configured to change their
+        #  directory output format, we will need a more sophisticated
+        #  test.
         if response.find('ROBIN Microsoft') != -1 or \
            response.find('Bliss_Server Microsoft') != -1:
             self._parser = self._parse_ms_line
@@ -173,8 +177,12 @@ class FTPHost:
         Return a new session object according to the current state of
         this `FTPHost` instance.
         """
+        # use copies of the arguments
         args = self._args[:]
         kwargs = self._kwargs.copy()
+        # if a session factory had been given on the instantiation of
+        #  this `FTPHost` object, use the same factory for this
+        #  `FTPHost` object's child sessions
         if kwargs.has_key('session_factory'):
             factory = kwargs['session_factory']
             del kwargs['session_factory']
@@ -197,6 +205,7 @@ class FTPHost:
         for host in self._children:
             if host._file.closed:
                 return host
+        # be explicit
         return None
 
     def file(self, path, mode='r'):
@@ -246,10 +255,11 @@ class FTPHost:
     def set_time_shift(self, time_shift):
         """
         Set the time shift value (i. e. the time difference between
-        client and server) for this `FTPHost` object. By definition,
-        the time shift value is positive if the local time of the
-        server is greater than the local time of the client (for the
-        same physical time). The time shift is measured in seconds.
+        client and server) for this `FTPHost` object. By (my)
+        definition, the time shift value is positive if the local
+        time of the server is greater than the local time of the
+        client (for the same physical time). The time shift is
+        measured in seconds.
         """
         self._time_shift = time_shift
 
@@ -311,8 +321,9 @@ class FTPHost:
         is necessary to let `upload_if_newer` and `download_if_newer`
         work correctly.
 
-        This implementation of `synchronize_time` requires all of the
-        following:
+        This implementation of `synchronize_time` requires _all_ of
+        the following:
+
         - The connection between server and client is established.
         - The client has write access to the directory that is
           current when `synchronize_time` is called.
@@ -326,6 +337,10 @@ class FTPHost:
 
         If `synchronize_time` fails, it raises a `TimeShiftError`.
         """
+        #FIXME `synchronize_time`, `upload_if_newer`,
+        #  `download_if_newer` and the `*stat` methods will fail
+        #  if the timezones for client and server "cross the
+        #  dateline" (see mail from Andrew Ittner, 2003-03-17)
         helper_file_name = "_ftputil_sync_"
         # open a dummy file for writing in the current directory
         #  on the FTP host, then close it
@@ -395,6 +410,9 @@ class FTPHost:
         text copies, or 'b' for binary copies.
         """
         self.__copy_file(source, target, mode, self.file, open)
+
+    #XXX the use of the `copy_method` seems less-than-ideal
+    #  factoring; can we handle it in another way?
 
     def __copy_file_if_newer(self, source, target, mode,
       source_mtime, target_mtime, target_exists, copy_method):
@@ -662,16 +680,26 @@ class FTPHost:
 
     def stat(self, path):
         """Return info from a `stat` call."""
+        # most code in this method is used to detect recursive
+        #  link structures
         visited_paths = {}
         while True:
+            # stat the link if it is one, else the file/directory
             stat_result = self.lstat(path)
+            # if the file is not a link, the `stat` result is the
+            #  same than the `lstat` result
             if not stat.S_ISLNK(stat_result.st_mode):
                 return stat_result
+            # if we stat'ed a link, calculate a normalized path for
+            #  the file the link points to
             dirname, basename = self.path.split(path)
             path = self.path.join(dirname, stat_result._st_target)
             path = self.path.normpath(path)
+            # check for cyclic structure
             if visited_paths.has_key(path):
+                # we had this path already
                 raise ftp_error.PermanentError(
                       "recursive link structure detected")
+            # remember the path we have encountered
             visited_paths[path] = True
 
