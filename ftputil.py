@@ -183,7 +183,7 @@ class _FTPFile:
         '''Delegate unknown attribute requests to the file.'''
         if attr_name in ( 'flush isatty fileno seek tell '
           'truncate closed name softspace'.split() ):
-            return eval('self._fp.%s' % attr_name)
+            return getattr(self._fp, attr_name)
         else:
             raise AttributeError("'FTPFile' object has no "
                   "attribute '%s'" % attr_name)
