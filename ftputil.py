@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.99 2003/03/15 18:42:20 schwa Exp $
+# $Id: ftputil.py,v 1.100 2003/03/15 18:52:17 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -37,7 +37,7 @@ ftputil - higher level support for FTP sessions
 FTPHost objects
     This class resembles the os module's interface to ordinary file
     systems. In addition, it provides a method file which will return
-    file-objects correspond- ing to remote files.
+    file-objects corresponding to remote files.
 
     # example session
     host = ftputil.FTPHost('ftp.domain.com', 'me', 'secret')
@@ -464,7 +464,7 @@ class FTPHost:
         "Copy data from file-like object source to file-like object target."
         # inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
-        while 1:
+        while True:
             buf = source.read(length)
             if not buf:
                 break
@@ -773,7 +773,7 @@ class FTPHost:
     def stat(self, path):
         """Return info from a `stat` call."""
         visited_paths = {}
-        while 1:
+        while True:
             stat_result = self.lstat(path)
             if not stat.S_ISLNK(stat_result.st_mode):
                 return stat_result
