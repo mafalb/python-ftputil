@@ -273,16 +273,33 @@ stat(path)
     directory is found. If an infinite link chain is encountered, a
     PermanentError is raised.
 
-FTPHost.path methods
---------------------
+FTPHost.path
+------------
 
 FTPHost objects contain an attribute named path, similar to os.path.
 (See there for documentation.) The following methods can be applied
-to the remote host with the same semantics as for os.path: abspath,
-basename, commonprefix, dirname, exists, getmtime, getsize, isabs,
-isdir, isfile, islink, join, normcase, normpath, split, splitdrive,
-splitext, and even walk. See the section on the os.path module in the
-Library Reference,
+to the remote host with the same semantics as for os.path:
+
+abspath(path)
+basename(path)
+commonprefix(path_list)
+dirname(path)
+exists(path)
+getmtime(path)
+getsize(path)
+isabs(path)
+isdir(path)
+isfile(path)
+islink(path)
+join(path1, path2, ...)
+normcase(path)
+normpath(path)
+split(path)
+splitdrive(path)
+splitext(path)
+walk(path, func, arg)
+
+See the section on the os.path module in the Library Reference,
 http://www.python.org/doc/current/lib/module-os.path.html
 
 ----------------------------------------------------------------------
@@ -290,9 +307,18 @@ FTPFile OBJECTS
 
 FTPFile objects as returned by a call to FTPHost.file (or
 FTPHost.open) have the following methods - with the same arguments and
-semantics as for local files: close, read, readline, readlines, write,
-writelines, and xreadlines, and the attribute closed. For details, see
-the section "File objects" in the Library Reference,
+semantics as for local files:
+
+close()
+read([count])
+readline([count])
+readlines()
+write(data)
+writelines(string_sequence)
+xreadlines()
+
+and the attribute closed. For details, see the section "File objects"
+in the Library Reference,
 http://www.python.org/doc/current/lib/bltin-file-objects.html
 
 Note that ftputil supports both binary and text mode with the
