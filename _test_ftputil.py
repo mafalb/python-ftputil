@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.69 2003/06/09 19:14:10 schwa Exp $
+# $Id: _test_ftputil.py,v 1.70 2003/06/09 19:17:15 schwa Exp $
 
 import operator
 import os
@@ -138,88 +138,6 @@ class TestLogin(unittest.TestCase):
         """Login to invalid host must fail."""
         self.assertRaises(ftputil.FTPOSError, _test_base.ftp_host_factory,
                           FailOnLoginSession)
-
-
-class TestStat(unittest.TestCase):
-    """
-    Test `FTPHost.lstat` and `FTPHost.stat` (test currently only
-    implemented for Unix server format).
-    """
-
-    def test_failing_lstat(self):
-        """Test whether lstat fails for a nonexistent path."""
-        host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.PermanentError, host.lstat,
-                          '/home/sschw/notthere')
-        self.assertRaises(ftputil.PermanentError, host.lstat,
-                          '/home/sschwarzer/notthere')
-
-    def test_lstat_for_root(self):
-        """Test `lstat` for `/` .
-        Note: `(l)stat` works by going one directory up and parsing
-        the output of an FTP `DIR` command. Unfortunately, it is not
-        possible to to this for the root directory `/`.
-        """
-        host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.RootDirError, host.lstat, '/')
-        try:
-            host.lstat('/')
-        except ftputil.RootDirError, exc_obj:
-            self.failIf( isinstance(exc_obj, ftputil.FTPOSError) )
-
-    def test_lstat_one_file(self):
-        """Test `lstat` for a file."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/index.html')
-        self.assertEqual( oct(stat_result.st_mode), '0100644' )
-        self.assertEqual(stat_result.st_size, 4604)
-
-    def test_lstat_one_dir(self):
-        """Test `lstat` for a directory."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/scios2')
-        self.assertEqual( oct(stat_result.st_mode), '042755' )
-        self.assertEqual(stat_result.st_ino, None)
-        self.assertEqual(stat_result.st_dev, None)
-        self.assertEqual(stat_result.st_nlink, 6)
-        self.assertEqual(stat_result.st_uid, '45854')
-        self.assertEqual(stat_result.st_gid, '200')
-        self.assertEqual(stat_result.st_size, 512)
-        self.assertEqual(stat_result.st_atime, None)
-        # The comparison with the value 937785600.0 may fail in
-        #  some Python environments. It seems that this depends on
-        #  how `time.mktime` interprets the dst flag.
-        self.failUnless(stat_result.st_mtime == 937785600.0 or
-                        stat_result.st_mtime == 937778400.0)
-        self.assertEqual(stat_result.st_ctime, None)
-        # same here (or similarly)
-        self.failUnless( stat_result == (17901, None, None, 6, '45854', '200',
-                                         512, None, 937785600.0, None) or
-                         stat_result == (17901, None, None, 6, '45854', '200',
-                                         512, None, 937778400.0, None) )
-
-    def test_lstat_via_stat_module(self):
-        """Test `lstat` indirectly via `stat` module."""
-        host = _test_base.ftp_host_factory()
-        stat_result = host.lstat('/home/sschwarzer/')
-        self.failUnless( stat.S_ISDIR(stat_result.st_mode) )
-
-    def test_stat_following_link(self):
-        """Test `stat` when invoked on a link."""
-        host = _test_base.ftp_host_factory()
-        # simple link
-        stat_result = host.stat('/home/link')
-        self.assertEqual(stat_result.st_size, 4604)
-        # link pointing to a link
-        stat_result = host.stat('/home/python/link_link')
-        self.assertEqual(stat_result.st_size, 4604)
-        stat_result = host.stat('../python/link_link')
-        self.assertEqual(stat_result.st_size, 4604)
-        # recursive link structures
-        self.assertRaises(ftputil.PermanentError, host.stat,
-                          '../python/bad_link')
-        self.assertRaises(ftputil.PermanentError, host.stat,
-                          '/home/bad_link')
 
 
 class TestListdir(unittest.TestCase):
