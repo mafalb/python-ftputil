@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.31 2002/03/30 15:28:35 schwa Exp $
+# $Id: _test_ftputil.py,v 1.32 2002/03/30 15:31:30 schwa Exp $
 
 import unittest
 import stat
@@ -60,6 +60,12 @@ class TestStat(unittest.TestCase):
     """Test FTPHost.lstat, FTPHost.stat, FTPHost.listdir.
     (test currently only implemented for Unix server format.
     """
+
+    def test_failing_lstat(self):
+        """Test whether lstat fails for a nonexistent path."""
+        host = FTPHostWrapper(_mock_ftplib.MockSession)
+        self.assertRaises(ftputil.PermanentError, host.lstat,
+                          '/home/sschwarzer/notthere')
 
     def test_lstat_one_file(self):
         """Test FTPHost.lstat with a file."""
