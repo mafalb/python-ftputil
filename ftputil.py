@@ -29,6 +29,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+#TODO FTPHost.copyfileobj, FTPHost.upload, FTPHost.download
+#TODO _Path.walk
+
 '''
 ftputil - higher level support for FTP sessions
 
@@ -527,8 +530,7 @@ class FTPHost:
         dirname = self.path.abspath(dirname)
         self._try( self._session.dir, dirname,
                    lambda line: lines.append(line) )
-#        # example for testing
-        # search for name to be stat'ed
+        # search for name to be stat'ed without full parsing
         candidates = self._stat_candidates(lines, basename)
         # parse candidates
         for line in candidates:
@@ -547,6 +549,48 @@ class FTPHost:
                   "handled in ftputil.FTPHost.stat?")
         else:
             return stat_
+
+    def copyfileobj(source, target, length=8*1024):
+        '''Copy data from file-like object source to file-like
+        object target.'''
+        # inspired by shutil.copyfileobj (I don't use the
+        #  shutil code directly because it might change)
+        while 1:
+            buf = source.read(length)
+            if not buf:
+                break
+            target.write(buf)
+
+    def __get_modes(self, mode):
+        '''Return modes for source and target file.'''
+        if mode == 'b':
+            return 'rb', 'wb'
+        else:
+            return 'r', 'w'
+
+    def upload(self, source, target, mode):
+        '''Upload a file from the local source (name) to the
+        remote target (name). The argument mode is an empty
+        string or 'a' for text copies, or 'b' for binary
+        copies.'''
+        source_mode, target_mode = self.__get_modes(mode)
+        source = file(source, source_mode)
+        target = self.file(target, target_mode)
+        self.copyfileobj(source, target)
+        source.close()
+        target.close()
+
+    def download(self, source, target, mode):
+        '''Download a file from the remote source (name) to
+        the local target (name). The argument mode is an empty
+        string or 'a' for text copies, or 'b' for binary
+        copies.'''
+        source_mode, target_mode = self.__get_modes(mode)
+        source = self.file(source, source_mode)
+        target = file(target, target_mode)
+        self.copyfileobj(source, target)
+        source.close()
+        target.close()
 
 
 #####################################################################
