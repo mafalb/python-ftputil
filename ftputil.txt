@@ -228,6 +228,11 @@ wrapper class::
                            port=EXAMPLE_PORT, session_factory=MySession)
     # use `host` as usual
 
+On login, the format of the directory listings (needed for stat'ing
+files and directories) should be determined automatically. If not, you
+may use the method `set_directory_format`_ to set the format
+"manually".
+
 ``FTPHost`` attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -412,8 +417,45 @@ Uploading and downloading files
 Stat'ing files and directories
 ,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
-If calling ``lstat`` or ``stat`` yields wrong modification dates or
-times, look at the methods that deal with time zone differences
+The methods ``lstat`` and ``stat`` (and others) rely on the
+directory listing format used by the FTP server. When connecting
+to a host, ``FTPHost``'s constructor tries to guess the right
+format, which mostly succeeds. However, if you get strange results
+(or exceptions), it may be necessary to set the directory format
+"manually". This is done - immediately after connecting - with
+
+.. _`set_directory_format`:
+
+- ``set_directory_format(server_format)``
+
+  ``server_format`` is one of the strings "unix" or "ms". To choose
+  the correct format, you have to start a command line FTP client and
+  request a directory listing (most clients do this with the ``DIR``
+  command.
+
+  If the resulting lines look like
+
+  ::
+
+      drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
+      -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
+
+  use "unix" as the argument.
+  
+  If the output looks like
+
+  ::
+
+      12-07-01  02:05PM       <DIR>          XPLaunch
+      07-17-00  02:08PM             12266720 digidash.exe
+
+  use "ms" as the argument string ``server_format``.
+
+  If none of the above settings help, contact me. It would be very
+  helpful if you could provide an example listing (``DIR``'s output).
+
+If calling ``lstat`` or ``stat`` yields wrong modification dates
+or times, look at the methods that deal with time zone differences
 (`time shift`_).
 
 .. _`FTPHost.lstat`:
@@ -473,7 +515,7 @@ times, look at the methods that deal with time zone differences
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
 
-``FTPHost`` objects contain an attribute named path, similar to
+``FTPHost`` objects contain an attribute named ``path``, similar to
 `os.path`_. The following methods can be applied to the remote host
 with the same semantics as for ``os.path``:
 
@@ -524,8 +566,8 @@ in the Library Reference.
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
 
-Tips and tricks
----------------
+Tips and tricks / FAQ
+---------------------
 
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -549,7 +591,15 @@ call `synchronize_times`_.
 Wrong dates or times when stat'ing on a server in a different time zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please see the previous tip.
+Please see the previous and the next tip.
+
+File-related query methods (e. g. ``listdir``) return unexpected results
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If, for example, ``listdir`` or ``lstat`` return a wrong value or
+raise an exception, it may be because of a wrongly determined
+directory format. Please see the discussion of
+`set_directory_format`_.
 
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
