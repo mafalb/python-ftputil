@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.9 2002/03/30 16:50:08 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.10 2002/03/30 17:40:03 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -332,6 +332,9 @@ class MockSocket:
     def makefile(self, mode):
         return StringIO.StringIO(self.mock_file_content)
 
+    def close(self):
+        pass
+
 
 class MockSession:
     """
@@ -378,6 +381,9 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
         else:
             raise ftplib.error_perm
 
+    def voidresp(self):
+        return '2xx'
+
     def pwd(self):
         return self.current_dir
 
@@ -406,7 +412,10 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2"""}
         """
         if DEBUG:
             print cmd
+        # fail if attempting to read from/write to a directory
+        cmd, path = cmd.split()
+        path = self._remove_trailing_slash(path)
+        if self.dir_contents.has_key(path):
+            raise ftplib.error_perm
         return MockSocket(self.mock_file_content)
-
-
 
