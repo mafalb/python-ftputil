@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.92 2002/04/20 23:05:59 schwa Exp $
+# $Id: ftputil.py,v 1.93 2002/05/29 11:42:12 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -397,8 +397,9 @@ class FTPHost:
             response = _try_with_oserror(self._session.voidcmd, 'STAT')
         except PermanentError:
             response = ''
-        if response.find('ROBIN Microsoft') != -1:
-            self._parser = self._parse_robin_line
+        if response.find('ROBIN Microsoft') != -1 or \
+           response.find('Bliss_Server Microsoft') != -1:
+            self._parser = self._parse_ms_line
         else:
             self._parser = self._parse_unix_line
 
@@ -674,7 +675,7 @@ class FTPHost:
         result._st_target = st_target
         return result
 
-    def _parse_robin_line(self, line):
+    def _parse_ms_line(self, line):
         """
         Return _Stat instance corresponding to the given text line
         from a MS ROBIN FTP server. Exceptions are caught in
