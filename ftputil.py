@@ -89,7 +89,7 @@ class _FTPFile:
     def __init__(self, host, path, mode):
         '''Construct the file(-like) object.'''
         # we need only the ftplib.FTP object
-        self._ftplib_host = host._ftplib_host
+        self._session = host._session
         # check mode
         if '+' in mode:
             raise FTPIOError("append modes not supported")
@@ -101,12 +101,12 @@ class _FTPFile:
         # select ASCII or binary mode
         transfer_type = ('A', 'I')[self._binary]
         command = 'TYPE %s' % transfer_type
-        self._ftplib_host.voidcmd(command)
+        self._session.voidcmd(command)
         # make transfer command
         command_type = ('STOR', 'RETR')[self._readmode]
         command = '%s %s' % (command_type, path)
         # get connection and file object
-        self._conn = self._ftplib_host.transfercmd(command)
+        self._conn = self._session.transfercmd(command)
         self._fp = self._conn.makefile(mode)
         self.closed = 0
 
@@ -187,7 +187,7 @@ class _FTPFile:
         if not self.closed:
             self._fp.close()
             self._conn.close()
-            self._ftplib_host.voidresp()
+            self._session.voidresp()
             self.closed = 1
 
     def __del__(self):
@@ -204,7 +204,7 @@ class FTPHost:
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
-        self._ftplib_host = ftplib.FTP(*args, **kwargs)
+        self._session = ftplib.FTP(*args, **kwargs)
         # simulate os.path
         self.path = _Path(self)
         # store arguments for later copy operations
@@ -228,19 +228,19 @@ class FTPHost:
 
     def close(self):
         '''Close host connection.'''
-        return self._ftplib_host.close()
+        return self._session.close()
 
     #
     # miscellaneous utility methods resembling those in os
     #
     def getcwd(self):
         '''Return the current path name.'''
-        return self._ftplib_host.pwd()
+        return self._session.pwd()
 
     def chdir(self, path):
         '''Change the directory on the host.'''
         try:
-            self._ftplib_host.cwd(path)
+            self._session.cwd(path)
         except ftplib.error_perm, obj:
             raise FTPOSError(obj)
 
@@ -253,15 +253,15 @@ class FTPHost:
         '''Make the directory path on the remote host. The
         argument mode is ignored and only supported for
         similarity with os.mkdir.'''
-        self._ftplib_host.mkd(path)
+        self._session.mkd(path)
 
     def rmdir(self, path):
         '''Remove the directory on the remote host.'''
-        self._ftplib_host.rmd(self, path)
+        self._session.rmd(self, path)
 
     def remove(self, path):
         '''Remove the given file.'''
-        self._ftplib_host.delete(path)
+        self._session.delete(path)
 
     def unlink(self, path):
         '''Remove the given file.'''
@@ -269,7 +269,7 @@ class FTPHost:
 
     def rename(self, src, dst):
         '''Rename the src on the FTP host to dst.'''
-        self._ftplib_host.rename(src, dst)
+        self._session.rename(src, dst)
 
     def _stat_candidates(self, lines, wanted_name):
         '''Return candidate lines for further analysis.
@@ -297,8 +297,8 @@ class FTPHost:
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._ftplib_host.dir(
-          dirname, lambda line: lines.append(line) )
+        self._session.dir( dirname,
+                           lambda line: lines.append(line) )
         # search for name to be stat'ed
         candidates = self._stat_candidates(lines, basename)
         # scan candidates
