@@ -29,6 +29,8 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+# $Id: _test_ftputil.py,v 1.20 2002/03/29 16:29:26 schwa Exp $
+
 import unittest
 import ftputil
 import getpass
