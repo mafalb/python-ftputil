@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.9 2003/06/09 18:00:13 schwa Exp $
+# $Id: ftp_stat.py,v 1.10 2003/06/09 18:16:45 schwa Exp $
 
 import stat
 import sys
@@ -68,10 +68,11 @@ class _StatResult(_StatResultBase):
                                  attr_name)
 
 
-class _StatParser:
-    """
-    Provide parsing of directory lines and full directory listings.
-    """
+class _Stat:
+    """Methods for stat'ing directories, links and regular files."""
+    def __init__(self, host):
+        self._host = host
+
     def parse_line(self, line):
         """
         Return a `_Stat` object as derived from the string `line`.
@@ -88,8 +89,76 @@ class _StatParser:
         stat_results = [ self.parse_line(line) for line in lines ]
         return stat_results
 
+    def _stat_candidates(self, lines, wanted_name):
+        """Return candidate lines for further analysis."""
+        # return only lines that contain the name of the file to stat
+        #  (however, the string may be _anywhere_ on the line but not
+        #  necessarily the file's basename; e. g. the string could
+        #  occur as the name of the file's group)
+        return [ line  for line in lines
+                 if line.find(wanted_name) != -1 ]
 
-class _UnixStatParser(_StatParser):
+    def lstat(self, path):
+        """Return an object similar to that returned by `os.lstat`."""
+        host_path = self._host.path
+        # get output from FTP's `DIR` command
+        lines = []
+        path = host_path.abspath(path)
+        # Note: (l)stat works by going one directory up and parsing
+        #  the output of an FTP `DIR` command. Unfortunately, it is
+        #  not possible to to this for the root directory `/`.
+        if path == '/':
+            raise ftp_error.RootDirError(
+                  "can't invoke stat for remote root directory")
+        dirname, basename = host_path.split(path)
+        lines = self._host._dir(dirname)
+        # search for name to be stat'ed without parsing the whole
+        #  directory listing
+        candidates = self._stat_candidates(lines, basename)
+        # parse candidates; return the first stat result where the
+        #  calculated name matches the previously determined
+        #  basename
+        for line in candidates:
+            try:
+                stat_result = self.parse_line(line)
+            except ftp_error.ParserError:
+                pass
+            else:
+                if stat_result._st_name == basename:
+                    return stat_result
+        # if the basename wasn't found in any line, raise an
+        #  exception
+        raise ftp_error.PermanentError(
+              "550 %s: no such file or directory" % path)
+
+    def stat(self, path):
+        """Return info from a `stat` call."""
+        host_path = self._host.path
+        # most code in this method is used to detect recursive
+        #  link structures
+        visited_paths = {}
+        while True:
+            # stat the link if it is one, else the file/directory
+            stat_result = self.lstat(path)
+            # if the file is not a link, the `stat` result is the
+            #  same as the `lstat` result
+            if not stat.S_ISLNK(stat_result.st_mode):
+                return stat_result
+            # if we stat'ed a link, calculate a normalized path for
+            #  the file the link points to
+            dirname, basename = host_path.split(path)
+            path = host_path.join(dirname, stat_result._st_target)
+            path = host_path.normpath(path)
+            # check for cyclic structure
+            if visited_paths.has_key(path):
+                # we had this path already
+                raise ftp_error.PermanentError(
+                      "recursive link structure detected")
+            # remember the path we have encountered
+            visited_paths[path] = True
+
+
+class _UnixStat(_Stat):
     # map month abbreviations to month numbers
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
@@ -172,7 +241,7 @@ class _UnixStatParser(_StatParser):
         return stat_result
 
 
-class _MSStatParser(_StatParser):
+class _MSStat(_Stat):
     def parse_line(self, line):
         """
         Return `_Stat` instance corresponding to the given text line

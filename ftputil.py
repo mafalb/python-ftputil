@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.124 2003/06/09 17:42:43 schwa Exp $
+# $Id: ftputil.py,v 1.125 2003/06/09 18:16:45 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -169,9 +169,9 @@ class FTPHost:
         #  test.
         if response.find('ROBIN Microsoft') != -1 or \
            response.find('Bliss_Server Microsoft') != -1:
-            self._parser = ftp_stat._MSStatParser()
+            self._stat = ftp_stat._MSStat(self)
         else:
-            self._parser = ftp_stat._UnixStatParser()
+            self._stat = ftp_stat._UnixStat(self)
 
     #
     # dealing with child sessions and file-like objects (rather
@@ -532,76 +532,16 @@ class FTPHost:
         names = []
         for line in lines:
             try:
-                stat_result = self._parser.parse_line(line)
+                stat_result = self._stat.parse_line(line)
             except ftp_error.ParserError:
                 pass
             else:
                 names.append(stat_result._st_name)
         return names
 
-    def _stat_candidates(self, lines, wanted_name):
-        """Return candidate lines for further analysis."""
-        # return only lines that contain the name of the file to stat
-        #  (however, the string may be _anywhere_ on the line but not
-        #  necessarily the file's basename; e. g. the string could
-        #  occur as the name of the file's group)
-        return [ line  for line in lines
-                 if line.find(wanted_name) != -1 ]
-
     def lstat(self, path):
-        """Return an object similar to that returned by `os.lstat`."""
-        # get output from FTP's `DIR` command
-        lines = []
-        path = self.path.abspath(path)
-        # Note: (l)stat works by going one directory up and parsing
-        #  the output of an FTP `DIR` command. Unfortunately, it is
-        #  not possible to to this for the root directory `/`.
-        if path == '/':
-            raise ftp_error.RootDirError(
-                  "can't invoke stat for remote root directory")
-        dirname, basename = self.path.split(path)
-        lines = self._dir(dirname)
-        # search for name to be stat'ed without parsing the whole
-        #  directory listing
-        candidates = self._stat_candidates(lines, basename)
-        # parse candidates; return the first stat result where the
-        #  calculated name matches the previously determined
-        #  basename
-        for line in candidates:
-            try:
-                stat_result = self._parser.parse_line(line)
-            except ftp_error.ParserError:
-                pass
-            else:
-                if stat_result._st_name == basename:
-                    return stat_result
-        # if the basename wasn't found in any line, raise an
-        #  exception
-        raise ftp_error.PermanentError(
-              "550 %s: no such file or directory" % path)
+        return self._stat.lstat(path)
 
     def stat(self, path):
-        """Return info from a `stat` call."""
-        # most code in this method is used to detect recursive
-        #  link structures
-        visited_paths = {}
-        while True:
-            # stat the link if it is one, else the file/directory
-            stat_result = self.lstat(path)
-            # if the file is not a link, the `stat` result is the
-            #  same as the `lstat` result
-            if not stat.S_ISLNK(stat_result.st_mode):
-                return stat_result
-            # if we stat'ed a link, calculate a normalized path for
-            #  the file the link points to
-            dirname, basename = self.path.split(path)
-            path = self.path.join(dirname, stat_result._st_target)
-            path = self.path.normpath(path)
-            # check for cyclic structure
-            if visited_paths.has_key(path):
-                # we had this path already
-                raise ftp_error.PermanentError(
-                      "recursive link structure detected")
-            # remember the path we have encountered
-            visited_paths[path] = True
+        return self._stat.stat(path)
 

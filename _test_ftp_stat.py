@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.2 2003/06/09 16:53:22 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.3 2003/06/09 18:16:45 schwa Exp $
 
 import unittest
 
@@ -39,13 +39,15 @@ import ftp_stat
 
 class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
-        parser = parser_class()
+        # no `FTPHost` is needed for these tests, so set it to `None`
+        parser = parser_class(None)
         for line, expected_stat_result in zip(lines, expected_stat_results):
             stat_result = parser.parse_line(line)
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
-        parser = parser_class()
+        # no `FTPHost` is needed for these tests, so set it to `None`
+        parser = parser_class(None)
         for line in lines:
             self.assertRaises(ftp_error.ParserError, parser.parse_line, line)
 
@@ -65,8 +67,7 @@ class TestStatParsers(unittest.TestCase):
           (17901, None, None, 2, '45854', '200', 512, None, 959551200.0, None),
           (41471, None, None, 2, '45854', '200', 512, None, 959551200.0, None)
           ]
-        self._test_valid_lines(ftp_stat._UnixStatParser, lines,
-                               expected_stat_results)
+        self._test_valid_lines(ftp_stat._UnixStat, lines, expected_stat_results)
 
     def test_invalid_unix_lines(self):
         lines = [
@@ -76,7 +77,7 @@ class TestStatParsers(unittest.TestCase):
           "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
           "drwxr-sr-x     45854    200           512 May  4  2000 chemeng"
           ]
-        self._test_invalid_lines(ftp_stat._UnixStatParser, lines)
+        self._test_invalid_lines(ftp_stat._UnixStat, lines)
 
     def test_valid_ms_lines(self):
         lines = [
@@ -90,8 +91,7 @@ class TestStatParsers(unittest.TestCase):
           (33024, None, None, None, None, None, 12266720, None, 963835680.0,
            None)
           ]
-        self._test_valid_lines(ftp_stat._MSStatParser, lines,
-                               expected_stat_results)
+        self._test_valid_lines(ftp_stat._MSStat, lines, expected_stat_results)
 
     def test_invalid_ms_lines(self):
         lines = [
@@ -99,7 +99,7 @@ class TestStatParsers(unittest.TestCase):
           "07-17-00  02:08             12266720 test.exe",
           "07-17-00  02:08AM           1226672x test.exe"
           ]
-        self._test_invalid_lines(ftp_stat._MSStatParser, lines)
+        self._test_invalid_lines(ftp_stat._MSStat, lines)
 
 
 if __name__ == '__main__':
