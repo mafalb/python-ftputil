@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.49 2002/03/30 22:14:53 schwa Exp $
+# $Id: _test_ftputil.py,v 1.50 2002/03/30 22:18:20 schwa Exp $
 
 import unittest
 import stat
@@ -43,16 +43,9 @@ import ftputil
 import _mock_ftplib
 
 
-class FailOnLoginSession(_mock_ftplib.MockSession):
-    def __init__(self, host='', user='', password=''):
-        raise ftplib.error_perm
-
-class ReadMockSession(_mock_ftplib.MockSession):
-    mock_file_content = 'line 1\r\nanother line\r\nyet another line'
-
-class AsciiReadMockSession(_mock_ftplib.MockSession):
-    mock_file_content = '\r\n'.join( map( str, range(20) ) )
-
+#
+# helper functions to generate random data
+#
 def random_data(pool, size=10000):
     """
     Return a sequence of characters consisting of those from
@@ -76,16 +69,35 @@ def binary_data():
     pool = range(0, 256)
     return random_data(pool)
 
+#
+# several customized MockSession classes
+#
+class FailOnLoginSession(_mock_ftplib.MockSession):
+    def __init__(self, host='', user='', password=''):
+        raise ftplib.error_perm
+
+class ReadMockSession(_mock_ftplib.MockSession):
+    mock_file_content = 'line 1\r\nanother line\r\nyet another line'
+
+class AsciiReadMockSession(_mock_ftplib.MockSession):
+    mock_file_content = '\r\n'.join( map( str, range(20) ) )
+
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
 
 
+#
+# factory to produce FTPHost-like classes from a given FTPHost
+#  class and a given MockSession class
 def ftp_host_factory(session_factory=_mock_ftplib.MockSession,
                      ftp_host_class=ftputil.FTPHost):
     return ftp_host_class('dummy_host', 'dummy_user', 'dummy_password',
                           session_factory=session_factory)
 
 
+#
+# test cases
+#
 class TestLogin(unittest.TestCase):
     """Test invalid logins."""
 
