@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.131 2003/10/04 17:37:14 schwa Exp $
+# $Id: ftputil.py,v 1.132 2003/10/04 19:29:32 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -326,27 +326,27 @@ class FTPHost:
                   "time shift (%.2f s) deviates more than %d s from full hours"
                   % (time_shift, maximum_deviation) )
 
-    def synchronize_time(self):
+    def synchronize_times(self):
         """
         Synchronize the local times of FTP client and server. This
         is necessary to let `upload_if_newer` and `download_if_newer`
         work correctly.
 
-        This implementation of `synchronize_time` requires _all_ of
+        This implementation of `synchronize_times` requires _all_ of
         the following:
 
         - The connection between server and client is established.
         - The client has write access to the directory that is
-          current when `synchronize_time` is called.
+          current when `synchronize_times` is called.
         - That directory is _not_ the root directory (i. e. `/`) of
           the FTP server.
 
-        The usual usage pattern of `synchronize_time` is to call it
+        The usual usage pattern of `synchronize_times` is to call it
         directly after the connection is established. (As can be
         concluded from the points above, this requires write access
         to the login directory.)
 
-        If `synchronize_time` fails, it raises a `TimeShiftError`.
+        If `synchronize_times` fails, it raises a `TimeShiftError`.
         """
         helper_file_name = "_ftputil_sync_"
         # open a dummy file for writing in the current directory

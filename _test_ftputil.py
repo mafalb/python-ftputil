@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.71 2003/06/09 19:37:56 schwa Exp $
+# $Id: _test_ftputil.py,v 1.72 2003/10/04 19:29:32 schwa Exp $
 
 import operator
 import os
@@ -462,17 +462,17 @@ class TestTimeShift(unittest.TestCase):
         self.assertRaises(ftputil.TimeShiftError, assert_time_shift,
                           -3600-10*60)
 
-    def test_synchronize_time(self):
+    def test_synchronize_times(self):
         """Test time synchronization with server."""
         host = _test_base.ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
-                                session_factory=TimeShiftMockSession)
+               session_factory=TimeShiftMockSession)
         # valid time shift
         host.path.set_mtime( time.time() + 3630 )
-        host.synchronize_time()
+        host.synchronize_times()
         self.assertEqual( host.time_shift(), 3600 )
         # invalid time shift
         host.path.set_mtime( time.time() + 3600+10*60 )
-        self.assertRaises(ftputil.TimeShiftError, host.synchronize_time)
+        self.assertRaises(ftputil.TimeShiftError, host.synchronize_times)
 
 
 if __name__ == '__main__':
