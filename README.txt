@@ -25,6 +25,9 @@ programming language, available from http://www.python.org at no cost.
 Installation
 ------------
 
+- *If you have an older version of ftputil installed, delete it or move
+  it somewhere else, so that it doesn't conflict with the new version!*
+
 - Unpack the archive file containing the distribution files. If you have
   ftputil version 1.2, you would type at the shell prompt
 
@@ -48,6 +51,12 @@ Installation
 
   If you want to customize the installation paths, please read
   http://www.python.org/doc/current/inst/inst.html .
+
+License
+-------
+
+ftputil is Open Source Software. It is distributed under a BSD-style
+license (see the top of ftputil.py).
 
 Author
 ------
