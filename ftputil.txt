@@ -1,13 +1,8 @@
 ftputil documentation
 =====================
 
-Name
-----
-
-    ftputil - abstract Python interface for FTP sessions
-
-Description
------------
+Introduction
+------------
 
 The ftputil module is a high-level interface to the ftplib_ module. The
 `FTPHost objects`_ generated from it allow many operations similar to
