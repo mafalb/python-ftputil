@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.19 2002/04/01 15:05:55 schwa Exp $
+# $Id: _mock_ftplib.py,v 1.20 2002/04/03 21:47:41 schwa Exp $
 
 """
 This module implements a mock version of the standard libraries
@@ -106,6 +106,9 @@ class MockSession:
 
     # used by MockSession.dir
     dir_contents = {
+          '/': """\
+drwxr-xr-x   2 45854    200           512 May  4  2000 home""",
+
           '/home': """\
 drwxr-sr-x   2 45854    200           512 May  4  2000 sschwarzer
 -rw-r--r--   1 45854    200          4605 Jan 19  1970 older
