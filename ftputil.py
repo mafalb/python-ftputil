@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.143 2003/10/30 19:25:57 schwa Exp $
+# $Id: ftputil.py,v 1.144 2003/10/30 20:00:23 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
@@ -344,7 +344,7 @@ class FTPHost:
         # round it to hours; this code should also work for later Python
         #  versions because of the explicit `int`
         absolute_rounded_time_shift = \
-          int( (absolute_time_shift + 30*minute) / hour) * hour
+          int( (absolute_time_shift + 30*minute) / hour ) * hour
         # return with correct sign
         return signum * absolute_rounded_time_shift
 
@@ -356,8 +356,7 @@ class FTPHost:
         """
         minute = 60.0
         hour = 60.0 * minute
-        absolute_rounded_time_shift = \
-          abs( self.__rounded_time_shift(time_shift) )
+        absolute_rounded_time_shift = abs(self.__rounded_time_shift(time_shift))
         # test 1: fail if the absolute time shift is greater than
         #  a full day (24 hours)
         if absolute_rounded_time_shift > 24 * hour:
@@ -366,11 +365,11 @@ class FTPHost:
         # test 2: fail if the deviation between given time shift and
         #  full hours is greater than a certain limit (e. g. five minutes)
         maximum_deviation = 5 * minute
-        if abs( time_shift - self.__rounded_time_shift(time_shift) ) > \
+        if abs(time_shift - self.__rounded_time_shift(time_shift)) > \
            maximum_deviation:
             raise ftp_error.TimeShiftError(
                   "time shift (%.2f s) deviates more than %d s from full hours"
-                  % (time_shift, maximum_deviation) )
+                  % (time_shift, maximum_deviation))
 
     def synchronize_times(self):
         """
@@ -414,7 +413,7 @@ class FTPHost:
         # do some sanity checks
         self.__assert_valid_time_shift(time_shift)
         # if tests passed, store the time difference as time shift value
-        self.set_time_shift( self.__rounded_time_shift(time_shift) )
+        self.set_time_shift(self.__rounded_time_shift(time_shift))
 
     #
     # operations based on file-like objects (rather high-level)
