@@ -153,7 +153,7 @@ class _FTPFile:
         command = '%s %s' % (command_type, path)
         # get connection and file object
         self._conn = self._session.transfercmd(command)
-        self._fp = self._conn.makefile(mode)
+        self._fo = self._conn.makefile(mode)
         self.closed = 0
 
     #
@@ -167,7 +167,7 @@ class _FTPFile:
     def read(self, *args, **kwargs):
         '''Return read bytes, normalized if in text
         transfer mode.'''
-        data = self._fp.read(*args, **kwargs)
+        data = self._fo.read(*args, **kwargs)
         if self._binary:
             return data
         return _native_to_python_linesep(data)
@@ -175,7 +175,7 @@ class _FTPFile:
     def readline(self, *args, **kwargs):
         '''Return one read line, normalized if in text
         transfer mode.'''
-        data = self._fp.readline(*args, **kwargs)
+        data = self._fo.readline(*args, **kwargs)
         if self._binary:
             return data
         return _native_to_python_linesep(data)
@@ -183,7 +183,7 @@ class _FTPFile:
     def readlines(self, *args, **kwargs):
         '''Return read lines, normalized if in text
         transfer mode.'''
-        lines = self._fp.readlines(*args, **kwargs)
+        lines = self._fo.readlines(*args, **kwargs)
         if self._binary:
             return lines
         # more memory-friendly than
@@ -196,7 +196,7 @@ class _FTPFile:
         '''Return an appropriate xreadlines object with
         built-in line separator conversion support.'''
         if self._binary:
-            return self._fp.xreadlines()
+            return self._fo.xreadlines()
         else:
             # we don't provide an xreadline-compatible class
             #  right now, so fall back to readlines
@@ -207,7 +207,7 @@ class _FTPFile:
         text mode.'''
         if not self._binary:
             data = _python_to_native_linesep(data)
-        self._fp.write(data)
+        self._fo.write(data)
 
     def writelines(self, lines):
         '''Write lines to file. Do linesep conversion for
@@ -216,7 +216,7 @@ class _FTPFile:
             # more memory-friendly than [... for line in lines]
             for i in range( len(lines) ):
                 lines[i] = _python_to_native_linesep(lines[i])
-        self._fp.writelines(lines)
+        self._fo.writelines(lines)
 
     #
     # other attributes
@@ -225,7 +225,7 @@ class _FTPFile:
         '''Delegate unknown attribute requests to the file.'''
         if attr_name in ( 'flush isatty fileno seek tell '
           'truncate closed name softspace'.split() ):
-            return getattr(self._fp, attr_name)
+            return getattr(self._fo, attr_name)
         else:
             raise AttributeError("'FTPFile' object has no "
                   "attribute '%s'" % attr_name)
@@ -233,7 +233,7 @@ class _FTPFile:
     def close(self):
         '''Close the FTPFile.'''
         if not self.closed:
-            self._fp.close()
+            self._fo.close()
             self._conn.close()
             self._session.voidresp()
             self.closed = 1
