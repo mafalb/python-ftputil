@@ -34,7 +34,7 @@ From version 1.1 to 2.0, the following has changed:
 - extended documentation and converted it to HTML format (now
   generated from reStructured Text)
 
-- bugfixes
+- several bugfixes
 
 - there's now a mailing list at http://codespeak.net/mailman/listinfo/ftputil
   (thanks to Holger Krekel)
