@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.31 2003/10/30 19:52:31 schwa Exp $
+# $Id: ftp_stat.py,v 1.32 2003/10/30 19:54:17 schwa Exp $
 
 import stat
 import sys
@@ -262,7 +262,7 @@ class _UnixStat(_Stat):
         st_atime = None
         # st_mtime
         try:
-            month = self._month_numbers[ month.lower() ]
+            month = self._month_numbers[month.lower()]
         except KeyError:
             raise ftp_error.ParserError("invalid month name '%s'" % month)
         day = int(day)
@@ -323,8 +323,8 @@ class _MSStat(_Stat):
             # "unpack list of wrong size"
             raise ftp_error.ParserError("line '%s' can't be parsed" % line )
         # st_mode
-        st_mode = 0400   # default to read access only;
-                         #  in fact, we can't tell
+        #  default to read access only; in fact, we can't tell
+        st_mode = 0400
         if dir_or_size == "<DIR>":
             st_mode = st_mode | stat.S_IFDIR
         else:
@@ -347,7 +347,7 @@ class _MSStat(_Stat):
         st_atime = None
         # st_mtime
         try:
-            month, day, year = map( int, date.split('-') )
+            month, day, year = map(int, date.split('-'))
             if year >= 70:
                 year = 1900 + year
             else:
