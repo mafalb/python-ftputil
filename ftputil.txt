@@ -243,6 +243,58 @@ Attributes
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
+Time zone correction
+,,,,,,,,,,,,,,,,,,,,
+
+.. _`time shift`:
+.. _`set_time_shift`:
+
+- ``set_time_shift(time_shift)``
+  sets the so-called time shift value (measured in seconds). The time
+  shift is the difference between the local time of the server and the
+  local time of the client at a given moment, i. e. by definition
+
+  ::
+
+    time_shift = server_time - client_time
+
+  Setting this value is important if `upload_if_newer`_ and
+  `download_if_newer`_ should work correctly even if the time zone of
+  the FTP server differs from that of the client (where ``ftputil``
+  runs). Note that the time shift value *can* be negative.
+
+  If the time shift value is invalid, e. g. no multiple of a full hour
+  or its absolute (unsigned) value larger than 24 hours, a
+  ``TimeShiftError`` is raised.
+
+  See also `synchronize_times`_ for a way to set the time shift with a
+  simple method call.
+
+- ``time_shift()``
+  return the currently-set time shift value. See ``set_time_shift``
+  (above) for its definition.
+
+.. _`synchronize_times`:
+
+- ``synchronize_times()``
+  synchronizes the local times of the server and the client, so that
+  `upload_if_newer`_ and `download_if_newer`_ work as expected, even
+  if the client and the server are in different time zones. For this
+  to work, *all* of the following conditions must be true:
+
+  - The connection between server and client is established.
+
+  - The client has write access to the directory that is current when
+    ``synchronize_times`` is called.
+
+  - That directory is *not* the root directory (i. e. ``/``) of the
+    FTP server.
+
+  If you can't fulfill these conditions, you can nevertheless set the
+  time shift value manually with `set_time_shift`_. Trying to call
+  ``synchronize_times`` if the above conditions aren't true results in
+  a ``TimeShiftError`` exception.
+
 Files and directories
 ,,,,,,,,,,,,,,,,,,,,,
 
@@ -416,58 +468,6 @@ times, look at the methods that deal with time zone differences
   link. This method follows multiple links until a regular file or
   directory is found. If an infinite link chain is encountered, a
   ``PermanentError`` is raised.
-
-Time zone correction
-,,,,,,,,,,,,,,,,,,,,
-
-.. _`time shift`:
-.. _`set_time_shift`:
-
-- ``set_time_shift(time_shift)``
-  sets the so-called time shift value (measured in seconds). The time
-  shift is the difference between the local time of the server and the
-  local time of the client at a given moment, i. e. by definition
-
-  ::
-
-    time_shift = server_time - client_time
-
-  Setting this value is important if `upload_if_newer`_ and
-  `download_if_newer`_ should work correctly even if the time zone of
-  the FTP server differs from that of the client (where ``ftputil``
-  runs). Note that the time shift value *can* be negative.
-
-  If the time shift value is invalid, e. g. no multiple of a full hour
-  or its absolute (unsigned) value larger than 24 hours, a
-  ``TimeShiftError`` is raised.
-
-  See also `synchronize_times`_ for a way to set the time shift with a
-  simple method call.
-
-- ``time_shift()``
-  return the currently-set time shift value. See ``set_time_shift``
-  (above) for its definition.
-
-.. _`synchronize_times`:
-
-- ``synchronize_times()``
-  synchronizes the local times of the server and the client, so that
-  `upload_if_newer`_ and `download_if_newer`_ work as expected, even
-  if the client and the server are in different time zones. For this
-  to work, *all* of the following conditions must be true:
-
-  - The connection between server and client is established.
-
-  - The client has write access to the directory that is current when
-    ``synchronize_times`` is called.
-
-  - That directory is *not* the root directory (i. e. ``/``) of the
-    FTP server.
-
-  If you can't fulfill these conditions, you can nevertheless set the
-  time shift value manually with `set_time_shift`_. Trying to call
-  ``synchronize_times`` if the above conditions aren't true results in
-  a ``TimeShiftError`` exception.
 
 ``FTPHost.path``
 ~~~~~~~~~~~~~~~~
