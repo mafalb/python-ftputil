@@ -214,6 +214,9 @@ class FTPHost:
         # store arguments for later copy operations
         self._args = args
         self._kwargs = kwargs
+        # store files associated with this host object
+        self._file_pool = []
+        self._closed = 0
 
     def _copy(self):
         '''Return a copy of this FTPHost object. This includes
@@ -228,15 +231,36 @@ class FTPHost:
     def file(self, path, mode='r'):
         '''Return a file(-like) object which is associated
         with this FTPHost object.'''
-        # look if one of our clones has a non-busy (i. e.
-        #  closed) _FTPFile object; in this case re-use it;
-        #  else make a new session for the requested _FTPFile
+        # look if there are non-busy (i. e. closed) _FTPFile
+        #  objects associated with this host; in this case
+        #  re-use one; else make a new host object for the
+        #  requested _FTPFile
+        for file in self._file_pool:
+            if file.closed:
+                # re-use it
+                current_dir = self.getcwd()
+                file._host.chdir(current_dir)
+                file._open(path, mode)
+                return file
+        # use a new FTPHost object to generate a new file
+        #  associated with that new host
         host_copy = self._copy()
-        return _FTPFile(host_copy, path, mode)
+        new_file = _FTPFile(host_copy, path, mode)
+        self._file_pool.append(new_file)
+        return new_file
 
     def close(self):
         '''Close host connection.'''
-        return self._session.close()
+        if not self._closed:
+            for file in self._file_pool:
+                file.close()
+                file._host.close()
+            self._file_pool = []
+            self._session.close()
+            self._closed = 1
+
+    def __del__(self):
+        self.close()
 
     #
     # miscellaneous utility methods resembling those in os
