@@ -1,5 +1,9 @@
 """A more or less complete user-defined wrapper around tuple objects.
-Adopted version of the standard library's UserTuple."""
+Adopted version of the standard library's UserList."""
+
+#XXX tuple instances (in Python 2.2) contain also:
+# __class__, __delattr__, __getattribute__, __hash__, __new__,
+# __reduce__, __setattr__, __str__
 
 class UserTuple:
     def __init__(self, inittuple=None):
@@ -9,8 +13,13 @@ class UserTuple:
             if type(inittuple) == type(self.data):
                 self.data = inittuple
             elif isinstance(inittuple, UserTuple):
+                # this results in
+                #   self.data is inittuple.data
+                # but that's ok for tuples because they are
+                # immutable. (Builtin tuples behave the same.)
                 self.data = inittuple.data[:]
             else:
+                # same applies here
                 self.data = tuple(inittuple)
     def __repr__(self): return repr(self.data)
     def __lt__(self, other): return self.data <  self.__cast(other)
@@ -37,7 +46,7 @@ class UserTuple:
             return self.__class__(self.data + other)
         else:
             return self.__class__(self.data + tuple(other))
-    #XXX dir( () ) contains no __radd__
+    # dir( () ) contains no __radd__ (at least in Python 2.2)
     def __mul__(self, n):
         return self.__class__(self.data*n)
     __rmul__ = __mul__
