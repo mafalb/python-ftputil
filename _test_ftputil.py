@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.38 2002/03/30 18:13:47 schwa Exp $
+# $Id: _test_ftputil.py,v 1.39 2002/03/30 18:29:23 schwa Exp $
 
 import unittest
 import stat
@@ -296,27 +296,23 @@ class TestFileOperations(unittest.TestCase):
         data = input_.read( len(expected_data) )
         self.assertEqual(data, expected_data)
 
-#     def ascii_readline(self):
-#         """Write some ASCII data to the host and use readline
-#         operations to get it back.
-#         """
-#         host = self.host
-#         # write some data
-#         local_data = 'line 1\nanother line\nyet another line'
-#         self.write_test_data(local_data, 'w')
-#         # read data with ascii readline
-#         input_ = host.file(self.remote_name, 'r')
-#         data = input_.readline(3)
-#         self.assertEqual(data, 'lin')
-#         data = input_.readline(10)
-#         self.assertEqual(data, 'e 1\n')
-#         data = input_.readline(13)
-#         self.assertEqual(data, 'another line\n')
-#         data = input_.readline()
-#         self.assertEqual(data, 'yet another line')
-#         data = input_.readline()
-#         self.assertEqual(data, '')
-#         input_.close()
+    def test_ascii_readline(self):
+        """Write some ASCII data to the (mock) host and use readline
+        operations to get it back.
+        """
+        host = ftp_host_factory(session_factory=AsciiReadMockSession1)
+        input_ = host.file('dummy', 'r')
+        data = input_.readline(3)
+        self.assertEqual(data, 'lin')
+        data = input_.readline(10)
+        self.assertEqual(data, 'e 1\n')
+        data = input_.readline(13)
+        self.assertEqual(data, 'another line\n')
+        data = input_.readline()
+        self.assertEqual(data, 'yet another line')
+        data = input_.readline()
+        self.assertEqual(data, '')
+        input_.close()
 #
 #     def binary_readline(self):
 #         """Write some ASCII data to the host and use binary
