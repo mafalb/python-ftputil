@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.12 2003/06/09 19:06:01 schwa Exp $
+# $Id: ftp_stat.py,v 1.13 2003/06/09 19:33:00 schwa Exp $
 
 import stat
 import sys
@@ -72,6 +72,7 @@ class _Stat:
     """Methods for stat'ing directories, links and regular files."""
     def __init__(self, host):
         self._host = host
+        self._path = host.path
 
     def parse_line(self, line):
         """
@@ -98,10 +99,9 @@ class _Stat:
         Return a list with directories, files etc. in the directory
         named path.
         """
-        host_path = self._host.path
         # we _can't_ put this check into `_dir`, s. a.
-        path = host_path.abspath(path)
-        if not host_path.isdir(path):
+        path = self._path.abspath(path)
+        if not self._path.isdir(path):
             raise ftp_error.PermanentError("550 %s: no such directory" % path)
         lines = self._host_dir(path)
         names = []
@@ -125,17 +125,16 @@ class _Stat:
 
     def lstat(self, path):
         """Return an object similar to that returned by `os.lstat`."""
-        host_path = self._host.path
         # get output from FTP's `DIR` command
         lines = []
-        path = host_path.abspath(path)
+        path = self._path.abspath(path)
         # Note: (l)stat works by going one directory up and parsing
         #  the output of an FTP `DIR` command. Unfortunately, it is
         #  not possible to to this for the root directory `/`.
         if path == '/':
             raise ftp_error.RootDirError(
                   "can't invoke stat for remote root directory")
-        dirname, basename = host_path.split(path)
+        dirname, basename = self._path.split(path)
         lines = self._host_dir(dirname)
         # search for name to be stat'ed without parsing the whole
         #  directory listing
@@ -158,7 +157,6 @@ class _Stat:
 
     def stat(self, path):
         """Return info from a `stat` call."""
-        host_path = self._host.path
         # most code in this method is used to detect recursive
         #  link structures
         visited_paths = {}
@@ -171,9 +169,9 @@ class _Stat:
                 return stat_result
             # if we stat'ed a link, calculate a normalized path for
             #  the file the link points to
-            dirname, basename = host_path.split(path)
-            path = host_path.join(dirname, stat_result._st_target)
-            path = host_path.normpath(path)
+            dirname, basename = self._path.split(path)
+            path = self._path.join(dirname, stat_result._st_target)
+            path = self._path.normpath(path)
             # check for cyclic structure
             if visited_paths.has_key(path):
                 # we had this path already
