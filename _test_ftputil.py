@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.70 2003/06/09 19:17:15 schwa Exp $
+# $Id: _test_ftputil.py,v 1.71 2003/06/09 19:37:56 schwa Exp $
 
 import operator
 import os
@@ -138,56 +138,6 @@ class TestLogin(unittest.TestCase):
         """Login to invalid host must fail."""
         self.assertRaises(ftputil.FTPOSError, _test_base.ftp_host_factory,
                           FailOnLoginSession)
-
-
-class TestListdir(unittest.TestCase):
-    """Test `FTPHost.listdir`."""
-
-    def test_failing_listdir(self):
-        """Test failing `FTPHost.listdir`."""
-        host = _test_base.ftp_host_factory()
-        self.assertRaises(ftputil.PermanentError, host.listdir, 'notthere')
-
-    def test_succeeding_listdir(self):
-        """Test succeeding `FTPHost.listdir`."""
-        # do we have all expected "files"?
-        host = _test_base.ftp_host_factory()
-        self.assertEqual( len(host.listdir(host.curdir)), 9 )
-        # have they the expected names?
-        host = _test_base.ftp_host_factory()
-        expected = ('chemeng download image index.html os2 '
-                    'osup publications python scios2').split()
-        remote_file_list = host.listdir(host.curdir)
-        for file in expected:
-            self.failUnless(file in remote_file_list)
-
-
-class TestPath(unittest.TestCase):
-    """Test operations in `FTPHost.path`."""
-
-    def test_isdir_isfile_islink(self):
-        """Test `FTPHost._Path.isdir/isfile/islink`."""
-        testdir = '/home/sschwarzer'
-        host = _test_base.ftp_host_factory()
-        host.chdir(testdir)
-        # test a path which isn't there
-        self.failIf( host.path.isdir('notthere') )
-        self.failIf( host.path.isfile('notthere') )
-        self.failIf( host.path.islink('notthere') )
-        # test a directory
-        self.failUnless( host.path.isdir(testdir) )
-        self.failIf( host.path.isfile(testdir) )
-        self.failIf( host.path.islink(testdir) )
-        # test a file
-        testfile = '/home/sschwarzer/index.html'
-        self.failIf( host.path.isdir(testfile) )
-        self.failUnless( host.path.isfile(testfile) )
-        self.failIf( host.path.islink(testfile) )
-        # test a link
-        testlink = '/home/sschwarzer/osup'
-        self.failIf( host.path.isdir(testlink) )
-        self.failIf( host.path.isfile(testlink) )
-        self.failUnless( host.path.islink(testlink) )
 
 
 class TestFileOperations(unittest.TestCase):
