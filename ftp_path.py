@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.7 2003/10/04 14:38:01 schwa Exp $
+# $Id: ftp_path.py,v 1.8 2003/10/30 18:51:23 schwa Exp $
 
 import posixpath
 import stat
@@ -72,15 +72,15 @@ class _Path:
             path = self.join( self._host.getcwd(), path )
         return self.normpath(path)
 
+    def __lstat_result_or_None(self, path):
+        #XXX alas, this looks quite deep into `FTPHost`'s internals
+        return self._host._stat._lstat_result_or_None(path)
+
     def exists(self, path):
         try:
-            # we don't need this call's result
-            self._host.lstat(path)
-            return True
+            return (self.__lstat_result_or_None(path) is not None)
         except ftp_error.RootDirError:
             return True
-        except ftp_error.FTPOSError:
-            return False
 
     def getmtime(self, path):
         return self._host.stat(path).st_mtime

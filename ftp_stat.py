@@ -33,7 +33,7 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.26 2003/10/29 23:01:50 schwa Exp $
+# $Id: ftp_stat.py,v 1.27 2003/10/30 18:51:23 schwa Exp $
 
 import stat
 import sys
@@ -133,8 +133,13 @@ class _Stat:
         return [ line  for line in lines
                  if line.find(wanted_name) != -1 ]
 
-    def lstat(self, path):
-        """Return an object similar to that returned by `os.lstat`."""
+    def _lstat_result_or_None(self, path):
+        """
+        Return an object similar to that returned by `os.lstat`.
+
+        This method isn't for public use but only for ftputil-
+        internal use.
+        """
         # get output from FTP's `DIR` command
         lines = []
         path = self._path.abspath(path)
@@ -159,9 +164,24 @@ class _Stat:
                     return stat_result
             except ftp_error.ParserError:
                 pass
-        # if the basename wasn't found in any line, raise an exception
-        raise ftp_error.PermanentError(
-              "550 %s: no such file or directory" % path)
+        # be explicit
+        return None
+
+    def lstat(self, path):
+        """
+        Return an object similar to that returned by `os.lstat`.
+
+        If the `path` is not found, raise a `PermanentError`.
+
+        Server problems may cause other FTP errors to be raised,
+        though this should rarely happen (e. g. connection drops).
+        """
+        lstat_result = self._lstat_result_or_None(path)
+        if lstat_result is None:
+            raise ftp_error.PermanentError(
+                  "550 %s: no such file or directory" % path)
+        else:
+            return lstat_result
 
     def stat(self, path):
         """Return info from a `stat` call."""
