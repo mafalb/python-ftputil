@@ -1,4 +1,4 @@
-# Copyright (C) 2002, Stefan Schwarzer <s.schwarzer@ndh.net>
+# Copyright (C) 2003, Stefan Schwarzer <s.schwarzer@ndh.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,16 +29,15 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: ftputil.py,v 1.98 2003/01/26 18:16:57 schwa Exp $
+# $Id: ftputil.py,v 1.99 2003/03/15 18:42:20 schwa Exp $
 
 """
 ftputil - higher level support for FTP sessions
 
 FTPHost objects
-    This class resembles the os module's interface to
-    ordinary file systems. In addition, it provides a
-    method file which will return file-objects correspond-
-    ing to remote files.
+    This class resembles the os module's interface to ordinary file
+    systems. In addition, it provides a method file which will return
+    file-objects correspond- ing to remote files.
 
     # example session
     host = ftputil.FTPHost('ftp.domain.com', 'me', 'secret')
@@ -60,26 +59,25 @@ FTPHost objects
     host.upload(local_file, remote_file)
     host.download(remote_file, local_file)
 
-    Both accept an additional mode parameter. If it's 'b'
-    the transfer mode will be for binary files.
+    Both accept an additional mode parameter. If it's 'b' the transfer
+    mode will be for binary files.
 
 FTPFile objects
-    FTPFile objects are constructed via the file method of
-    FTPHost objects. FTPFile objects support the usual file
-    operations for non-seekable files (read, readline,
-    readlines, xreadlines, write, writelines, close).
+    FTPFile objects are constructed via the file method of FTPHost
+    objects. FTPFile objects support the usual file operations for
+    non-seekable files (read, readline, readlines, xreadlines, write,
+    writelines, close).
 
-Note: ftputil currently is not threadsafe. More specifically,
-      you can use different FTPHost objects in different
-      threads but not using a single FTPHost object in
-      different threads.
+Note: ftputil currently is not threadsafe. More specifically, you can
+      use different `FTPHost` objects in different threads but not
+      using a single `FTPHost` object in different threads.
 """
 
 # Ideas for future development:
 # - allow to set an offset for the time difference of local
 #   and remote host
 # - handle connection timeouts
-# - caching of FTPHost.stat results??
+# - caching of `FTPHost.stat` results??
 # - map FTP error numbers to os error numbers (ENOENT etc.)?
 
 # for Python 2.1
@@ -140,7 +138,7 @@ class ParserError(FTPOSError): pass
 def _try_with_oserror(callee, *args, **kwargs):
     """
     Try the callee with the given arguments and map resulting
-    exceptions from ftplib.all_errors to FTPOSError and its
+    exceptions from `ftplib.all_errors` to `FTPOSError` and its
     derived classes.
     """
     try:
@@ -158,7 +156,7 @@ class FTPIOError(FTPError, IOError): pass
 def _try_with_ioerror(callee, *args, **kwargs):
     """
     Try the callee with the given arguments and map resulting
-    exceptions from ftplib.all_errors to FTPIOError.
+    exceptions from `ftplib.all_errors` to `FTPIOError`.
     """
     try:
         return callee(*args, **kwargs)
@@ -170,21 +168,21 @@ def _try_with_ioerror(callee, *args, **kwargs):
 #####################################################################
 # Support for file-like objects
 
-# converter for \r\n line ends to normalized ones in Python.
-#  RFC 959 states that the server will send \r\n on text mode
+# converter for `\r\n` line ends to normalized ones in Python.
+#  RFC 959 states that the server will send `\r\n` on text mode
 #  transfers, so this conversion should be safe. I still use
 #  text mode transfers (mode 'r', not 'rb') in socket.makefile
 #  (below) because the server may do charset conversions on
 #  text transfers.
 _crlf_to_python_linesep = lambda text: text.replace('\r', '')
 
-# converter for Python line ends into \r\n
+# converter for Python line ends into `\r\n`
 _python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 
 
 # helper class for xreadline protocol for ASCII transfers
 class _XReadlines:
-    """Represents xreadline objects for ASCII transfers."""
+    """Represents `xreadline` objects for ASCII transfers."""
 
     def __init__(self, ftp_file):
         self._ftp_file = ftp_file
@@ -241,17 +239,16 @@ class _FTPFile:
         self._conn = _try_with_ioerror(self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
         # this comes last so that close does not try to
-        #  close _FTPFile objects without _conn and _fo
+        #  close `_FTPFile` objects without `_conn` and `_fo`
         #  attributes
         self.closed = False
 
     #
-    # Read and write operations with support for
-    # line separator conversion for text modes.
+    # Read and write operations with support for line separator
+    # conversion for text modes.
     #
-    # Note that we must convert line endings because
-    # the FTP server expects \r\n to be sent on text
-    # transfers.
+    # Note that we must convert line endings because the FTP server
+    # expects `\r\n` to be sent on text transfers.
     #
     def read(self, *args):
         """Return read bytes, normalized if in text transfer mode."""
@@ -261,16 +258,15 @@ class _FTPFile:
         data = _crlf_to_python_linesep(data)
         if args == ():
             return data
-        # If the read data contains \r characters the number
-        #  of read characters will be too small! Thus we
-        #  (would) have to continue to read until we have
-        #  fetched the requested number of bytes (or run out
-        #  of source data).
-        # The algorithm below avoids repetitive string
-        #  concatanations in the style of
+        # If the read data contains `\r` characters the number of read
+        #  characters will be too small! Thus we (would) have to
+        #  continue to read until we have fetched the requested number
+        #  of bytes (or run out of source data).
+        # The algorithm below avoids repetitive string concatanations
+        #  in the style of
         #      data = data + more_data
-        #  and so should also work relatively well if there
-        #  are many short lines in the file.
+        #  and so should also work relatively well if there are many
+        #  short lines in the file.
         wanted_size = args[0]
         chunks = [data]
         current_size = len(data)
@@ -301,16 +297,15 @@ class _FTPFile:
         lines = self._fo.readlines(*args)
         if self._binmode:
             return lines
-        # more memory-friendly than
-        #  return [... for line in lines]
+        # more memory-friendly than `return [... for line in lines]`
         for i in range( len(lines) ):
             lines[i] = _crlf_to_python_linesep(lines[i])
         return lines
 
     def xreadlines(self):
         """
-        Return an appropriate xreadlines object with
-        built-in line separator conversion support.
+        Return an appropriate `xreadlines` object with built-in line
+        separator conversion support.
         """
         if self._binmode:
             return self._fo.xreadlines()
@@ -342,7 +337,7 @@ class _FTPFile:
               "attribute '%s'" % attr_name)
 
     def close(self):
-        """Close the FTPFile."""
+        """Close the `FTPFile`."""
         if not self.closed:
             self._fo.close()
             _try_with_ioerror(self._conn.close)
@@ -353,36 +348,34 @@ class _FTPFile:
         self.close()
 
 
-############################################################
-# FTPHost class with several methods similar to those of os
+#####################################################################
+# `FTPHost` class with several methods similar to those of `os`
 
 class FTPHost:
     """FTP host class"""
 
     # Implementation notes:
     #
-    # Upon every request of a file (_FTPFile object) a
-    # new FTP session is created ("cloned"), leading
-    # to a child session of the FTPHost object from which the
-    # file is requested.
+    # Upon every request of a file (`_FTPFile` object) a new FTP
+    # session is created ("cloned"), leading to a child session of
+    # the FTPHost object from which the file is requested.
     #
-    # This is needed because opening an _FTPFile will make
-    # the local session object wait for the completion of the
-    # transfer. In fact, code like this would block
-    # indefinitely, if the RETR request would be made on the
-    # _session of the object host:
+    # This is needed because opening an `_FTPFile` will make the
+    # local session object wait for the completion of the transfer.
+    # In fact, code like this would block indefinitely, if the `RETR`
+    # request would be made on the `_session` of the object host:
     #
-    # host = FTPHost(ftp_server, user, password)
-    # f = host.file('index.html')
-    # host.getcwd()   # would block!
+    #   host = FTPHost(ftp_server, user, password)
+    #   f = host.file('index.html')
+    #   host.getcwd()   # would block!
     #
-    # On the other hand, the initially constructed host object
-    # will store references to already established _FTPFile
-    # objects and reuse an associated connection if its
-    # associated _FTPFile has been closed.
+    # On the other hand, the initially constructed host object will
+    # store references to already established `_FTPFile` objects and
+    # reuse an associated connection if its associated `_FTPFile`
+    # has been closed.
 
     def __init__(self, *args, **kwargs):
-        """Abstract initialization of FTPHost object."""
+        """Abstract initialization of `FTPHost` object."""
         # store arguments for later operations
         self._args = args
         self._kwargs = kwargs
@@ -390,13 +383,13 @@ class FTPHost:
         self._session = self._make_session()
         # simulate os.path
         self.path = _Path(self)
-        # associated FTPHost objects for data transfer
+        # associated `FTPHost` objects for data transfer
         self._children = []
         self.closed = False
-        # set curdir, pardir etc. for the remote host;
-        #  RFC 959 states that this is, strictly spoken,
-        #  dependent on the server OS but it seems to work
-        #  at least with Unix and Windows servers
+        # set curdir, pardir etc. for the remote host; RFC 959 states
+        #  that this is, strictly spoken, dependent on the server OS
+        #  but it seems to work at least with Unix and Windows
+        #  servers
         self.curdir, self.pardir, self.sep = '.', '..', '/'
         # check if we have a Microsoft ROBIN server
         try:
@@ -404,7 +397,7 @@ class FTPHost:
         except PermanentError:
             response = ''
         #XXX If these servers can be configured to change their directory
-        # output format, we'll need a more sophisticated test.
+        # output format, we will need a more sophisticated test.
         if response.find('ROBIN Microsoft') != -1 or \
            response.find('Bliss_Server Microsoft') != -1:
             self._parser = self._parse_ms_line
@@ -416,8 +409,8 @@ class FTPHost:
     #
     def _make_session(self):
         """
-        Return a new session object according to the current state
-        of this FTPHost instance.
+        Return a new session object according to the current state of
+        this `FTPHost` instance.
         """
         args = self._args[:]
         kwargs = self._kwargs.copy()
@@ -430,15 +423,15 @@ class FTPHost:
 
     def _copy(self):
         """Return a copy of this FTPHost object."""
-        # The copy includes a new session factory return value
-        #  (aka session) but doesn't copy the state of self.getcwd().
+        # The copy includes a new session factory return value (aka
+        #  session) but doesn't copy the state of `self.getcwd()`.
         return FTPHost(*self._args, **self._kwargs)
 
     def _available_child(self):
         """
-        Return an available (i. e. one whose _file object is closed)
-        child (FTPHost object) from the pool of children or None if
-        there aren't any.
+        Return an available (i. e. one whose `_file` object is closed)
+        child (`FTPHost` object) from the pool of children or `None`
+        if there aren't any.
         """
         for host in self._children:
             if host._file.closed:
@@ -448,11 +441,12 @@ class FTPHost:
     def file(self, path, mode='r'):
         """
         Return an open file(-like) object which is associated with
-        this FTPHost object.
+        this `FTPHost` object.
 
         This method tries to reuse a child but will generate a new one
         if none is available.
         """
+        #TODO make requesting a child (whether cached or not) thread-safe
         host = self._available_child()
         if host is None:
             host = self._copy()
@@ -468,8 +462,8 @@ class FTPHost:
 
     def copyfileobj(self, source, target, length=64*1024):
         "Copy data from file-like object source to file-like object target."
-        # inspired by shutil.copyfileobj (I don't use the
-        #  shutil code directly because it might change)
+        # inspired by `shutil.copyfileobj` (I don't use the `shutil`
+        #  code directly because it might change)
         while 1:
             buf = source.read(length)
             if not buf:
@@ -554,7 +548,7 @@ class FTPHost:
         if not self.closed:
             # close associated children
             for host in self._children:
-                # only children have _file attributes
+                # only children have `_file` attributes
                 host._file.close()
                 host.close()
             # now deal with our-self
@@ -566,11 +560,11 @@ class FTPHost:
         try:
             self.close()
         except:
-            # don't want warnings if constructor had failed
+            # we don't want warnings if the constructor did fail
             pass
 
     #
-    # miscellaneous utility methods resembling those in os
+    # miscellaneous utility methods resembling those in `os`
     #
     def getcwd(self):
         """Return the current path name."""
@@ -652,8 +646,7 @@ class FTPHost:
             st_mode = st_mode | char_to_mode[file_type]
         else:
             raise ParserError("unknown file type character '%s'" % file_type)
-        # st_ino, st_dev, st_nlink, st_uid, st_gid,
-        # st_size, st_atime
+        # st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime
         st_ino = None
         st_dev = None
         st_nlink = int(nlink)
@@ -665,12 +658,12 @@ class FTPHost:
         month = self._month_numbers[ month.lower() ]
         day = int(day)
         if year_or_time.find(':') == -1:
-            # year_or_time is really a year
+            # `year_or_time` is really a year
             year, hour, minute = int(year_or_time), 0, 0
             st_mtime = time.mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
         else:
-            # year_or_time is a time hh:mm
+            # `year_or_time` is a time hh:mm
             hour, minute = year_or_time.split(':')
             year, hour, minute = None, int(hour), int(minute)
             # try the current year
@@ -678,7 +671,7 @@ class FTPHost:
             st_mtime = time.mktime( (year, month, day, hour,
                        minute, 0, 0, 0, -1) )
             if st_mtime > time.time():
-                # if it's in the future use previous year
+                # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, -1) )
         # st_ctime
@@ -697,9 +690,9 @@ class FTPHost:
 
     def _parse_ms_line(self, line):
         """
-        Return _Stat instance corresponding to the given text line
+        Return `_Stat` instance corresponding to the given text line
         from a MS ROBIN FTP server. Exceptions are caught in
-        _parse_line.
+        `_parse_line`.
         """
         date, time_, dir_or_size, name = line.split(None, 3)
         # st_mode
@@ -745,7 +738,7 @@ class FTPHost:
         return result
 
     def _parse_line(self, line, fail=1):
-        """Return _Stat instance corresponding to the given text line."""
+        """Return `_Stat` instance corresponding to the given text line."""
         try:
             return self._parser(line)
         except (ValueError, IndexError):
@@ -756,12 +749,12 @@ class FTPHost:
 
     def lstat(self, path):
         """Return an object similar to that returned by os.lstat."""
-        # get output from DIR
+        # get output from FTP's `DIR` command
         lines = []
         path = self.path.abspath(path)
         # Note: (l)stat works by going one directory up and parsing
-        #  the output of an FTP DIR command. Unfortunately, it is not
-        #  possible to to this for the root directory / .
+        #  the output of an FTP `DIR` command. Unfortunately, it is
+        #  not #  possible to to this for the root directory `/` .
         if path == '/':
             raise RootDirError("can't invoke stat for remote root directory")
         dirname, basename = self.path.split(path)
@@ -778,7 +771,7 @@ class FTPHost:
         raise PermanentError("550 %s: no such file or directory" % path)
 
     def stat(self, path):
-        """Return info from a stat call."""
+        """Return info from a `stat` call."""
         visited_paths = {}
         while 1:
             stat_result = self.lstat(path)
@@ -793,13 +786,13 @@ class FTPHost:
 
 
 #####################################################################
-# Helper classes _Stat and _Path to imitate behaviour of stat objects
-#  and os.path module contents.
+# Helper classes `_Stat` and `_Path` to imitate behaviour of `stat`
+#  objects and `os.path` module contents
 
 class _Stat(_StatBase):
     """
     Support class resembling a tuple like that which is returned
-    from os.(l)stat.
+    from `os.(l)stat`.
     """
 
     _index_mapping = {
@@ -817,9 +810,9 @@ class _Stat(_StatBase):
 
 class _Path:
     """
-    Support class resembling os.path, accessible from the
-    FTPHost() object e. g. as FTPHost().path.abspath(path).
-    Hint: substitute os with the FTPHost() object.
+    Support class resembling os.path, accessible from the `FTPHost`
+    object, e. g. as `FTPHost().path.abspath(path)`.
+    Hint: substitute `os` with the `FTPHost` object.
     """
 
     def __init__(self, host):
@@ -861,7 +854,7 @@ class _Path:
         return self._host.stat(path).st_size
 
     # check whether a path is a regular file/dir/link;
-    #  for the first two cases follow links (like in os.path)
+    #  for the first two cases follow links (like in `os.path`)
     def isfile(self, path):
         try:
             stat_result = self._host.stat(path)
