@@ -31,11 +31,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.3 2003/10/05 15:51:08 schwa Exp $
+# $Id: setup.py,v 1.4 2003/10/25 18:02:52 schwa Exp $
 
 """
 setup.py - installation script for Python distutils
 """
+
+import sys
 
 from distutils import core
 from distutils import sysconfig
@@ -45,6 +47,13 @@ _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
 _data_target = "%s/%s/" % (sysconfig.get_python_lib(), _package)
+
+# add `download_url` parameter if the version of distutils supports it
+more_args = {}
+if sys.version_info > (2, 2, 2):
+    more_args['download_url'] = \
+      "http://www.sschwarzer.net/download/%s-%s.tar.gz" % (_name, _version)
+print more_args
 
 core.setup(
   # installation data
@@ -63,6 +72,6 @@ core.setup(
   platforms=["Pure Python (Python version >= 2.0)"],
   # has to be added yet
   #long_description="",
-  download_url="http://www.sschwarzer.net/download/%s-%s.tar.gz" %
-               (_name, _version))
+  **more_args
+  )
 
