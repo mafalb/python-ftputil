@@ -33,7 +33,7 @@
 ftp_stat.py - stat result class and parsers for `ftputil`
 """
 
-# $Id: ftp_stat.py,v 1.8 2003/06/09 17:22:57 schwa Exp $
+# $Id: ftp_stat.py,v 1.9 2003/06/09 18:00:13 schwa Exp $
 
 import stat
 import sys
@@ -43,13 +43,13 @@ import ftp_error
 
 
 if sys.version_info[:2] >= (2, 2):
-    _StatBase = tuple
+    _StatResultBase = tuple
 else:
     import UserTuple
-    _StatBase = UserTuple.UserTuple
+    _StatResultBase = UserTuple.UserTuple
 
 
-class _Stat(_StatBase):
+class _StatResult(_StatResultBase):
     """
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
@@ -164,8 +164,9 @@ class _UnixStatParser(_StatParser):
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None
-        stat_result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
-                              st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        stat_result = _StatResult(
+                      (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                       st_gid, st_size, st_atime, st_mtime, st_ctime) )
         stat_result._st_name = st_name
         stat_result._st_target = st_target
         return stat_result
@@ -223,8 +224,9 @@ class _MSStatParser(_StatParser):
                    minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
-        stat_result = _Stat( (st_mode, st_ino, st_dev, st_nlink, st_uid,
-                              st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        stat_result = _StatResult(
+                      (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                       st_gid, st_size, st_atime, st_mtime, st_ctime) )
         # _st_name and _st_target
         stat_result._st_name = name
         stat_result._st_target = None
