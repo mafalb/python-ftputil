@@ -29,7 +29,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.11 2003/12/30 20:45:00 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.12 2003/12/30 20:50:39 schwa Exp $
+
+from __future__ import division
 
 import stat
 import time
