@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.41 2002/03/30 18:38:23 schwa Exp $
+# $Id: _test_ftputil.py,v 1.42 2002/03/30 18:40:23 schwa Exp $
 
 import unittest
 import stat
@@ -338,36 +338,31 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, ['e 1\n', 'another line\n',
                                 'yet another line'])
         input_.close()
-#
-#     def ascii_xreadlines(self):
-#         """Write some ASCII data to the host and use an
-#         xreadline-like object to retrieve it.
-#         """
-#         host = self.host
-#         # write data
-#         local_data = 'line 1\nanother line\nyet another line'
-#         self.write_test_data(local_data, 'w')
-#         # open file, skip some bytes
-#         input_ = host.file(self.remote_name, 'r')
-#         data = input_.read(3)
-#         xrl_obj = input_.xreadlines()
-#         self.failUnless(xrl_obj.__class__ is
-#                         ftputil._XReadlines)
-#         self.failUnless(xrl_obj._ftp_file.__class__ is
-#                         ftputil._FTPFile)
-#         data = xrl_obj[0]
-#         self.assertEqual(data, 'e 1\n')
-#         # try to skip an index
-#         self.assertRaises(RuntimeError, operator.__getitem__,
-#                           xrl_obj, 2)
-#         # continue reading
-#         data = xrl_obj[1]
-#         self.assertEqual(data, 'another line\n')
-#         data = xrl_obj[2]
-#         self.assertEqual(data, 'yet another line')
-#         # try to read beyond EOF
-#         self.assertRaises(IndexError, operator.__getitem__,
-#                           xrl_obj, 3)
+
+    def test_ascii_xreadlines(self):
+        """Use an xreadline-like object to retrieve ASCII data."""
+        host = ftp_host_factory(session_factory=ReadMockSession)
+        # open file, skip some bytes
+        input_ = host.file('dummy', 'r')
+        data = input_.read(3)
+        xrl_obj = input_.xreadlines()
+        self.failUnless(xrl_obj.__class__ is
+                        ftputil._XReadlines)
+        self.failUnless(xrl_obj._ftp_file.__class__ is
+                        ftputil._FTPFile)
+        data = xrl_obj[0]
+        self.assertEqual(data, 'e 1\n')
+        # try to skip an index
+        self.assertRaises(RuntimeError, operator.__getitem__,
+                          xrl_obj, 2)
+        # continue reading
+        data = xrl_obj[1]
+        self.assertEqual(data, 'another line\n')
+        data = xrl_obj[2]
+        self.assertEqual(data, 'yet another line')
+        # try to read beyond EOF
+        self.assertRaises(IndexError, operator.__getitem__,
+                          xrl_obj, 3)
 #
 #     def test_read_from_host(self):
 #         """Test _FTPFile.read*"""
