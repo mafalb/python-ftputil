@@ -39,17 +39,13 @@ FTPHost objects
     ing to remote files.
 
     # example session
-    host = ftputil.FTPHost(hostname,
-                           [user, [password, [account]]])
+    host = ftputil.FTPHost('ftp.domain.com', 'me', 'secret')
     print host.getcwd()  # e. g. '/home/me'
     source = host.file('sourcefile', 'r')
     host.mkdir('newdir')
     host.chdir('newdir')
     target = host.file('targetfile', 'w')
-    while 1:
-        line = source.readline()
-        if not line:
-            break
+    for line in source.xreadlines():
         target.writeline(line)
     source.close()
     target.close()
@@ -75,7 +71,6 @@ import os
 import stat
 import time
 import sys
-import re
 import posixpath
 
 
@@ -265,8 +260,8 @@ class FTPHost:
     #
     # On the other hand, the initially constructed host object
     # will store references to already established _FTPFile
-    # objects and reuse an associated connection if the file
-    # has been closed.
+    # objects and reuse an associated connection if its
+    # associated _FTPFile has been closed.
 
     def __init__(self, *args, **kwargs):
         '''Abstract initialization of FTPHost object.'''
@@ -381,38 +376,19 @@ class FTPHost:
 
     def _stat_candidates(self, lines, wanted_name):
         '''Return candidate lines for further analysis.'''
-        result = []
-        for line in lines:
-            if line.find(wanted_name) != -1:
-                result.append(line)
-        return result
+        return [line  for line in lines
+                if line.find(wanted_name) != -1]
         
-    _line_pattern = re.compile(
-      r'(\S+)\s+'       # directory metadata
-      r'(\d+)\s+'       # inodes?
-      r'(\S+)\s+'       # user
-      r'(\S+)\s+'       # group
-      r'(\d+)\s+'       # size
-      r'(\w{3})\s+'     # month name
-      r'(\d\d?)\s+'     # day
-      r'(\d{4}|\d\d?:\d\d)\s+'  # year or time
-      r'(.*)')          # name
-
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
-    def _parse_line(self, line):
+    def __parse_line(self, line):
         '''Return _Stat instance corresponding to the given
-        text line.'''
-        try:
-            metadata, nlink, user, group, size, month, day, \
-              year_or_time, name = \
-              self._line_pattern.match(line).groups()
-        except (TypeError, ValueError):
-            # shouldn't happen; provide non-abstract error msg
-            raise FTPOSError("can't parse line '%s'" % line)
+        text line. Exceptions are caught in _parse_line.'''
+        metadata, nlink, user, group, size, month, day, \
+          year_or_time, name = line.split(None, 8)
         # st_mode
         st_mode = 0
         for bit in metadata[1:10]:
@@ -428,21 +404,23 @@ class FTPHost:
             st_mode = st_mode | stat.S_IFLNK
         # st_ino, st_dev, st_nlink, st_uid, st_gid,
         # st_size, st_atime
-        st_ino = 0
-        st_dev = 0
+        st_ino = None
+        st_dev = None
         st_nlink = int(nlink)
         st_uid = user
         st_gid = group
         st_size = int(size)
-        st_atime = 0
+        st_atime = None
         # st_mtime
         month = self._month_numbers[ month.lower() ]
         day = int(day)
         if year_or_time.find(':') == -1:
+            # year_or_time is really a year
             year, hour, minute = int(year_or_time), 0, 0
             st_mtime = time.mktime( (year, month, day, hour,
                        minute, 0, 0, 0, 0) )
         else:
+            # year_or_time is a time hh:mm
             hour, minute = year_or_time.split(':')
             year, hour, minute = None, int(hour), int(minute)
             # try the current year
@@ -454,7 +432,7 @@ class FTPHost:
                 st_mtime = time.mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, 0) )
         # st_ctime
-        st_ctime = 0
+        st_ctime = None
         # st_name
         if name.find(' -> ') != -1:
             st_name = name.split(' -> ')[0]
@@ -464,28 +442,38 @@ class FTPHost:
                        st_uid, st_gid, st_size, st_atime,
                        st_mtime, st_ctime, st_name) )
           
+    def _parse_line(self, line):
+        '''Return _Stat instance corresponding to the given
+        text line.'''
+        try:
+            return self.__parse_line(line)
+        except ValueError:
+            # problems with list unpacking or invalid string
+            #  arguments for int()
+            raise FTPOSError("can't parse line '%s'" % line)
+        
     def lstat(self, path):
         '''Return an object similar to that returned
         by os.stat.'''
         # get output from DIR
         lines = []
         dirname, basename = self.path.split(path)
-        self._session.dir( dirname,
-                           lambda line: lines.append(line) )
+#        self._session.dir( dirname,
+#                           lambda line: lines.append(line) )
 #        # example for testing
-#        lines = ['total 14',
-#'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
-#'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
-#'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
-#'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
-#'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
-#'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
-#'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
-#'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
-#'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
-#'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
-#'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
-#'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
+        lines = ['total 14',
+'drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng',
+'drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download',
+'drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image',
+'-rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html',
+'drwxr-sr-x   2 45854    200           512 May 29  2000 os2',
+'lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2',
+'drwxr-sr-x   2 45854    200           512 Feb 26  2000 private',
+'drwxr-sr-x   2 45854    200           512 May 25  2000 publications',
+'drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python',
+'drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2',
+'drwxr-sr-x   2 45854    200           512 Apr 30  2000 tmp',
+'-rw-r--r--   1 45854    200             0 Jan 20 16:19 xyz'] 
         # remove "total" line
         if lines and lines[0].startswith('total'):
             lines = lines[1:]
