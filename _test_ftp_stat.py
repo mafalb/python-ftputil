@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.1 2003/06/09 16:45:56 schwa Exp $
+# $Id: _test_ftp_stat.py,v 1.2 2003/06/09 16:53:22 schwa Exp $
 
 import unittest
 
@@ -73,6 +73,7 @@ class TestStatParsers(unittest.TestCase):
           "total 14",
           "drwxr-sr-    2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
+          "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
           "drwxr-sr-x     45854    200           512 May  4  2000 chemeng"
           ]
         self._test_invalid_lines(ftp_stat._UnixStatParser, lines)
@@ -95,7 +96,8 @@ class TestStatParsers(unittest.TestCase):
     def test_invalid_ms_lines(self):
         lines = [
           "07-27-01  11:16AM                      Test",
-          "07-17-00  02:08             12266720 test.exe"
+          "07-17-00  02:08             12266720 test.exe",
+          "07-17-00  02:08AM           1226672x test.exe"
           ]
         self._test_invalid_lines(ftp_stat._MSStatParser, lines)
 
