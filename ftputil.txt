@@ -1,8 +1,8 @@
 ``ftputil`` - a high-level FTP client library
 =============================================
 
-:Version:   2.0.2
-:Date:      2004-04-18
+:Version:   2.0.3b
+:Date:      2004-07-10
 :Summary:   high-level FTP client library for Python
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
@@ -193,7 +193,7 @@ and are described here:
     accessible, i. e. a ``chdir`` call fails.
 
   - You try to access a path which contains whitespace.
-  
+
 - ``TimeShiftError``
 
   is used to denote errors which relate to setting the `time shift`_,
@@ -626,6 +626,47 @@ appropriate line ending conversions.
 Tips and tricks / FAQ
 ---------------------
 
+Where can I get the latest version?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+See http://www.sschwarzer.net/python/python_software.html#ftputil .
+Announcements will also be sent to the mailing list (see the question
+below). Announcements on major updates will also be posted to the
+newsgroup `comp.lang.python`_ .
+
+.. _`comp.lang.python`: news:comp.lang.python
+
+Is there a mailing list on ``ftputil``?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Yes, you can subscribe at http://codespeak.net/mailman/listinfo/ftputil
+or read the archives at http://codespeak.net/pipermail/ftputil/ .
+
+I found a bug! What now?
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Before reporting a bug, make sure that you already tried the latest
+version of ``ftputil``. There the bug might have already been fixed.
+
+Please send your bug report to the ``ftputil`` mailing list (see
+above for the address) or to me (email address at the top of this
+file). In *either* case you *must not* include confidential
+information (user id, password, file names, etc.) in the mail.
+
+When reporting a bug, please provide the following information:
+
+- Version of ``ftputil``:
+
+- Version of Python:
+
+- Operating system and version (output of ``uname -a`` on Unix):
+
+- Bug description:
+
+- If possible, a short code example which reproduces the bug:
+
+- If possible, ideas that might help to find the cause of the bug:
+
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -663,22 +704,6 @@ raise an exception, it may be because of a wrongly determined
 directory format. Please see the discussion of
 `set_directory_format`_.
 
-Is there a mailing list on ``ftputil``?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Yes, you can subscribe at http://codespeak.net/mailman/listinfo/ftputil
-or read the archives at http://codespeak.net/pipermail/ftputil/ .
-
-Where can I get the latest version?
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-See http://www.sschwarzer.net/python/python_software.html#ftputil .
-Announcements will also be sent to the mailing list (see the question
-above). Announcements on major updates will also be posted to the
-newsgroup `comp.lang.python`_ .
-
-.. _`comp.lang.python`: news:comp.lang.python
-
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -707,7 +732,7 @@ Bugs and limitations
 
 - ``FTPFile`` objects in text mode *may not* support charsets with more
   than one byte per character. Please email me your experiences
-  (address below), if you work with multibyte text streams in FTP
+  (address above), if you work with multibyte text streams in FTP
   sessions.
 
 - Currently, it is not possible to continue an interrupted upload or
