@@ -260,7 +260,7 @@ may use the method `set_directory_format`_ to set the format
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Attributes
-,,,,,,,,,,
+``````````
 
 - ``curdir``, ``pardir``, ``sep``
 
@@ -275,7 +275,7 @@ Attributes
 .. _`time shift`:
 
 Time zone correction
-,,,,,,,,,,,,,,,,,,,,
+````````````````````
 
 .. _`set_time_shift`:
 
@@ -329,7 +329,7 @@ Time zone correction
   a ``TimeShiftError`` exception.
 
 Files and directories
-,,,,,,,,,,,,,,,,,,,,,
+`````````````````````
 
 - ``file(path, mode='r')``
 
@@ -407,7 +407,7 @@ Files and directories
   in the given path; similar to ``os.listdir``.
 
 Uploading and downloading files
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+```````````````````````````````
 
 - ``upload(source, target, mode='')``
 
@@ -472,7 +472,7 @@ Uploading and downloading files
   subsection on `time shift`_ settings.
 
 Stat'ing files and directories
-,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
+``````````````````````````````
 
 The methods ``lstat`` and ``stat`` (and others) rely on the
 directory listing format used by the FTP server. When connecting
