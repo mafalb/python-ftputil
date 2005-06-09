@@ -8,8 +8,7 @@
 :Автор:                    Stefan Schwarzer <sschwarzer@sschwarzer.net>
 :Перевод на русский язык:  Степанов Антон <antymail@mail.ru>
 
-.. .. Содержание::
-.. contents::
+.. contents:: Содержание
 
 Введение
 --------
