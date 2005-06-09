@@ -100,7 +100,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0.3'
+__version__ = '2.0.4'
 
 
 #####################################################################
