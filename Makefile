@@ -57,9 +57,9 @@ ftputil_ru.html: ftputil_ru.txt
 
 patch:
 	@echo "Patching files"
-	sed -i'' -E -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
-	sed -i'' -E -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
-	sed -i'' -E -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
+	sed -i'' -r -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
+	sed -i'' -r -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
+	sed -i'' -r -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
 
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru.txt
 
