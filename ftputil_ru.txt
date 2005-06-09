@@ -8,7 +8,8 @@
 :Автор:                    Stefan Schwarzer <sschwarzer@sschwarzer.net>
 :Перевод на русский язык:  Степанов Антон <antymail@mail.ru>
 
-.. Содержание::
+.. .. Содержание::
+.. contents::
 
 Введение
 --------
@@ -17,11 +18,9 @@
 ftplib_ модуля.Объекты FTPHost позволяют производить
 большое количество операций, аналогичных операциям в модулях os_ и `os.path`_.
 
-.. _ftplib: http://www.python.org/doc/current/lib/module-
-ftplib.html
+.. _ftplib: http://www.python.org/doc/current/lib/module-ftplib.html
 .. _os: http://www.python.org/doc/current/lib/module-os.html
-.. _`os.path`: http://www.python.org/doc/current/lib/module-
-os.path.html
+.. _`os.path`: http://www.python.org/doc/current/lib/module-os.path.html
 
 Примеры:
   ::
@@ -33,16 +32,13 @@ os.path.html
     names = host.listdir(host.curdir)
     for name in names:
         if host.path.isfile(name):
-            host.download(name, name, 'b')  # remote, local,
-binary mode
+            host.download(name, name, 'b')  # remote, local, binary mode
 
     # make a new directory and copy a remote file into it
     host.mkdir('newdir')
     source = host.file('index.html', 'r')  # file-like object
-    target = host.file('newdir/index.html', 'w')  # file-like
-object
-    host.copyfileobj(source, target)  # similar to
-shutil.copyfileobj
+    target = host.file('newdir/index.html', 'w')  # file-like object
+    host.copyfileobj(source, target)  # similar to shutil.copyfileobj
     source.close()
     target.close()
 
@@ -51,9 +47,7 @@ shutil.copyfileobj
 `os.stat`_. Даже, такая функция как `FTPHost.path.walk`_ работает
 в этой библиотеке.
 
-.. _`os.stat`: http://www.python.org/doc/current/lib/os-file-
-dir.html#l2h-1455
-
+.. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
 
 Дистрибутив содержит модуль ``UserTuple``, который обеспечивает
 совместимость результатов модуля stat_ с версиями Python 2.0 и 2.1.
@@ -65,6 +59,7 @@ dir.html#l2h-1455
 
 Исключения находятся в пространстве имен пакета ``ftputil``
 (например: ``ftputil.TemporaryError``). Они организованы следующим образом
+
   ::
 
     FTPError
@@ -230,7 +225,7 @@ dir.html#l2h-1455
 Конструкция
 ~~~~~~~~~~~
 
-``FTPHost``запрос может быть произведен с использованием следующего вызова:
+``FTPHost`` запрос может быть произведен с использованием следующего вызова:
 
   ::
 
@@ -267,17 +262,14 @@ dir.html#l2h-1455
 
     class MySession(ftplib.FTP):
         def __init__(self, host, userid, password, port):
-            """Act like ftplib.FTP's constructor but connect to
-other port."""
+            """Act like ftplib.FTP's constructor but connect to other port."""
             ftplib.FTP.__init__(self)
             self.connect(host, port)
             self.login(userid, password)
 
-    # try not to use MySession() as factory, - use the class
-itself
+    # try not to use MySession() as factory, - use the class itself
     host = ftputil.FTPHost(host, userid, password,
-                           port=EXAMPLE_PORT,
-session_factory=MySession)
+                           port=EXAMPLE_PORT, session_factory=MySession)
     # use `host` as usual
 
 При входе в систему, формат списка каталогов (необходимый для
@@ -368,11 +360,9 @@ session_factory=MySession)
   т. е. чтение текстовых файлов. Допустимые режимы - "r",
   "rb", "w", и "wb".
 
-
-
 - ``open(path, mode='r')``
 
-  является псевдонимом для ``file``(см. выше).
+  является псевдонимом для ``file`` (см. выше).
 
 - ``copyfileobj(source, target, length=64*1024)``
 
@@ -527,8 +517,7 @@ Stat - методы для файлов и каталогов
   ::
 
       drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
-      -rw-r--r--   1 45854    200          4604 Jan 19 23:11
-index.html
+      -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
 
   используйте строку "unix" как аргумент.
 
@@ -800,17 +789,14 @@ http://codespeak.net/mailman/listinfo/ftputil
 - Mackinnon T, Freeman S, Craig P. 2000. `Endo-Testing:
   Unit Testing with Mock Objects`_.
 
-- Postel J, Reynolds J. 1985. `RFC 959 - File Transfer Protocol
-(FTP)`_.
+- Postel J, Reynolds J. 1985. `RFC 959 - File Transfer Protocol (FTP)`_.
 
 - Van Rossum G, Drake Jr FL. 2003. `Python Library Reference`_.
 
 .. _`Endo-Testing: Unit Testing with Mock Objects`:
    http://www.connextra.com/aboutUs/mockobjects.pdf
-.. _`RFC 959 - File Transfer Protocol (FTP)`:
-http://www.ietf.org/rfc/rfc959.txt
-.. _`Python Library Reference`:
-http://www.python.org/doc/current/lib/lib.html
+.. _`RFC 959 - File Transfer Protocol (FTP)`: http://www.ietf.org/rfc/rfc959.txt
+.. _`Python Library Reference`: http://www.python.org/doc/current/lib/lib.html
 
 Автор
 -----
@@ -819,3 +805,4 @@ http://www.python.org/doc/current/lib/lib.html
 <sschwarzer@sschwarzer.net>.
 
 Обратная связь учтена. :-)
+
