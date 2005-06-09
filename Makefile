@@ -34,7 +34,8 @@
 
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
-DOC_FILES=README.html ftputil.html
+DOC_FILES=README.html ftputil.html ftputil_ru.html
+STYLESHEET_PATH=/usr/share/doc/docutils-0.3.5/html/tools/stylesheets/default.css
 WWW_DIR=${HOME}/www
 
 .PHONY: dist extdist test docs clean register patch
@@ -46,10 +47,13 @@ test:
 		python $$file ; \
 	done
 
+
+ftputil_ru.html: ftputil_ru.txt
+	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
+		--input-encoding=koi8-r $< $@
+
 .txt.html:
-	rst2html.py \
-	--stylesheet-path=/usr/opt/docutils/stylesheets/default.css \
-	--embed-stylesheet $< $@
+	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet $< $@
 
 patch:
 	@echo "Patching files"
@@ -57,7 +61,7 @@ patch:
 	sed -i'' -E -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
 	sed -i'' -E -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
 
-docs: ${DOC_FILES} README.txt ftputil.txt
+docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru.txt
 
 dist: clean patch docs
 	python setup.py sdist
