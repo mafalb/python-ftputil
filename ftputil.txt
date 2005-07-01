@@ -664,7 +664,7 @@ When reporting a bug, please provide the following information:
 
 - type and version of FTP server (should be visible in its "welcome
   message")
-  
+
 - operating system and version for server and client (output of
   ``uname -a`` on Unix)
 
@@ -687,7 +687,25 @@ you like.
 Using active or passive connections
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please see the previous tip.
+Use a wrapper class for ``ftplib.FTP``, as described in section
+`FTPHost construction`_::
+
+    import ftplib
+
+    class ActiveFTPSession(ftplib.FTP):
+        def __init__(self, host, userid, password):
+            """
+            Act like ftplib.FTP's constructor but use active mode
+            explicitly.
+            """
+            ftplib.FTP.__init__(self)
+            self.connect(host, port)
+            self.login(userid, password)
+            # see http://docs.python.org/lib/ftp-objects.html
+            self.set_pasv(False)
+
+Use this class as the ``session_factory`` argument in ``FTPHost``'s
+constructor.
 
 Conditional upload/download to/from a server in a different time zone
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
