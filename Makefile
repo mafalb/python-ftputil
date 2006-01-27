@@ -35,7 +35,7 @@
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html ftputil_ru.html
-STYLESHEET_PATH=/usr/share/doc/docutils-0.3.5/html/tools/stylesheets/default.css
+STYLESHEET_PATH=/usr/share/doc/docutils-0.3.7/html/tools/stylesheets/default.css
 WWW_DIR=${HOME}/www
 
 .PHONY: dist extdist test docs clean register patch
@@ -48,9 +48,9 @@ test:
 	done
 
 
-ftputil_ru.html: ftputil_ru.txt
+ftputil_ru.html: ftputil_ru_utf8.txt
 	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
-		--input-encoding=koi8-r $< $@
+		--input-encoding=utf-8 $< $@
 
 .txt.html:
 	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet $< $@
@@ -60,8 +60,9 @@ patch:
 	sed -i'' -r -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil.py
 	sed -i'' -r -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
 	sed -i'' -r -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
+	#TODO add rules for Russian translation
 
-docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru.txt
+docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
 
 dist: clean patch docs
 	python setup.py sdist
