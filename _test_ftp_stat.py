@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2004, Stefan Schwarzer
+# Copyright (C) 2003-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftp_stat.py,v 1.16 2004/07/12 22:08:45 schwa Exp $
+# $Id$
 
 from __future__ import division
 
@@ -75,10 +75,26 @@ class TestStatParsers(unittest.TestCase):
         for line in lines:
             self.assertRaises(ftp_error.ParserError, parser.parse_line, line)
 
+    def _expected_year(self):
+        """
+        Return the expected year for the second line in the
+        listing in `test_valid_unix_lines`.
+        """
+        # if in this year it's after Dec 19, 23:11, use the current
+        #  year, else use the previous year ...
+        now = time.localtime()
+        # we need only month, day, hour and minute
+        current_time_parts = now[1:5]
+        time_parts_in_listing = (12, 19, 23, 11)
+        if current_time_parts > time_parts_in_listing:
+            return now[0]
+        else:
+            return now[0] - 1
+        
     def test_valid_unix_lines(self):
         lines = [
           "drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
-          # the results for this line will change with the actual time
+          # the year value for this line will change with the actual time
           "-rw-r--r--   1 45854    200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2 45854    200           512 May 29  2000 os2",
           "lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> "
@@ -88,7 +104,7 @@ class TestStatParsers(unittest.TestCase):
           [17901, None, None, 2, '45854', '200', 512, None,
            (2000, 5, 4, 0, 0, 0), None],
           [33188, None, None, 1, '45854', '200', 4604, None,
-           (2003, 12, 19, 23, 11, 0), None],
+           (self._expected_year(), 12, 19, 23, 11, 0), None],
           [17901, None, None, 2, '45854', '200', 512, None,
            (2000, 5, 29, 0, 0, 0), None],
           [41471, None, None, 2, '45854', '200', 512, None,
