@@ -87,6 +87,69 @@ class RealFTPTest(unittest.TestCase):
         files = host.listdir(host.curdir)
         self.failIf(dir_name in files)
 
+    def test_makedirs_without_existing_dirs(self):
+        host = self.host
+        # no `dir1` yet
+        self.failIf('dir1' in host.listdir(host.curdir))
+        # vanilla case, all should go well
+        host.makedirs('dir1/dir2/dir3/dir4')
+        # check host
+        self.failUnless(host.path.isdir('dir1'))
+        self.failUnless(host.path.isdir('dir1/dir2'))
+        self.failUnless(host.path.isdir('dir1/dir2/dir3'))
+        self.failUnless(host.path.isdir('dir1/dir2/dir3/dir4'))
+        # clean up
+        host.rmdir('dir1/dir2/dir3/dir4')
+        host.rmdir('dir1/dir2/dir3')
+        host.rmdir('dir1/dir2')
+        host.rmdir('dir1')
+
+    def test_makedirs_of_existing_directory(self):
+        host = self.host
+        # the (chrooted) login directory
+        host.makedirs('/')
+
+    def test_makedirs_with_file_in_the_way(self):
+        host = self.host
+        host.mkdir('dir1')
+        # this is the equivalent of touch(1)
+        f = host.file('dir1/file1', 'w')
+        f.close()
+        # try it
+        self.assertRaises(ftp_error.PermanentError, host.makedirs, 'dir1/file1')
+        self.assertRaises(ftp_error.PermanentError, host.makedirs,
+                          'dir1/file1/dir2')
+        # clean up
+        host.unlink('dir1/file1')
+        host.rmdir('dir1')
+
+    def test_makedirs_with_existing_directory(self):
+        host = self.host
+        host.mkdir('dir1')
+        host.makedirs('dir1/dir2')
+        # check
+        self.failUnless(host.path.isdir('dir1'))
+        self.failUnless(host.path.isdir('dir1/dir2'))
+        # clean up
+        host.rmdir('dir1/dir2')
+        host.rmdir('dir1')
+
+    def test_makedirs_in_non_writable_directory(self):
+        host = self.host
+        # preparation: `rootdir1` exists but is only writable by root
+        self.assertRaises(ftp_error.PermanentError, host.makedirs,
+                          'rootdir1/dir2')
+
+    def test_makedirs_with_writable_directory_at_end(self):
+        host = self.host
+        # preparation: `rootdir2` exists but is only writable by root;
+        #  `dir2` is writable by regular ftp user
+        # these both should work
+        host.makedirs('rootdir2/dir2')
+        host.makedirs('rootdir2/dir2/dir3')
+        # clean up
+        host.rmdir('rootdir2/dir2/dir3')
+
     def test_stat(self):
         host = self.host
         dir_name = "_testdir_"
@@ -153,6 +216,7 @@ remote server. Thus, you may want to skip this test by pressing Ctrl-C. If
 the test should run, enter the login data for the remote server. You need
 write access in the login directory. This test can take a few minutes.
 """
+    #raw_input("[Return] to continue, else press [Ctrl-C]. ")
     # get login data only once, not for each test
     server, user, password = get_login_data()
     unittest.main()

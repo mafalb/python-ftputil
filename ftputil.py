@@ -549,12 +549,36 @@ class FTPHost:
         """
         ftp_error._try_with_oserror(self._session.mkd, path)
 
+    def makedirs(self, path, mode=None):
+        """
+        Make the directory `path`, but also make not yet existing
+        intermediate directories, like `os.makedirs`. The value
+        of `mode` is only accepted for compatibility with
+        `os.makedirs` but otherwise ignored.
+        """
+        path = self.path.abspath(path)
+        directories = path.split(self.sep)
+        #print directories
+        # try to build the directory chain from the "uppermost" to
+        #  the "lowermost" directory
+        for index in range(1, len(directories)+1):
+            next_directory = self.path.join(*directories[:index])
+            try:
+                self.mkdir(next_directory)
+            except ftp_error.PermanentError:
+                # find out the cause of the error; re-raise the
+                #  exception only if the directory didn't exist already;
+                #  else something went _really_ wrong, e. g. we might
+                #  have a regular file with the name of the directory
+                if not self.path.isdir(next_directory):
+                    raise
+
     def rmdir(self, path, _remove_only_empty=True):
         """
         Remove the _empty_ directory `path` on the remote host.
 
         Compatibility note:
-        
+
         Previous versions of ftputil simply delegated the `rmdir`
         call to the FTP server's `RMD` command, thus often allowing
         to delete non-empty directories. By default, that's no
