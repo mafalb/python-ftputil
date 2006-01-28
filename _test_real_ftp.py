@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_real_ftp.py,v 1.1 2003/12/28 19:18:28 schwa Exp $
+# $Id$
 
 # Execute a test on a real FTP server (other tests use a mock server)
 
@@ -49,12 +49,13 @@ EXPECTED_TIME_SHIFT = 0.0
 def get_login_data():
     """
     Return a three-element tuple consisting of server name, user id
-    and password. The data is requested interactively.
+    and password. The data - used to be - requested interactively.
     """
-    server = raw_input("Server: ")
-    user = raw_input("User: ")
-    password = getpass.getpass()
-    return server, user, password
+    #server = raw_input("Server: ")
+    #user = raw_input("User: ")
+    #password = getpass.getpass()
+    #return server, user, password
+    return "localhost", 'ftptest', 'd605581757de5eb56d568a4419f4126e'
 
 
 class RealFTPTest(unittest.TestCase):
