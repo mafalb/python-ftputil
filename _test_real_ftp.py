@@ -207,6 +207,50 @@ class RealFTPTest(unittest.TestCase):
         os.unlink("_localfile_")
         host.unlink("_remotefile_")
 
+    def test_walk_topdown(self):
+        # preparation: build tree in directory `walk_test`
+        host = self.host
+        expected = [
+          ('walk_test', ['dir1', 'dir2', 'dir3'], ['file4']),
+          ('walk_test/dir1', ['dir11', 'dir12'], []),
+          ('walk_test/dir1/dir11', [], []),
+          ('walk_test/dir1/dir12', ['dir123'], ['file121', 'file122']),
+          ('walk_test/dir1/dir12/dir123', [], ['file1234']),
+          ('walk_test/dir2', [], []),
+          ('walk_test/dir3', ['dir33'], ['file31', 'file32']),
+          ('walk_test/dir3/dir33', [], []),
+          ]
+        # collect data, using `walk`
+        actual = []
+        for items in host.walk('walk_test'):
+            actual.append(items)
+        # compare with expected results
+        self.assertEqual(len(actual), len(expected))
+        for index in range(len(actual)):
+            self.assertEqual(actual[index], expected[index])
+
+    def test_walk_depth_first(self):
+        # preparation: build tree in directory `walk_test`
+        host = self.host
+        expected = [
+          ('walk_test/dir1/dir11', [], []),
+          ('walk_test/dir1/dir12/dir123', [], ['file1234']),
+          ('walk_test/dir1/dir12', ['dir123'], ['file121', 'file122']),
+          ('walk_test/dir1', ['dir11', 'dir12'], []),
+          ('walk_test/dir2', [], []),
+          ('walk_test/dir3/dir33', [], []),
+          ('walk_test/dir3', ['dir33'], ['file31', 'file32']),
+          ('walk_test', ['dir1', 'dir2', 'dir3'], ['file4'])
+          ]
+        # collect data, using `walk`
+        actual = []
+        for items in host.walk('walk_test', topdown=False):
+            actual.append(items)
+        # compare with expected results
+        self.assertEqual(len(actual), len(expected))
+        for index in range(len(actual)):
+            self.assertEqual(actual[index], expected[index])
+
 
 if __name__ == '__main__':
     print """\
@@ -215,7 +259,7 @@ Test for real FTP access.
 This test writes some files and directories on the local client and the
 remote server. Thus, you may want to skip this test by pressing [Ctrl-C].
 If the test should run, enter the login data for the remote server. You
-need write access in the login directory. This test can take a few minutes.
+need write access in the login directory. This test can last a few minutes.
 """
     try:
         raw_input("[Return] to continue, or [Ctrl-C] to skip test. ")

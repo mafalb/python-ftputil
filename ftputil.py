@@ -76,8 +76,9 @@ Note: ftputil currently is not threadsafe. More specifically, you can
       using a single `FTPHost` object in different threads.
 """
 
-# for Python 2.1
-from __future__ import nested_scopes
+# for Python 2.2; note that we can't use try/except here, see FAQ in
+#  http://www.python.org/peps/pep-0236.html
+from __future__ import generators
 
 import ftplib
 import os
@@ -662,4 +663,45 @@ class FTPHost:
 
     def stat(self, path, _exception_for_missing_path=True):
         return self._stat.stat(path, _exception_for_missing_path)
+
+    def walk(self, top, topdown=True, onerror=None):
+        """
+        Iterate over directory tree and return a tuple (dirpath,
+        dirnames, filenames) on each iteration, like the `os.walk`
+        function (see http://docs.python.org/lib/os-file-dir.html ).
+
+        Implementation note: The code is copied from `os.walk` in
+        Python 2.3 and adapted to ftputil.
+        """
+        # this method won't work for Python versions before 2.2;
+        #  these don't know generators
+        if sys.version_info < (2, 2, 0):
+            raise RuntimeError("FTPHost.walk needs Python >= 2.2")
+
+        # code from `os.walk` ...
+        try:
+            # Note that listdir and error are globals in this module due
+            # to earlier import-*.
+            names = self.listdir(top)
+        except ftp_error.FTPOSError, err:
+            if onerror is not None:
+                onerror(err)
+            return
+
+        dirs, nondirs = [], []
+        for name in names:
+            if self.path.isdir(self.path.join(top, name)):
+                dirs.append(name)
+            else:
+                nondirs.append(name)
+
+        if topdown:
+            yield top, dirs, nondirs
+        for name in dirs:
+            path = self.path.join(top, name)
+            if not self.path.islink(path):
+                for x in self.walk(path, topdown, onerror):
+                    yield x
+        if not topdown:
+            yield top, dirs, nondirs
 
