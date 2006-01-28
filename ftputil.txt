@@ -422,6 +422,10 @@ Files and directories
   Actually, ``FTPHost.walk`` uses the code from Python with just the
   necessary modifications, so see the linked documentation.
 
+  Unless the rest of ftputil, which should work with every Python
+  version from 2.0 on, the ``walk`` method requires generators
+  and thus will only work with Python 2.2 and above.
+
 .. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
 
 Uploading and downloading files
