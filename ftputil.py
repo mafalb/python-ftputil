@@ -561,8 +561,8 @@ class FTPHost:
         #print directories
         # try to build the directory chain from the "uppermost" to
         #  the "lowermost" directory
-        for index in range(1, len(directories)+1):
-            next_directory = self.path.join(*directories[:index])
+        for index in range(1, len(directories)):
+            next_directory = self.path.join(*directories[:index+1])
             try:
                 self.mkdir(next_directory)
             except ftp_error.PermanentError:
