@@ -378,6 +378,13 @@ Files and directories
   passed into a function instead of the os module (see the subsection
   on Python exceptions above for an explanation).
 
+- ``makedirs(path, [mode])``
+
+  works similar to ``mkdir`` (see above, but also makes intermediate
+  directories (like ``os.makedirs``). The ``mode`` parameter is
+  only there for compatibility with ``os.makedirs`` and is
+  ignored.
+
 - ``rmdir(path)``
 
   removes the given remote directory.
