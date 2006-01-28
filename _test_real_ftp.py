@@ -37,6 +37,7 @@ import getpass
 import os
 import time
 import unittest
+import sys
 
 import ftputil
 from ftputil import ftp_error
@@ -212,11 +213,15 @@ if __name__ == '__main__':
 Test for real FTP access.
 
 This test writes some files and directories on the local client and the
-remote server. Thus, you may want to skip this test by pressing Ctrl-C. If
-the test should run, enter the login data for the remote server. You need
-write access in the login directory. This test can take a few minutes.
+remote server. Thus, you may want to skip this test by pressing [Ctrl-C].
+If the test should run, enter the login data for the remote server. You
+need write access in the login directory. This test can take a few minutes.
 """
-    #raw_input("[Return] to continue, else press [Ctrl-C]. ")
+    try:
+        raw_input("[Return] to continue, or [Ctrl-C] to skip test. ")
+    except KeyboardInterrupt:
+        print "\nTest aborted."
+        sys.exit()
     # get login data only once, not for each test
     server, user, password = get_login_data()
     unittest.main()
