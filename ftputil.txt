@@ -416,6 +416,14 @@ Files and directories
   returns a list containing the names of the files and directories
   in the given path; similar to ``os.listdir``.
 
+- ``walk(top, topdown=True, onerror=None)``
+
+  iterates over a directory tree, similar to `os.walk`_ in Python 2.3.
+  Actually, ``FTPHost.walk`` uses the code from Python with just the
+  necessary modifications, so see the linked documentation.
+
+.. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
+
 Uploading and downloading files
 ```````````````````````````````
 
