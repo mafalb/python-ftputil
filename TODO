@@ -5,8 +5,6 @@ Planned features:
   b) for benchmarking
   c) as a useful tool
 - caching of `FTPHost.stat` results; policy?
-- migrate CVS repository to subversion and make it publicly available
-  on codespeak
 - support more directory formats (see mails from Oleg Broytmann)
 - support time resolution in stat results (Oleg Broytmann)
 - add `ftp_session` module containing session classes (e. g. for
