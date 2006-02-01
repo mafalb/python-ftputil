@@ -112,7 +112,9 @@ class _Stat:
         # we _can't_ put this check into `FTPHost._dir`; see its docstring
         path = self._path.abspath(path)
         if not self._path.isdir(path):
-            raise ftp_error.PermanentError("550 %s: no such directory" % path)
+            raise ftp_error.PermanentError(
+                  "550 %s: no such directory or wrong directory parser used" %
+                  path)
         lines = self._host_dir(path)
         names = []
         for line in lines:
