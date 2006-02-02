@@ -165,6 +165,10 @@ class FTPHost:
         Return a true value if the FTP server seems to emit Microsoft
         directory listing format; else return a false value.
         """
+        #XXX perhaps the directory format can be determined in
+        # a way similar to `synchronize_times`: put a file on the
+        # server and use different parsers until the stat result
+        # makes sense
         #XXX if these servers can be configured to change their
         #  directory output format, we will need a more sophisticated
         #  test
