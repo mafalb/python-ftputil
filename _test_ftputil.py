@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2004, Stefan Schwarzer
+# Copyright (C) 2002-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_ftputil.py,v 1.80 2004/07/12 22:08:45 schwa Exp $
+# $Id$
 
 import ftplib
 import operator
@@ -101,7 +101,7 @@ class InaccessibleDirSession(_mock_ftplib.MockSession):
 
     def pwd(self):
         return self._login_dir
-        
+
     def cwd(self, dir):
         if dir in (self._login_dir, self._login_dir + '/'):
             raise ftplib.error_perm
@@ -129,7 +129,6 @@ class TimeShiftFTPHost(ftputil.FTPHost):
     def __init__(self, *args, **kwargs):
         ftputil.FTPHost.__init__(self, *args, **kwargs)
         self.path = self._Path()
-
 
 #
 # test cases
@@ -159,7 +158,7 @@ class TestFileOperations(unittest.TestCase):
                session_factory=InaccessibleDirSession)
         self.assertRaises(ftp_error.FTPIOError, host.file,
                           '/inaccessible/new_file', 'w')
-        
+
     def test_caching(self):
         """Test whether `_FTPFile` cache of `FTPHost` object works."""
         host = _test_base.ftp_host_factory()
