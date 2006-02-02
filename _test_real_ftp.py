@@ -41,7 +41,7 @@ import sys
 
 import ftputil
 from ftputil import ftp_error
-
+from ftputil import ftp_stat
 
 # difference between local times of server and client; if 0.0, server
 #  and client are in the same timezone
@@ -180,6 +180,11 @@ class RealFTPTest(unittest.TestCase):
         # clean up
         host.unlink(file_name)
         host.rmdir(dir_name)
+
+    def test_autodetect_directory_format(self):
+        host = self.host
+        host.auto_set_directory_format()
+        self.failUnless(isinstance(host._stat, ftp_stat._UnixStat))
 
     def make_local_file(self):
         fobj = file("_localfile_", "wb")

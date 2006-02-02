@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2004, Stefan Schwarzer
+# Copyright (C) 2002-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -373,6 +373,12 @@ class _MSStat(_Stat):
         stat_result._st_name = name
         stat_result._st_target = None
         return stat_result
+
+
+_stat_classes = {
+  "unix": _UnixStat,
+  "ms"  : _MSStat,
+  }
 
 
 # Unix format

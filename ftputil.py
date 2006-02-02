@@ -186,14 +186,69 @@ class FTPHost:
                 return True
         return False
 
-    def set_directory_format(self, server_platform):
+    def auto_set_directory_format(self):
+        """
+        Try to find out the directory format used by the FTP server
+        automatically.
+
+        This is _not_ the default applied by ftputil because the
+        method requires write access to the current directory which
+        can't be taken for granted.
+
+        If the auto-detection fails for any reason, a
+        `FormatDetectionError` is raised. The error conditions include
+        the impossibility to find an appropriate parser for the
+        directory format but in fact there are many possible reasons,
+        e. g. no write access to the current directory. If such an
+        exception occurs, the stat functionality of the `FTPHost`
+        instance won't work but other functionality might.
+        """
+        helper_file_name = "_ftputil_format_"
+        # open a dummy file for writing in the current directory
+        #  on the FTP host, then close it
+        try:
+            file_ = self.file(helper_file_name, 'w')
+            file_.close()
+        except ftp_error.FTPIOError:
+            # couldn't write the file; since errors should never pass
+            #  silently, raise an exception; using `getcwd` here should
+            #  be safe because it doesn't need `stat` itself
+            raise ftp_error.FormatDetectionError(
+                  "couldn't detect directory format using directory '%s'" %
+                  self.getcwd())
+        # try to parse the directory with the available parsers until
+        #  one works
+        try:
+            for format in ftp_stat._stat_classes.keys():
+                self.set_directory_format(format)
+                try:
+                    stat_result = self.stat(helper_file_name)
+                except FTPOSError:
+                    # parser doen't work; try the next
+                    continue
+                else:
+                    if (stat_result._st_name, stat_result.st_size)  == \
+                       (helper_file_name, 0):
+                        break
+            else:
+                raise ftp_error.FormatDetectionError(
+                      "no usable directory parser found")
+        finally:
+            # remove the helper file
+            try:
+                self.unlink(helper_file_name)
+            except ftp_error.FTPOSError:
+                raise ftp_error.FormatDetectionError(
+                      "couldn't remove helper file")
+
+    def set_directory_format(self, directory_format):
         """
         Tell this `FTPHost` object the directory format of the remote
         server. Ideally, this should never be necessary, but you can
         use it as a resort if the automatic server detection does not
         work as it should.
 
-        `server_platform` is one of the following strings:
+        `directory_format` is one of the following strings:
 
         "unix": Use this if the directory listing from the server
         looks like
@@ -210,12 +265,12 @@ class FTPHost:
         If the argument is none of the above strings, a `ValueError`
         is raised.
         """
-        parsers = {"unix"   : ftp_stat._UnixStat,
-                   "ms"     : ftp_stat._MSStat}
-        if parsers.has_key(server_platform):
-            self._stat = parsers[server_platform](self)
+        try:
+            stat_class = ftp_stat._stat_classes[directory_format]
+        except KeyError:
+            raise ValueError("invalid directory format '%s'" % directory_format)
         else:
-            raise ValueError("invalid server platform '%s'" % server_platform)
+            self._stat = stat_class(self)
 
     #
     # dealing with child sessions and file-like objects
