@@ -62,7 +62,7 @@ class TestStatParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
         parser = parser_class(_test_base.ftp_host_factory())
         for line, expected_stat_result in zip(lines, expected_stat_results):
-            # convert to list to compare with the list expected_stat_results
+            # convert to list to compare with the list `expected_stat_results`
             stat_result = list(parser.parse_line(line))
             # convert time tuple to seconds
             expected_stat_result[8] = \
