@@ -183,6 +183,8 @@ class RealFTPTest(unittest.TestCase):
 
     def test_autodetect_directory_format(self):
         host = self.host
+        # set this so we can check if it has changed
+        host.set_directory_format("ms")
         host.auto_set_directory_format()
         self.failUnless(isinstance(host._stat, ftp_stat._UnixStat))
 
