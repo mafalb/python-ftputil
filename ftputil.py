@@ -224,7 +224,7 @@ class FTPHost:
                 try:
                     stat_result = self.stat(helper_file_name)
                 except FTPOSError:
-                    # parser doen't work; try the next
+                    # parser doesn't work; try the next
                     continue
                 else:
                     if (stat_result._st_name, stat_result.st_size)  == \
