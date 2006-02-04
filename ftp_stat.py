@@ -307,9 +307,7 @@ class _Stat:
             except ftp_error.ParserError:
                 # ignore things like "total 17", as found in some
                 #  server listings
-                if line.lower().startswith("total"):
-                    pass
-                else:
+                if not line.lower().startswith("total"):
                     raise
         return names
 
@@ -354,8 +352,10 @@ class _Stat:
                 if stat_result._st_name == basename:
                     return stat_result
             except ftp_error.ParserError:
-                # ignore things like ".", "..", "total 17"
-                pass
+                # ignore things like "total 17", as found in some
+                #  server listings
+                if not line.lower().startswith("total"):
+                    raise
         # path was not found
         if _exception_for_missing_path:
             raise ftp_error.PermanentError(
