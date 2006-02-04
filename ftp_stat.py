@@ -143,7 +143,7 @@ class _Stat:
         If the `path` is not found, raise a `PermanentError`.
 
         (`_exception_for_missing_path` is an implementation aid and
-        not intended for use by ftputil clients.)
+        _not_ intended for use by ftputil clients.)
         """
         # get output from FTP's `DIR` command
         lines = []
@@ -187,7 +187,7 @@ class _Stat:
         Return info from a `stat` call.
 
         (`_exception_for_missing_path` is an implementation aid and
-        not intended for use by ftputil clients.)
+        _not_ intended for use by ftputil clients.)
         """
         # save for error message
         original_path = path
