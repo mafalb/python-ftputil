@@ -153,9 +153,9 @@ class FTPHost:
         # check whether we have an FTP server which emits Microsoft-
         #  style directory listings
         if self.__emits_ms_format():
-            self.set_directory_format("ms")
+            self.set_directory_parser("ms")
         else:
-            self.set_directory_format("unix")
+            self.set_directory_parser("unix")
 
     #
     # setting the directory format for the remote server
@@ -186,7 +186,7 @@ class FTPHost:
                 return True
         return False
 
-    def auto_set_directory_format(self):
+    def auto_set_directory_parser(self):
         """
         Try to find out the directory format used by the FTP server
         automatically.
@@ -220,7 +220,7 @@ class FTPHost:
         #  one works
         try:
             for format in ftp_stat._stat_classes.keys():
-                self.set_directory_format(format)
+                self.set_directory_parser(format)
                 try:
                     stat_result = self.stat(helper_file_name)
                 except FTPOSError:
@@ -241,14 +241,14 @@ class FTPHost:
                 raise ftp_error.FormatDetectionError(
                       "couldn't remove helper file")
 
-    def set_directory_format(self, directory_format):
+    def set_directory_parser(self, directory_parser):
         """
         Tell this `FTPHost` object the directory format of the remote
         server. Ideally, this should never be necessary, but you can
         use it as a resort if the automatic server detection does not
         work as it should.
 
-        `directory_format` is one of the following strings:
+        `directory_parser` is one of the following strings:
 
         "unix": Use this if the directory listing from the server
         looks like
@@ -266,11 +266,16 @@ class FTPHost:
         is raised.
         """
         try:
-            stat_class = ftp_stat._stat_classes[directory_format]
+            stat_class = ftp_stat._stat_classes[directory_parser]
         except KeyError:
-            raise ValueError("invalid directory format '%s'" % directory_format)
+            raise ValueError("invalid directory format '%s'" % directory_parser)
         else:
             self._stat = stat_class(self)
+
+    # keep `set_directory_format` as a now _deprecated_ alias;
+    #  keep this for ftputil 2.1.x for compatibilty with old ftputil
+    #  client code, then remove the alias
+    set_directory_format = set_directory_parser
 
     #
     # dealing with child sessions and file-like objects
