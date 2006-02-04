@@ -298,13 +298,19 @@ class _Stat:
         names = []
         for line in lines:
             try:
+                # we don't need the `time_shift` parameter here
+                #  because we just need the names
                 stat_result = self._parser.parse_line(line)
                 st_name = stat_result._st_name
                 if st_name not in (self._host.curdir, self._host.pardir):
                     names.append(st_name)
             except ftp_error.ParserError:
-                # ignore things like ".", "..", "total 17"
-                pass
+                # ignore things like "total 17", as found in some
+                #  server listings
+                if line.lower().startswith("total"):
+                    pass
+                else:
+                    raise
         return names
 
     def _stat_candidates(self, lines, wanted_name):
