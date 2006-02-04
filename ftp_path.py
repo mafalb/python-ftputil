@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2003-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,7 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id: ftp_path.py,v 1.10 2003/10/30 19:55:22 schwa Exp $
+# $Id$
 
 import posixpath
 import stat
@@ -95,7 +95,6 @@ class _Path:
     # signal a missing path. This approach has the problem, however,
     # that exceptions caused by code earlier in `lstat` are obscured
     # by the exception handling in `isfile`, `isdir` and `islink`.
-    # I assume it's better to let such "abnormal" exceptions through.
 
     def isfile(self, path):
         try:
