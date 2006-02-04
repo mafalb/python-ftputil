@@ -150,12 +150,19 @@ class FTPHost:
         # set default time shift (used in `upload_if_newer` and
         #  `download_if_newer`)
         self.set_time_shift(0.0)
-        # check whether we have an FTP server which emits Microsoft-
-        #  style directory listings
-        if self.__emits_ms_format():
-            self.set_directory_parser("ms")
-        else:
-            self.set_directory_parser("unix")
+#         # check whether we have an FTP server which emits Microsoft-
+#         #  style directory listings
+#         if self.__emits_ms_format():
+#             self.set_directory_parser("ms")
+#         else:
+#             self.set_directory_parser("unix")
+        self._stat = ftp_stat._Stat(self)
+        # assume by default that the FTP server sends directory
+        #  listings in "Unix" format
+        self.set_directory_parser("unix")
+        # we haven't yet made sure that the parser actually works,
+        #  so it make sense to try out other parsers later
+        self._directory_parser_is_confirmed = False
 
     #
     # setting the directory format for the remote server
@@ -165,10 +172,6 @@ class FTPHost:
         Return a true value if the FTP server seems to emit Microsoft
         directory listing format; else return a false value.
         """
-        #XXX perhaps the directory format can be determined in
-        # a way similar to `synchronize_times`: put a file on the
-        # server and use different parsers until the stat result
-        # makes sense
         #XXX if these servers can be configured to change their
         #  directory output format, we will need a more sophisticated
         #  test
@@ -219,7 +222,7 @@ class FTPHost:
         # try to parse the directory with the available parsers until
         #  one works
         try:
-            for format in ftp_stat._stat_classes.keys():
+            for format in ftp_stat._available_parsers.keys():
                 self.set_directory_parser(format)
                 try:
                     stat_result = self.stat(helper_file_name)
@@ -266,11 +269,11 @@ class FTPHost:
         is raised.
         """
         try:
-            stat_class = ftp_stat._stat_classes[directory_parser]
+            parser_class = ftp_stat._available_parsers[directory_parser]
         except KeyError:
             raise ValueError("invalid directory format '%s'" % directory_parser)
         else:
-            self._stat = stat_class(self)
+            self._stat._parser = parser_class()
 
     # keep `set_directory_format` as a now _deprecated_ alias;
     #  keep this for ftputil 2.1.x for compatibilty with old ftputil

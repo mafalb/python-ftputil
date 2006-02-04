@@ -51,6 +51,7 @@ try:
     class __InheritanceTest(tuple):
         pass
     _StatResultBase = tuple
+    del __InheritanceTest
 except TypeError:
     # "base is not a class object"
     import UserTuple
@@ -74,161 +75,49 @@ class _StatResult(_StatResultBase):
             raise AttributeError("'_Stat' object has no attribute '%s'" %
                                  attr_name)
 
-
-class _Stat:
-    """Methods for stat'ing directories, links and regular files."""
-    def __init__(self, host):
-        self._host = host
-        self._path = host.path
-
-    def parse_line(self, line):
+#
+# FTP directory parsers
+#
+class _DirectoryParser:
+    def parse_line(self, line, time_shift=0.0):
         """
-        Return a `_Stat` object as derived from the string `line`.
-        The parser code to use depends on the directory format the
-        FTP server delivers (also see examples at end of file).
+        Return a `_StatResult` object as derived from the string
+        `line`. The parser code to use depends on the directory format
+        the FTP server delivers (also see examples at end of file).
+
+        For the definition of `time_shift` see the docstring of
+        `FTPHost.set_time_shift` in `ftputil.py`. Not all parsers
+        use the `time_shift` parameter.
         """
         raise NotImplementedError("must be defined by subclass")
 
-    def parse_lines(self, lines):
+    def parse_lines(self, lines, time_shift=0.0):
         """
-        Return a list of `_Stat` objects with one `_Stat` object per
-        line in the list `lines`. The order of the returned list
-        corresponds to the order in the `lines` argument.
-        """
-        return [self.parse_line(line) for line in lines]
+        Return a list of `_StatResult` objects with one `_StatResult`
+        object per line in the list `lines`. The order of the returned
+        list corresponds to the order in the `lines` argument.
 
-    def _host_dir(self, path):
+        For the definition of `time_shift` see the docstring of
+        `FTPHost.set_time_shift` in `ftputil.py`. Not all parsers
+        use the `time_shift` parameter.
         """
-        Return a list of lines, as fetched by FTP's `DIR` command,
-        when applied to `path`.
-        """
-        return self._host._dir(path)
-
-    def listdir(self, path):
-        """
-        Return a list of directories, files etc. in the directory
-        named `path`.
-        """
-        # we _can't_ put this check into `FTPHost._dir`; see its docstring
-        path = self._path.abspath(path)
-        if not self._path.isdir(path):
-            raise ftp_error.PermanentError(
-                  "550 %s: no such directory or wrong directory parser used" %
-                  path)
-        lines = self._host_dir(path)
-        names = []
-        for line in lines:
-            try:
-                stat_result = self.parse_line(line)
-                st_name = stat_result._st_name
-                if st_name not in (self._host.curdir, self._host.pardir):
-                    names.append(st_name)
-            except ftp_error.ParserError:
-                # ignore things like ".", "..", "total 17"
-                pass
-        return names
-
-    def _stat_candidates(self, lines, wanted_name):
-        """Return candidate lines for further analysis."""
-        # return only lines that contain the name of the file to stat
-        #  (however, the string may be _anywhere_ on the line but not
-        #  necessarily the file's basename; e. g. the string could
-        #  occur as the name of the file's group)
-        return [line  for line in lines  if line.find(wanted_name) != -1]
-
-    def lstat(self, path, _exception_for_missing_path=True):
-        """
-        Return an object similar to that returned by `os.lstat`.
-
-        If the `path` is not found, raise a `PermanentError`.
-
-        (`_exception_for_missing_path` is an implementation aid and
-        _not_ intended for use by ftputil clients.)
-        """
-        # get output from FTP's `DIR` command
-        lines = []
-        path = self._path.abspath(path)
-        # Note: (l)stat works by going one directory up and parsing
-        #  the output of an FTP `DIR` command. Unfortunately, it is
-        #  not possible to do this for the root directory `/`.
-        if path == '/':
-            raise ftp_error.RootDirError(
-                  "can't invoke stat for remote root directory")
-        dirname, basename = self._path.split(path)
-        lines = self._host_dir(dirname)
-        # search for name to be stat'ed without parsing the whole
-        #  directory listing
-        candidates = self._stat_candidates(lines, basename)
-        # parse candidates; return the first stat result where the
-        #  calculated name matches the previously determined
-        #  basename
-        for line in candidates:
-            try:
-                stat_result = self.parse_line(line)
-                if stat_result._st_name == basename:
-                    return stat_result
-            except ftp_error.ParserError:
-                # ignore things like ".", "..", "total 17"
-                pass
-        # path was not found
-        if _exception_for_missing_path:
-            raise ftp_error.PermanentError(
-                  "550 %s: no such file or directory" % path)
-        else:
-            # be explicit; returning `None` is a signal for
-            #  `_Path.exists/isfile/isdir/islink` that the path was
-            #  not found; if we would raise an exception, there would
-            #  be no distinction between a missing path or a more
-            #  severe error in the code above
-            return None
-
-    def stat(self, path, _exception_for_missing_path=True):
-        """
-        Return info from a `stat` call.
-
-        (`_exception_for_missing_path` is an implementation aid and
-        _not_ intended for use by ftputil clients.)
-        """
-        # save for error message
-        original_path = path
-        # most code in this method is used to detect recursive
-        #  link structures
-        visited_paths = {}
-        while True:
-            # stat the link if it is one, else the file/directory
-            lstat_result = self.lstat(path, _exception_for_missing_path)
-            if lstat_result is None:
-                return None
-            # if the file is not a link, the `stat` result is the
-            #  same as the `lstat` result
-            if not stat.S_ISLNK(lstat_result.st_mode):
-                return lstat_result
-            # if we stat'ed a link, calculate a normalized path for
-            #  the file the link points to
-            dirname, basename = self._path.split(path)
-            path = self._path.join(dirname, lstat_result._st_target)
-            path = self._path.normpath(path)
-            # check for cyclic structure
-            if visited_paths.has_key(path):
-                # we had this path already
-                raise ftp_error.PermanentError(
-                      "recursive link structure detected for path '%s'" %
-                      original_path)
-            # remember the path we have encountered
-            visited_paths[path] = True
+        return [self.parse_line(line, time_shift) for line in lines]
 
 
-class _UnixStat(_Stat):
-    """`_Stat` class for Unix-specific directory format."""
+class _UnixDirectoryParser(_DirectoryParser):
+    """`_DirectoryParser` class for Unix-specific directory format."""
     # map month abbreviations to month numbers
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
-    def parse_line(self, line):
+    def parse_line(self, line, time_shift=0.0):
         """
-        Return `_Stat` instance corresponding to the given text line.
+        Return a `_StatResult` instance corresponding to the given
+        text line. The `time_shift` value is needed to determine
+        to which year a datetime without an explicit year belongs.
+
         If the line can't be parsed, raise a `ParserError`.
         """
         try:
@@ -294,7 +183,7 @@ class _UnixStat(_Stat):
             #  may cause that datetime to be recognized as the current
             #  datetime, but after all the datetime from the server
             #  can only be exact up to a minute
-            if st_mtime > time.time() + self._host.time_shift() + 60.0:
+            if st_mtime > time.time() + time_shift + 60.0:
                 # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
                            hour, minute, 0, 0, 0, -1) )
@@ -313,13 +202,15 @@ class _UnixStat(_Stat):
         return stat_result
 
 
-class _MSStat(_Stat):
-    """`_Stat` class for MS-specific directory format."""
+class _MSDirectoryParser(_DirectoryParser):
+    """`_DirectoryParser` class for MS-specific directory format."""
     def parse_line(self, line):
         """
-        Return `_Stat` instance corresponding to the given text line
-        from a MS ROBIN FTP server. If the line can't be parsed,
-        raise a `ParserError`.
+        Return a `_StatResult` instance corresponding to the given
+        text line from a FTP server which emits "Microsoft format"
+        (see end of file).
+
+        If the line can't be parsed, raise a `ParserError`.
         """
         try:
             date, time_, dir_or_size, name = line.split(None, 3)
@@ -374,10 +265,142 @@ class _MSStat(_Stat):
         stat_result._st_target = None
         return stat_result
 
+#
+# Stat'ing operations for files on an FTP server
+#
+class _Stat:
+    """Methods for stat'ing directories, links and regular files."""
+    def __init__(self, host):
+        self._host = host
+        self._path = host.path
+        # use the Unix directory parser by default
+        self._parser = _UnixDirectoryParser()
 
-_stat_classes = {
-  "unix": _UnixStat,
-  "ms"  : _MSStat,
+    def _host_dir(self, path):
+        """
+        Return a list of lines, as fetched by FTP's `DIR` command,
+        when applied to `path`.
+        """
+        return self._host._dir(path)
+
+    def listdir(self, path):
+        """
+        Return a list of directories, files etc. in the directory
+        named `path`.
+        """
+        # we _can't_ put this check into `FTPHost._dir`; see its docstring
+        path = self._path.abspath(path)
+        if not self._path.isdir(path):
+            raise ftp_error.PermanentError(
+                  "550 %s: no such directory or wrong directory parser used" %
+                  path)
+        lines = self._host_dir(path)
+        names = []
+        for line in lines:
+            try:
+                stat_result = self._parser.parse_line(line)
+                st_name = stat_result._st_name
+                if st_name not in (self._host.curdir, self._host.pardir):
+                    names.append(st_name)
+            except ftp_error.ParserError:
+                # ignore things like ".", "..", "total 17"
+                pass
+        return names
+
+    def _stat_candidates(self, lines, wanted_name):
+        """Return candidate lines for further analysis."""
+        # return only lines that contain the name of the file to stat
+        #  (however, the string may be _anywhere_ on the line but not
+        #  necessarily the file's basename; e. g. the string could
+        #  occur as the name of the file's group)
+        return [line  for line in lines  if line.find(wanted_name) != -1]
+
+    def lstat(self, path, _exception_for_missing_path=True):
+        """
+        Return an object similar to that returned by `os.lstat`.
+
+        If the `path` is not found, raise a `PermanentError`.
+
+        (`_exception_for_missing_path` is an implementation aid and
+        _not_ intended for use by ftputil clients.)
+        """
+        # get output from FTP's `DIR` command
+        lines = []
+        path = self._path.abspath(path)
+        # Note: (l)stat works by going one directory up and parsing
+        #  the output of an FTP `DIR` command. Unfortunately, it is
+        #  not possible to do this for the root directory `/`.
+        if path == '/':
+            raise ftp_error.RootDirError(
+                  "can't invoke stat for remote root directory")
+        dirname, basename = self._path.split(path)
+        lines = self._host_dir(dirname)
+        # search for name to be stat'ed without parsing the whole
+        #  directory listing
+        candidates = self._stat_candidates(lines, basename)
+        # parse candidates; return the first stat result where the
+        #  calculated name matches the previously determined
+        #  basename
+        for line in candidates:
+            try:
+                stat_result = self._parser.parse_line(line,
+                              self._host.time_shift())
+                if stat_result._st_name == basename:
+                    return stat_result
+            except ftp_error.ParserError:
+                # ignore things like ".", "..", "total 17"
+                pass
+        # path was not found
+        if _exception_for_missing_path:
+            raise ftp_error.PermanentError(
+                  "550 %s: no such file or directory" % path)
+        else:
+            # be explicit; returning `None` is a signal for
+            #  `_Path.exists/isfile/isdir/islink` that the path was
+            #  not found; if we would raise an exception, there would
+            #  be no distinction between a missing path or a more
+            #  severe error in the code above
+            return None
+
+    def stat(self, path, _exception_for_missing_path=True):
+        """
+        Return info from a `stat` call.
+
+        (`_exception_for_missing_path` is an implementation aid and
+        _not_ intended for use by ftputil clients.)
+        """
+        # save for error message
+        original_path = path
+        # most code in this method is used to detect recursive
+        #  link structures
+        visited_paths = {}
+        while True:
+            # stat the link if it is one, else the file/directory
+            lstat_result = self.lstat(path, _exception_for_missing_path)
+            if lstat_result is None:
+                return None
+            # if the file is not a link, the `stat` result is the
+            #  same as the `lstat` result
+            if not stat.S_ISLNK(lstat_result.st_mode):
+                return lstat_result
+            # if we stat'ed a link, calculate a normalized path for
+            #  the file the link points to
+            dirname, basename = self._path.split(path)
+            path = self._path.join(dirname, lstat_result._st_target)
+            path = self._path.normpath(path)
+            # check for cyclic structure
+            if visited_paths.has_key(path):
+                # we had this path already
+                raise ftp_error.PermanentError(
+                      "recursive link structure detected for path '%s'" %
+                      original_path)
+            # remember the path we have encountered
+            visited_paths[path] = True
+
+
+_available_parsers = {
+  "ms"  : _MSDirectoryParser,
+  "unix": _UnixDirectoryParser,
   }
 
 

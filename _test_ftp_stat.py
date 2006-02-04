@@ -45,7 +45,9 @@ import ftputil
 
 def test_stat():
     host = _test_base.ftp_host_factory()
-    stat = ftp_stat._UnixStat(host)
+    stat = ftp_stat._Stat(host)
+    # use Unix format parser explicitly
+    stat._parser = ftp_stat._UnixDirectoryParser()
     return stat
 
 def stat_tuple_to_seconds(t):
@@ -58,9 +60,9 @@ def stat_tuple_to_seconds(t):
     return time.mktime(t + (0, 0, -1))
 
 
-class TestStatParsers(unittest.TestCase):
+class TestDirectoryParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
-        parser = parser_class(_test_base.ftp_host_factory())
+        parser = parser_class()
         for line, expected_stat_result in zip(lines, expected_stat_results):
             # convert to list to compare with the list `expected_stat_results`
             stat_result = list(parser.parse_line(line))
@@ -71,7 +73,7 @@ class TestStatParsers(unittest.TestCase):
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
-        parser = parser_class(_test_base.ftp_host_factory())
+        parser = parser_class()
         for line in lines:
             self.assertRaises(ftp_error.ParserError, parser.parse_line, line)
 
@@ -110,7 +112,8 @@ class TestStatParsers(unittest.TestCase):
           [41471, None, None, 2, '45854', '200', 512, None,
            (2000, 5, 29, 0, 0, 0), None]
           ]
-        self._test_valid_lines(ftp_stat._UnixStat, lines, expected_stat_results)
+        self._test_valid_lines(ftp_stat._UnixDirectoryParser, lines,
+                               expected_stat_results)
 
     def test_invalid_unix_lines(self):
         lines = [
@@ -120,7 +123,7 @@ class TestStatParsers(unittest.TestCase):
           "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
           "drwxr-sr-x     45854    200           512 May  4  2000 chemeng"
           ]
-        self._test_invalid_lines(ftp_stat._UnixStat, lines)
+        self._test_invalid_lines(ftp_stat._UnixDirectoryParser, lines)
 
     def test_valid_ms_lines(self):
         lines = [
@@ -136,7 +139,8 @@ class TestStatParsers(unittest.TestCase):
           [33024, None, None, None, None, None, 12266720, None,
            (2000, 7, 17, 14, 8, 0), None]
           ]
-        self._test_valid_lines(ftp_stat._MSStat, lines, expected_stat_results)
+        self._test_valid_lines(ftp_stat._MSDirectoryParser, lines,
+                               expected_stat_results)
 
     def test_invalid_ms_lines(self):
         lines = [
@@ -144,7 +148,7 @@ class TestStatParsers(unittest.TestCase):
           "07-17-00  02:08             12266720 test.exe",
           "07-17-00  02:08AM           1226672x test.exe"
           ]
-        self._test_invalid_lines(ftp_stat._MSStat, lines)
+        self._test_invalid_lines(ftp_stat._MSDirectoryParser, lines)
 
     #
     # the following code checks if the decision logic in the Unix
@@ -192,10 +196,13 @@ class TestStatParsers(unittest.TestCase):
         time shift and the supposed time shift, which is rounded
         to full hours.
         """
-        parser = ftp_stat._UnixStat(_test_base.ftp_host_factory())
-        parser._host.set_time_shift(supposed_time_shift)
+        host = _test_base.ftp_host_factory()
+        # use Unix format parser explicitly
+        host._stat._parser = ftp_stat._UnixDirectoryParser()
+        host.set_time_shift(supposed_time_shift)
         server_time = time.time() + supposed_time_shift + deviation
-        stat_result = parser.parse_line(self.dir_line(server_time))
+        stat_result = host._stat._parser.parse_line(self.dir_line(server_time),
+                                                    host.time_shift())
         self.assert_equal_times(stat_result.st_mtime, server_time)
 
     def test_time_shifts(self):
