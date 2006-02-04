@@ -618,7 +618,6 @@ class FTPHost:
         """
         path = self.path.abspath(path)
         directories = path.split(self.sep)
-        #print directories
         # try to build the directory chain from the "uppermost" to
         #  the "lowermost" directory
         for index in range(1, len(directories)):
