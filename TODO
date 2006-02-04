@@ -1,4 +1,10 @@
-Planned features:
+Planned:
+
+- try to auto-detect the necessary parser format, if possible,
+  without writing something on the server as it's now done
+- revise exception hierarchy (mainly regarding InternalErrors; what
+  is "internal" supposed to mean? pay attention to TimeShiftError)
+  Warning: this _might_ break client code
 
 - write a ftputil_mirror.py script
   a) as a usage example of ftputil
