@@ -53,10 +53,11 @@ class FTPError:
     def __str__(self):
         return self.strerror
 
+# internal errors are those that have more to do with the inner
+#  workings of ftputil than with errors on the server side
 class InternalError(FTPError): pass
 class RootDirError(InternalError): pass
 class InaccessibleLoginDirError(InternalError): pass
-class FormatDetectionError(InternalError): pass
 
 class TimeShiftError(FTPError): pass
 
