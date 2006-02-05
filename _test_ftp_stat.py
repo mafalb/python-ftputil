@@ -92,7 +92,7 @@ class TestDirectoryParsers(unittest.TestCase):
             return now[0]
         else:
             return now[0] - 1
-        
+
     def test_valid_unix_lines(self):
         lines = [
           "drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
@@ -298,6 +298,37 @@ class TestLstatAndStat(unittest.TestCase):
                           '../python/bad_link')
         self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '/home/bad_link')
+
+    def test_parser_switching_with_permanent_error(self):
+        """Test non-switching of parser format with `PermanentError`."""
+        self.assertEqual(self.stat._allow_parser_switching, True)
+        # if there's a `PermanentError`, don't switch because we
+        #  don't know if the file was missed due to a wrong parser
+        self.assertRaises(ftp_error.PermanentError, self.stat.lstat,
+                          "/home/msformat/nonexistent")
+        self.assertEqual(self.stat._allow_parser_switching, True)
+
+    def test_parser_switching_default_to_unix(self):
+        """Test non-switching of parser format; stay with Unix."""
+        self.assertEqual(self.stat._allow_parser_switching, True)
+        self.failUnless(isinstance(self.stat._parser,
+                                   ftp_stat._UnixDirectoryParser))
+        stat_result = self.stat.lstat("/home/sschwarzer/index.html")
+        self.failUnless(isinstance(self.stat._parser,
+                                   ftp_stat._UnixDirectoryParser))
+        self.assertEqual(self.stat._allow_parser_switching, False)
+
+    def test_parser_switching_to_ms(self):
+        """Test switching of parser from Unix to MS format."""
+        self.assertEqual(self.stat._allow_parser_switching, True)
+        self.failUnless(isinstance(self.stat._parser,
+                                   ftp_stat._UnixDirectoryParser))
+        stat_result = self.stat.lstat("/home/msformat/abcd.exe")
+        self.failUnless(isinstance(self.stat._parser,
+                                   ftp_stat._MSDirectoryParser))
+        self.assertEqual(self.stat._allow_parser_switching, False)
+        self.assertEqual(stat_result._st_name, "abcd.exe")
+        self.assertEqual(stat_result.st_size, 12266720)
 
 
 class TestListdir(unittest.TestCase):

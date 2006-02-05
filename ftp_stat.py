@@ -204,13 +204,16 @@ class _UnixDirectoryParser(_DirectoryParser):
 
 class _MSDirectoryParser(_DirectoryParser):
     """`_DirectoryParser` class for MS-specific directory format."""
-    def parse_line(self, line):
+    def parse_line(self, line, time_shift=0.0):
         """
         Return a `_StatResult` instance corresponding to the given
         text line from a FTP server which emits "Microsoft format"
         (see end of file).
 
         If the line can't be parsed, raise a `ParserError`.
+
+        The parameter `time_shift` isn't used in this method but is
+        listed for compatibilty with the base class.
         """
         try:
             date, time_, dir_or_size, name = line.split(None, 3)
@@ -275,6 +278,9 @@ class _Stat:
         self._path = host.path
         # use the Unix directory parser by default
         self._parser = _UnixDirectoryParser()
+        # allow one chance to switch to another parser if the default
+        #  doesn't work
+        self._allow_parser_switching = True
 
     def _host_dir(self, path):
         """
@@ -283,7 +289,7 @@ class _Stat:
         """
         return self._host._dir(path)
 
-    def listdir(self, path):
+    def _real_listdir(self, path):
         """
         Return a list of directories, files etc. in the directory
         named `path`.
@@ -319,7 +325,7 @@ class _Stat:
         #  occur as the name of the file's group)
         return [line  for line in lines  if line.find(wanted_name) != -1]
 
-    def lstat(self, path, _exception_for_missing_path=True):
+    def _real_lstat(self, path, _exception_for_missing_path=True):
         """
         Return an object similar to that returned by `os.lstat`.
 
@@ -368,7 +374,7 @@ class _Stat:
             #  severe error in the code above
             return None
 
-    def stat(self, path, _exception_for_missing_path=True):
+    def _real_stat(self, path, _exception_for_missing_path=True):
         """
         Return info from a `stat` call.
 
@@ -382,7 +388,7 @@ class _Stat:
         visited_paths = {}
         while True:
             # stat the link if it is one, else the file/directory
-            lstat_result = self.lstat(path, _exception_for_missing_path)
+            lstat_result = self._real_lstat(path, _exception_for_missing_path)
             if lstat_result is None:
                 return None
             # if the file is not a link, the `stat` result is the
@@ -402,6 +408,36 @@ class _Stat:
                       original_path)
             # remember the path we have encountered
             visited_paths[path] = True
+
+    def __call_with_parser_retry(self, method, *args, **kwargs):
+        """
+        Call `method` with the `args` and `kwargs` once. If that
+        results in a `ParserError` and only one parser has been
+        used yet, try the other parser. If that still fails,
+        propagate the `ParserError`.
+        """
+        try:
+            result = method(*args, **kwargs)
+            self._allow_parser_switching = False
+            return result
+        except ftp_error.ParserError:
+            if self._allow_parser_switching:
+                self._allow_parser_switching = False
+                self._parser = _MSDirectoryParser()
+                return method(*args, **kwargs)
+            else:
+                raise
+
+    def listdir(self, path):
+        return self.__call_with_parser_retry(self._real_listdir, path)
+
+    def lstat(self, path, _exception_for_missing_path=True):
+        return self.__call_with_parser_retry(self._real_lstat, path,
+                                             _exception_for_missing_path)
+
+    def stat(self, path, _exception_for_missing_path=True):
+        return self.__call_with_parser_retry(self._real_stat, path,
+                                             _exception_for_missing_path)
 
 
 _available_parsers = {

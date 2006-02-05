@@ -150,19 +150,17 @@ class FTPHost:
         # set default time shift (used in `upload_if_newer` and
         #  `download_if_newer`)
         self.set_time_shift(0.0)
-#         # check whether we have an FTP server which emits Microsoft-
-#         #  style directory listings
-#         if self.__emits_ms_format():
-#             self.set_directory_parser("ms")
-#         else:
-#             self.set_directory_parser("unix")
+        # check whether we have an FTP server which emits Microsoft-
+        #  style directory listings
         self._stat = ftp_stat._Stat(self)
-        # assume by default that the FTP server sends directory
-        #  listings in "Unix" format
-        self.set_directory_parser("unix")
-        # we haven't yet made sure that the parser actually works,
-        #  so it make sense to try out other parsers later
-        self._directory_parser_is_confirmed = False
+        if self.__emits_ms_format():
+            self.set_directory_parser("ms")
+        else:
+            self.set_directory_parser("unix")
+#         # assume by default that the FTP server sends directory
+#         #  listings in "Unix" format, if not, another parser is
+#         #  tried once
+#         self.set_directory_parser("unix")
 
     #
     # setting the directory format for the remote server

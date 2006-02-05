@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _mock_ftplib.py,v 1.27 2004/07/12 22:02:12 schwa Exp $
+# $Id$
 
 """
 This module implements a mock version of the standard library's
@@ -139,8 +139,13 @@ total 1
 
       # fail when trying to write to this directory (the content isn't
       #  relevant)
-      'sschwarzer': ""
+      'sschwarzer': "",
 
+      '/home/msformat': """\
+10-23-01  03:25PM       <DIR>          WindowsXP
+12-07-01  02:05PM       <DIR>          XPLaunch
+07-17-00  02:08PM             12266720 abcd.exe
+07-17-00  02:08PM                89264 O2KKeys.exe"""
     }
 
     # file content to be used (indirectly) with transfercmd
