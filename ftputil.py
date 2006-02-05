@@ -552,6 +552,17 @@ class FTPHost:
                 if not self.path.isdir(next_directory):
                     raise
 
+    #FIXME clean up file/directory deletion:
+    # - unconditionally, allow only to remove empty directories
+    #   with `rmdir`
+    # - add a parameter `force` to `remove` to let it work
+    #   similar to `rm -rf` under Unix, i. e. allow it to delete
+    #   directories, even non-empty ones, _or_
+    # - add `brute_remove` ;-) or something like that to work
+    #   like `rm -rf` under Unix
+    # - let `remove`/`unlink` check if the `path` really is a file
+    #   or link to a file
+    # - don't add `removedirs`; it seems dangerous to me
     def rmdir(self, path, _remove_only_empty=True):
         """
         Remove the _empty_ directory `path` on the remote host.
@@ -579,7 +590,11 @@ class FTPHost:
 
     def remove(self, path):
         """Remove the given file."""
-        ftp_error._try_with_oserror(self._session.delete, path)
+        if self.path.isfile(path):
+            ftp_error._try_with_oserror(self._session.delete, path)
+        else:
+            raise ftp_error.PermanentError(
+                  "remove/unlink can only delete files, not directories")
 
     def unlink(self, path):
         """Remove the given file."""

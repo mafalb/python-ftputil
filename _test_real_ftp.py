@@ -82,9 +82,20 @@ class RealFTPTest(unittest.TestCase):
         non_empty = host.file(file_name, "w")
         non_empty.close()
         self.assertRaises(ftp_error.PermanentError, host.rmdir, dir_name)
-        # remove file and delete empty directory
+        # remove file
         host.unlink(file_name)
-        host.rmdir(dir_name)
+        # `remove` on a directory should fail
+        try:
+            try:
+                host.remove(dir_name)
+            except ftp_error.PermanentError, exc:
+                self.failUnless(str(exc).startswith(
+                                         "remove/unlink can only delete files"))
+            else:
+                self.failIf(True, "we shouldn't have come here")
+        finally:
+            # delete empty directory
+            host.rmdir(dir_name)
         files = host.listdir(host.curdir)
         self.failIf(dir_name in files)
 
