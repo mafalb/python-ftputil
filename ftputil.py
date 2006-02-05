@@ -139,6 +139,8 @@ class FTPHost:
         self._session = self._make_session()
         # simulate os.path
         self.path = ftp_path._Path(self)
+        # lstat, stat, listdir services
+        self._stat = ftp_stat._Stat(self)
         # associated `FTPHost` objects for data transfer
         self._children = []
         self.closed = False
@@ -150,98 +152,15 @@ class FTPHost:
         # set default time shift (used in `upload_if_newer` and
         #  `download_if_newer`)
         self.set_time_shift(0.0)
-        # check whether we have an FTP server which emits Microsoft-
-        #  style directory listings
-        self._stat = ftp_stat._Stat(self)
-        if self.__emits_ms_format():
-            self.set_directory_parser("ms")
-        else:
-            self.set_directory_parser("unix")
-#         # assume by default that the FTP server sends directory
-#         #  listings in "Unix" format, if not, another parser is
-#         #  tried once
-#         self.set_directory_parser("unix")
 
     #
     # setting the directory format for the remote server
     #
-    def __emits_ms_format(self):
-        """
-        Return a true value if the FTP server seems to emit Microsoft
-        directory listing format; else return a false value.
-        """
-        #XXX if these servers can be configured to change their
-        #  directory output format, we will need a more sophisticated
-        #  test
-        try:
-            stat_response = ftp_error._try_with_oserror(
-                            self._session.voidcmd, 'STAT')
-        except ftp_error.PermanentError:
-            # some FTP servers have the `STAT` command disabled
-            stat_response = ''
-        # check for indicators in `STAT` response
-        ms_indicators = ("ROBIN Microsoft", "Bliss_Server Microsoft",
-                         "Microsoft Windows NT FTP Server status")
-        for indicator in ms_indicators:
-            if stat_response.find(indicator) != -1:
-                return True
-        return False
-
-    def auto_set_directory_parser(self):
-        """
-        Try to find out the directory format used by the FTP server
-        automatically.
-
-        This is _not_ the default applied by ftputil because the
-        method requires write access to the current directory which
-        can't be taken for granted.
-
-        If the auto-detection fails for any reason, a
-        `FormatDetectionError` is raised. The error conditions include
-        the impossibility to find an appropriate parser for the
-        directory format but in fact there are many possible reasons,
-        e. g. no write access to the current directory. If such an
-        exception occurs, the stat functionality of the `FTPHost`
-        instance won't work but other functionality might.
-        """
-        helper_file_name = "_ftputil_format_"
-        # open a dummy file for writing in the current directory
-        #  on the FTP host, then close it
-        try:
-            file_ = self.file(helper_file_name, 'w')
-            file_.close()
-        except ftp_error.FTPIOError:
-            # couldn't write the file; since errors should never pass
-            #  silently, raise an exception; using `getcwd` here should
-            #  be safe because it doesn't need `stat` itself
-            raise ftp_error.FormatDetectionError(
-                  "couldn't detect directory format using directory '%s'" %
-                  self.getcwd())
-        # try to parse the directory with the available parsers until
-        #  one works
-        try:
-            for format in ftp_stat._available_parsers.keys():
-                self.set_directory_parser(format)
-                try:
-                    stat_result = self.stat(helper_file_name)
-                except FTPOSError:
-                    # parser doesn't work; try the next
-                    continue
-                else:
-                    if (stat_result._st_name, stat_result.st_size)  == \
-                       (helper_file_name, 0):
-                        break
-            else:
-                raise ftp_error.FormatDetectionError(
-                      "no usable directory parser found")
-        finally:
-            # remove the helper file
-            try:
-                self.unlink(helper_file_name)
-            except ftp_error.FTPOSError:
-                raise ftp_error.FormatDetectionError(
-                      "couldn't remove helper file")
-
+    # Note: there's now an autodetection of the format in
+    #  `ftp_stat._Stat`, so calling this method should never
+    #  be necessary. Thus `set_directory_parser` is obsolete
+    #  and will be removed in ftputil 2.2 !
+    #
     def set_directory_parser(self, directory_parser):
         """
         Tell this `FTPHost` object the directory format of the remote
@@ -266,12 +185,7 @@ class FTPHost:
         If the argument is none of the above strings, a `ValueError`
         is raised.
         """
-        try:
-            parser_class = ftp_stat._available_parsers[directory_parser]
-        except KeyError:
-            raise ValueError("invalid directory format '%s'" % directory_parser)
-        else:
-            self._stat._parser = parser_class()
+        pass
 
     # keep `set_directory_format` as a now _deprecated_ alias;
     #  keep this for ftputil 2.1.x for compatibilty with old ftputil

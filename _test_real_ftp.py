@@ -181,14 +181,6 @@ class RealFTPTest(unittest.TestCase):
         host.unlink(file_name)
         host.rmdir(dir_name)
 
-    def test_autodetect_directory_format(self):
-        host = self.host
-        # set this so we can check if it has changed
-        host.set_directory_parser("ms")
-        host.auto_set_directory_parser()
-        self.failUnless(isinstance(host._stat._parser,
-                                   ftp_stat._UnixDirectoryParser))
-
     def make_local_file(self):
         fobj = file("_localfile_", "wb")
         fobj.write("abc\x12\x34def\t")
