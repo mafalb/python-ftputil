@@ -589,8 +589,10 @@ class FTPHost:
         ftp_error._try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
-        """Remove the given file."""
-        if self.path.isfile(path):
+        """Remove the given file or link."""
+        # though `isfile` includes also links to files, `islink`
+        #  is needed to include links to directories
+        if self.path.isfile(path) or self.path.islink(path):
             ftp_error._try_with_oserror(self._session.delete, path)
         else:
             raise ftp_error.PermanentError(
