@@ -439,34 +439,3 @@ class _Stat:
         return self.__call_with_parser_retry(self._real_stat, path,
                                              _exception_for_missing_path)
 
-
-_available_parsers = {
-  "ms"  : _MSDirectoryParser,
-  "unix": _UnixDirectoryParser,
-  }
-
-
-# Unix format
-# total 14
-# drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng
-# drwxr-sr-x   2 45854    200           512 Jan  3 17:17 download
-# drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
-# -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
-# drwxr-sr-x   2 45854    200           512 May 29  2000 os2
-# lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> ../os2
-# drwxr-sr-x   2 45854    200           512 May 25  2000 publications
-# drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
-# drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2
-
-# Microsoft ROBIN FTP server
-# 07-04-01  12:57PM       <DIR>          SharePoint_Launch
-# 11-12-01  04:38PM       <DIR>          Solution Sales
-# 06-27-01  01:53PM       <DIR>          SPPS
-# 01-08-02  01:32PM       <DIR>          technet
-# 07-27-01  11:16AM       <DIR>          Test
-# 10-23-01  06:49PM       <DIR>          Wernerd
-# 10-23-01  03:25PM       <DIR>          WindowsXP
-# 12-07-01  02:05PM       <DIR>          XPLaunch
-# 07-17-00  02:08PM             12266720 digidash.exe
-# 07-17-00  02:08PM                89264 O2KKeys.exe
-
