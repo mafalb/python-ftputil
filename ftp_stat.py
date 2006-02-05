@@ -293,6 +293,9 @@ class _Stat:
         """
         Return a list of directories, files etc. in the directory
         named `path`.
+
+        If the directory listing from the server can't be parsed
+        raise a `ParserError`.
         """
         # we _can't_ put this check into `FTPHost._dir`; see its docstring
         path = self._path.abspath(path)
@@ -329,7 +332,12 @@ class _Stat:
         """
         Return an object similar to that returned by `os.lstat`.
 
-        If the `path` is not found, raise a `PermanentError`.
+        If the directory listing from the server can't be parsed,
+        raise a `ParserError`. If the directory can be parsed and the
+        `path` is not found, raise a `PermanentError`. That means that
+        if the directory containing `path` can't be parsed we get a
+        `ParserError`, independent on the presence of `path` on the
+        server.
 
         (`_exception_for_missing_path` is an implementation aid and
         _not_ intended for use by ftputil clients.)
@@ -376,7 +384,13 @@ class _Stat:
 
     def _real_stat(self, path, _exception_for_missing_path=True):
         """
-        Return info from a `stat` call.
+        Return info from a "stat" call on `path`.
+
+        If the directory containing `path` can't be parsed, raise
+        a `ParserError`. If the listing can be parsed but the
+        `path` can't be found, raise a `PermanentError`. Also raise
+        a `PermanentError` if there's an endless (cyclic) chain of
+        symbolic links "behind" the `path`.
 
         (`_exception_for_missing_path` is an implementation aid and
         _not_ intended for use by ftputil clients.)
@@ -416,6 +430,10 @@ class _Stat:
         used yet, try the other parser. If that still fails,
         propagate the `ParserError`.
         """
+        # Do _not_ set `_allow_parser_switching` in a `finally` clause!
+        #  This would cause a `PermanentError` due to a not-found
+        #  file in an empty directory to finally establish the
+        #  parser - which is wrong.
         try:
             result = method(*args, **kwargs)
             self._allow_parser_switching = False

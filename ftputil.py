@@ -634,12 +634,42 @@ class FTPHost:
         return lines
 
     def listdir(self, path):
+        """
+        Return a list of directories, files etc. in the directory
+        named `path`.
+
+        If the directory listing from the server can't be parsed with
+        any of the available parsers raise a `ParserError`.
+        """
         return self._stat.listdir(path)
 
     def lstat(self, path, _exception_for_missing_path=True):
+        """
+        Return an object similar to that returned by `os.lstat`.
+
+        If the directory listing from the server can't be parsed with
+        any of the available parsers, raise a `ParserError`. If the
+        directory _can_ be parsed and the `path` is _not_ found, raise
+        a `PermanentError`.
+
+        (`_exception_for_missing_path` is an implementation aid and
+        _not_ intended for use by ftputil clients.)
+        """
         return self._stat.lstat(path, _exception_for_missing_path)
 
     def stat(self, path, _exception_for_missing_path=True):
+        """
+        Return info from a "stat" call on `path`.
+
+        If the directory containing `path` can't be parsed, raise a
+        `ParserError`. If the directory containing `path` can be
+        parsed but the `path` can't be found, raise a
+        `PermanentError`. Also raise a `PermanentError` if there's an
+        endless (cyclic) chain of symbolic links "behind" the `path`.
+
+        (`_exception_for_missing_path` is an implementation aid and
+        _not_ intended for use by ftputil clients.)
+        """
         return self._stat.stat(path, _exception_for_missing_path)
 
     def walk(self, top, topdown=True, onerror=None):
