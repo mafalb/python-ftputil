@@ -220,6 +220,16 @@ class _FTPFile:
         raise AttributeError(
               "'FTPFile' object has no attribute '%s'" % attr_name)
 
+    def keep_alive(self):
+        """
+        Keep the connection busy to prevent lost connections
+        because of server timeouts.
+        """
+        if self._readmode:
+            self.read(0)
+        else:
+            self.write("")
+
     def close(self):
         """Close the `FTPFile`."""
         if not self.closed:

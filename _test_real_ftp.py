@@ -310,6 +310,21 @@ class RealFTPTest(unittest.TestCase):
         for index in range(len(actual)):
             self.assertEqual(actual[index], expected[index])
 
+    def test_keep_connection(self):
+        # just make sure that `keep_alive` doesn't cause an error (exception)
+        host = self.host
+        # host
+        host.keep_alive()
+        # written file
+        written_file = host.file("_test_file_", "w")
+        written_file.keep_alive()
+        written_file.close()
+        # read file
+        read_file = host.file("_test_file_", "r")
+        read_file.keep_alive()
+        read_file.close()
+        host.remove("_test_file_")
+
 
 if __name__ == '__main__':
     print """\

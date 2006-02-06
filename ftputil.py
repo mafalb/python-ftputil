@@ -248,6 +248,15 @@ class FTPHost:
         # alias for `file` method
         return self.file(path, mode)
 
+    def keep_alive(self):
+        """
+        Do something without side effects to keep the connection to
+        the server. This can be used to prevent broken connections due
+        to server timeouts.
+        """
+        # just prevent loss of the connection, so discard the result
+        self.getcwd()
+
     def close(self):
         """Close host connection."""
         if not self.closed:
@@ -566,7 +575,7 @@ class FTPHost:
         all exceptions occuring during the tree iteration and
         processing are raised. These exceptions are all of type
         `PermanentError`.
-        
+
         To distinguish between error situations and/or pass in a
         callable for `onerror`. This callable must accept three
         arguments: `func`, `path` and `exc_info`). `func` is a bound
@@ -574,9 +583,9 @@ class FTPHost:
         `path` is the path that was the recent argument of the
         respective method (`listdir`, `remove`, `rmdir`). `exc_info`
         is the exception info as it's got from `sys.exc_info`.
-        
+
         Implementation note: The code is copied from `shutil.rmtree`
-        in Python 2.4 and adapted to ftputil. 
+        in Python 2.4 and adapted to ftputil.
         """
         # the following code is an adapted version of Python 2.4's
         #  `shutil.rmtree` function
