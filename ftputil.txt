@@ -80,10 +80,10 @@ results with Python versions 2.0 and 2.1.
 * Iterate over remote file systems (``walk``)
 
 * Read files from and write files to remote hosts via
-  file-like objects (``FTPHost.file``; the generated file-like
-  objects have many common methods like ``read``, ``readlines``,
-  ``write``, ``close`` and can do automatical line ending
-  conversions on the fly, i. e. text/binary mode)
+  file-like objects (``FTPHost.file``; the generated file-like objects
+  have many common methods like ``read``, ``readline``, ``readlines``,
+  ``write``, ``writelines``, ``close`` and can do automatical line
+  ending conversions on the fly, i. e. text/binary mode)
 
 
 Exception hierarchy
@@ -634,6 +634,12 @@ Iteration over diretories and files
 Other methods
 `````````````
 
+- ``close()``
+
+  closes the connection to the remote host. After this, no more
+  interaction with the FTP server is possible without using a new
+  ``FTPHost`` object.
+
 - ``rename(source, target)``
 
   renames the source file (or directory) on the FTP server.
@@ -643,15 +649,15 @@ Other methods
   copies the contents from the file-like object source to the
   file-like object target. The only difference to
   ``shutil.copyfileobj`` is the default buffer size. Note that
-  arbitrary file-like objects can be used as arguments (e. g.
-  local files, remote FTP files). See `File-like objects`_ for
-  construction and use of remote file-like objects.
+  arbitrary file-like objects can be used as arguments (e. g. local
+  files, remote FTP files). See `File-like objects`_ for construction
+  and use of remote file-like objects.
 
-- ``close()``
+- ``keep_alive()``
 
-  closes the connection to the remote host. After this, no more
-  interaction with the FTP server is possible without using a new
-  ``FTPHost`` object.
+  Do something without side effects to hold the connection to the FTP
+  server. This should be used to prevent server timeouts after several
+  minutes of inactivity.
 
 
 File-like objects
@@ -698,6 +704,13 @@ objects of a local disk file system. For details, see the section
 
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
+
+- ``keep_alive()``
+
+  Do something without side effects to hold the connection to the FTP
+  server. This should be used to prevent server timeouts after several
+  minutes of inactivity.
+
 
 FAQ / Tips and tricks
 ---------------------
