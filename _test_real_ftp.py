@@ -173,7 +173,7 @@ class RealFTPTest(unittest.TestCase):
         self.make_file('dir1/dir2/file3')
         self.make_file('dir1/dir2/file4')
         # try to remove a _file_ with `rmtree`
-        self.assertRaises(ftp_error.FTPOSError, host.rmtree, 'dir1/file2')
+        self.assertRaises(ftp_error.PermanentError, host.rmtree, 'dir1/file2')
         # remove dir2
         host.rmtree('dir1/dir2')
         self.failIf(host.path.exists('dir1/dir2'))

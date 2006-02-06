@@ -582,20 +582,20 @@ class FTPHost:
         names = []
         try:
             names = self.listdir(path)
-        except ftp_error.FTPOSError:
+        except ftp_error.PermanentError:
             onerror(self.listdir, path, sys.exc_info())
         for name in names:
             full_name = self.path.join(path, name)
             try:
                 mode = self.lstat(full_name).st_mode
-            except ftp_error.FTPOSError:
+            except ftp_error.PermanentError:
                 mode = 0
             if stat.S_ISDIR(mode):
                 self.rmtree(full_name, ignore_errors, onerror)
             else:
                 try:
                     self.remove(full_name)
-                except ftp_error.FTPOSError:
+                except ftp_error.PermanentError:
                     onerror(self.remove, full_name, sys.exc_info())
         try:
             self.rmdir(path)
