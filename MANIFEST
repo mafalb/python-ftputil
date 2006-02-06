@@ -14,9 +14,7 @@ ftp_file.py
 ftp_path.py
 ftp_stat.py
 ftputil.html
-ftputil_ru.html
 ftputil.py
 ftputil.txt
-ftputil_ru_utf8.txt
 setup.py
 true_false.py
