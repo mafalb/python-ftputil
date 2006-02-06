@@ -102,7 +102,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.0.4'
+__version__ = '2.1b'
 
 
 #####################################################################
@@ -248,14 +248,24 @@ class FTPHost:
         # alias for `file` method
         return self.file(path, mode)
 
-    def keep_alive(self):
+    def keep_alive(self, also_files=True):
         """
         Do something without side effects to keep the connection to
         the server. This can be used to prevent broken connections due
         to server timeouts.
+
+        If the parameter `also_files` is a true value, which is the
+        default, propagate the connection refresh to all associated
+        open file-like objects. In multi-threaded applications, you
+        may want to set `also_files` to `False` and call the
+        `keep_alive` method of the file-like objects individually.
         """
         # just prevent loss of the connection, so discard the result
         self.getcwd()
+        # refresh also connections of associated file-like objects
+        if also_files:
+            for host in self._children:
+                host._file.keep_alive()
 
     def close(self):
         """Close host connection."""

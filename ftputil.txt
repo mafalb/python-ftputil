@@ -653,11 +653,22 @@ Other methods
   files, remote FTP files). See `File-like objects`_ for construction
   and use of remote file-like objects.
 
-- ``keep_alive()``
+.. _`FTPHost.keep_alive`:
+
+- ``keep_alive(also_files=True)``
 
   Do something without side effects to hold the connection to the FTP
   server. This should be used to prevent server timeouts after several
   minutes of inactivity.
+
+  Note that not only an ``FTPHost`` object but also *each* of the
+  file-objects made from it has its own connection to the FTP server,
+  so all of the connections must be kept alive. Use the default
+  setting, ``True``, for ``also_files`` to propagate the refresh to
+  all open file-like objects made from this ``FTPHost`` instance.
+
+  However, be careful with the default parameter in multi-threaded
+  applications.
 
 
 File-like objects
@@ -710,6 +721,11 @@ appropriate line ending conversions.
   Do something without side effects to hold the connection to the FTP
   server. This should be used to prevent server timeouts after several
   minutes of inactivity.
+
+  Note that not only an ``FTPHost`` object but also *each* of the
+  file-objects made from it has its own connection to the FTP server,
+  so all of the connections must be kept alive. Use the
+  `FTPHost.keep_alive`_ to refresh all connections at once.
 
 
 FAQ / Tips and tricks
@@ -815,10 +831,9 @@ Bugs and limitations
 
 - Timeouts of individual child sessions currently are not handled.
   This is only a problem if your ``FTPHost`` object or the generated
-  ``FTPFile`` objects are inactive for about ten minutes or longer. A
-  workaround is to keep the respective connections busy, e. g. call
-  ``getcwd`` on ``FTPHost`` objects or ``write("")`` on remote
-  file-like objects.
+  ``FTPFile`` objects are inactive for about ten minutes or longer.
+  As a workaround, you can use the ``keep_alive`` methods of
+  ``FTPHost`` objects and remote file-like objects.
 
 - Until now, I haven't paid attention to thread safety. In principle,
   at least, different ``FTPFile`` objects should be usable in different
