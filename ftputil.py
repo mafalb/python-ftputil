@@ -576,7 +576,7 @@ class FTPHost:
         is the exception info as it's got from `sys.exc_info`.
         
         Implementation note: The code is copied from `shutil.rmtree`
-        in Python 2.4 and adapted to ftputil.
+        in Python 2.4 and adapted to ftputil. 
         """
         # the following code is an adapted version of Python 2.4's
         #  `shutil.rmtree` function
