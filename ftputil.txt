@@ -1,10 +1,10 @@
 ``ftputil`` - a high-level FTP client library
 =============================================
 
-:Version:   2.0.4
-:Date:      2005-06-09
+:Version:   2.1b
+:Date:      2006-02-06
 :Summary:   high-level FTP client library for Python
-:Keywords:  FTP, ``ftplib`` substitute, virtual filesystem
+:Keywords:  FTP, ``ftplib`` substitute, virtual filesystem, pure Python
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
 :`Russian translation`__: Anton Stepanov <antymail@mail.ru>
 
@@ -12,16 +12,18 @@
 
 .. contents::
 
+
 Introduction
 ------------
 
 The ``ftputil`` module is a high-level interface to the ftplib_
 module. The `FTPHost objects`_ generated from it allow many operations
-similar to those of os_ and `os.path`_.
+similar to those of os_, `os.path`_ and `shutil`_.
 
 .. _ftplib: http://www.python.org/doc/current/lib/module-ftplib.html
 .. _os: http://www.python.org/doc/current/lib/module-os.html
 .. _`os.path`: http://www.python.org/doc/current/lib/module-os.path.html
+.. _`shutil`: http://www.python.org/doc/current/lib/module-shutil.html
 
 Examples::
 
@@ -36,7 +38,7 @@ Examples::
 
     # make a new directory and copy a remote file into it
     host.mkdir('newdir')
-    source = host.file('index.html', 'r')  # file-like object
+    source = host.file('index.html', 'r')         # file-like object
     target = host.file('newdir/index.html', 'w')  # file-like object
     host.copyfileobj(source, target)  # similar to shutil.copyfileobj
     source.close()
@@ -44,7 +46,7 @@ Examples::
 
 Also, there are `FTPHost.lstat`_ and `FTPHost.stat`_ to request size and
 modification time of a file. The latter can also follow links, similar
-to `os.stat`_. Even `FTPHost.path.walk`_ works.
+to `os.stat`_. Even `FTPHost.walk`_ and `FTPHost.path.walk`_ work.
 
 .. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
 
@@ -53,22 +55,56 @@ results with Python versions 2.0 and 2.1.
 
 .. _stat: http://www.python.org/doc/current/lib/module-stat.html
 
+
+``ftputil`` features
+--------------------
+
+* Method names are familiar from Python's ``os``, ``os.path`` and
+  ``shutil`` modules
+
+* Remote file system navigation (``getcwd``, ``chdir``)
+
+* Upload and download files (``upload``, ``upload_if_newer``,
+  ``download``, ``download_if_newer``)
+
+* Time zone synchronization between client and server (needed
+  for ``upload_if_newer`` and ``download_if_newer``)
+
+* Create and remove directories (``mkdir``, ``makedirs``, ``rmdir``,
+  ``rmtree``) and remove files (``remove``)
+
+* Read files from and write files to remote hosts via
+  file-like objects (``FTPHost.file``; the generated file-like
+  objects have many common methods like ``read``, ``readlines``,
+  ``write``, ``close`` and can do automatical line ending
+  conversions on the fly, i. e. text/binary mode)
+
+* Get information about directories, files and links (``listdir``,
+  ``stat``, ``lstat``, ``exists``, ``isdir``, ``isfile``, ``islink``,
+  ``abspath``, ``split``, ``join``, ``dirname``, ``basename`` etc.)
+
+* Iterate over remote file systems (``walk``)
+
+
 Exception hierarchy
 -------------------
 
-The exceptions are in the namespace of the ``ftputil`` package (e. g.
-``ftputil.TemporaryError``). They are organized as follows::
+The exceptions are in the namespace of the ``ftp_error`` module, e. g.
+``ftp_error.TemporaryError``. Getting the exception classes from the
+"package module" ``ftputil`` is deprecated.
+
+The exceptions are organized as follows::
 
     FTPError
         FTPOSError(FTPError, OSError)
-            TemporaryError(FTPOSError)
             PermanentError(FTPOSError)
-            ParserError(FTPOSError)
+            TemporaryError(FTPOSError)
         FTPIOError(FTPError)
         InternalError(FTPError)
-            RootDirError(InternalError)
             InaccessibleLoginDirError(InternalError)
-        TimeShiftError(FTPError)
+            ParserError(InternalError)
+            RootDirError(InternalError)
+            TimeShiftError(InternalError)
 
 and are described here:
 
@@ -125,22 +161,16 @@ and are described here:
   holds the FTP server return code in the ``errno`` attribute of the
   exception object and the error text in ``strerror``.
 
-- ``TemporaryError``
-
-  is raised for FTP return codes from the 4xx category. This
-  corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
-  ``ftplib.error_temp`` are *not* identical).
-
 - ``PermanentError``
 
   is raised for 5xx return codes from the FTP server
   (again, that's similar but *not* identical to ``ftplib.error_perm``).
 
-- ``ParserError``
+- ``TemporaryError``
 
-  is used for errors during the parsing of directory
-  listings from the server. This exception is used by the ``FTPHost``
-  methods ``stat``, ``lstat``, and ``listdir``.
+  is raised for FTP return codes from the 4xx category. This
+  corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
+  ``ftplib.error_temp`` are *not* identical).
 
 - ``FTPIOError``
 
@@ -151,7 +181,7 @@ and are described here:
   ::
 
     >>> try:
-    ...     f = open('notthere')
+    ...     f = open('not_there')
     ... except IOError, obj:
     ...     print obj.errno
     ...     print obj.strerror
@@ -165,13 +195,13 @@ and are described here:
 
     >>> host = ftputil.FTPHost('host', 'user', 'password')
     >>> try:
-    ...     f = host.open('notthere')
+    ...     f = host.open('not_there')
     ... except IOError, obj:
     ...     print obj.errno
     ...     print obj.strerror
     ...
     550
-    550 notthere: No such file or directory.
+    550 not_there: No such file or directory.
 
   As you can see, both code snippets are similar. (However, the error
   codes aren't the same.)
@@ -180,12 +210,6 @@ and are described here:
 
   subsumes exception classes for signaling errors due to limitations
   of the FTP protocol or the concrete implementation of ``ftputil``.
-
-- ``RootDirError``
-
-  Because of the implementation of the ``lstat`` method it is not
-  possible to do a ``stat`` call  on the root directory ``/``.
-  If you know *any* way to do it, please let me know. :-)
 
 - ``InaccessibleLoginDirError``
 
@@ -197,10 +221,26 @@ and are described here:
 
   - You try to access a path which contains whitespace.
 
+- ``ParserError``
+
+  is used for errors during the parsing of directory
+  listings from the server. This exception is used by the ``FTPHost``
+  methods ``stat``, ``lstat``, and ``listdir``.
+
+- ``RootDirError``
+
+  Because of the implementation of the ``lstat`` method it is not
+  possible to do a ``stat`` call  on the root directory ``/``.
+  If you know *any* way to do it, please let me know. :-)
+
+  This problem does *not* affect stat calls on items *in* the root
+  directory.
+
 - ``TimeShiftError``
 
   is used to denote errors which relate to setting the `time shift`_,
-  e. g. trying to set a value which is no multiple of a full hour.
+  *for example* trying to set a value which is no multiple of a full
+  hour.
 
 
 ``FTPHost`` objects
@@ -255,9 +295,10 @@ wrapper class::
     # use `host` as usual
 
 On login, the format of the directory listings (needed for stat'ing
-files and directories) should be determined automatically. If not, you
-may use the method `set_directory_format`_ to set the format
-"manually".
+files and directories) should be determined automatically. If not,
+please `file a bug`_.
+
+.. _`file a bug`: http://ftputil.sschwarzer.net/issuetrackernotes
 
 ``FTPHost`` attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -267,11 +308,11 @@ Attributes
 
 - ``curdir``, ``pardir``, ``sep``
 
-  are strings which denote the current and the parent directory on
-  the remote server. sep identifies the path separator. Though `RFC
-  959`_ (File Transfer Protocol) notes that these values may be server
-  dependent, the Unix counterparts seem to work well in practice,
-  even for non-Unix servers.
+  are strings which denote the current and the parent directory on the
+  remote server. sep identifies the path separator. Though `RFC 959`_
+  (File Transfer Protocol) notes that these values may depend on the
+  FTP server implementation, the Unix counterparts seem to work well
+  in practice, even for non-Unix servers.
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
@@ -323,9 +364,6 @@ Time zone correction
   - The client has write access to the directory that is current when
     ``synchronize_times`` is called.
 
-  - That directory is *not* the root directory (i. e. ``/``) of the
-    FTP server.
-
   If you can't fulfill these conditions, you can nevertheless set the
   time shift value manually with `set_time_shift`_. Trying to call
   ``synchronize_times`` if the above conditions aren't true results in
@@ -336,12 +374,11 @@ Files and directories
 
 - ``file(path, mode='r')``
 
-  returns a file-like object that is connected to the path on the
-  remote host. This path may be absolute or relative to current
-  directory on the remote host (this directory can be determined
-  with the getcwd method). As with local file objects the default
-  mode is "r", i. e. reading text files. Valid modes are "r", "rb",
-  "w", and "wb".
+  returns a file-like object that refers to the path on the remote
+  host. This path may be absolute or relative to the current directory
+  on the remote host (this directory can be determined with the getcwd
+  method). As with local file objects the default mode is "r", i. e.
+  reading text files. Valid modes are "r", "rb", "w", and "wb".
 
 - ``open(path, mode='r')``
 
@@ -367,41 +404,60 @@ Files and directories
 - ``chdir(directory)``
 
   sets the current directory on the FTP server. This resembles
-  ``os.chdir``, as you may have expected. :-)
+  ``os.chdir``, as you may have expected.
 
 - ``mkdir(path, [mode])``
 
-  makes the given directory on the remote host. In the current
-  implementation, this doesn't construct "intermediate" directories
-  which don't already exist. The ``mode`` parameter is ignored. This
-  is for compatibilty with ``os.mkdir`` if an ``FTPHost`` object is
-  passed into a function instead of the os module (see the subsection
-  on Python exceptions above for an explanation).
+  makes the given directory on the remote host. This doesn't construct
+  "intermediate" directories which don't already exist. The ``mode``
+  parameter is ignored; this is for compatibility with ``os.mkdir`` if
+  an ``FTPHost`` object is passed into a function instead of the os
+  module (see the subsection on Python exceptions above for an
+  explanation).
 
 - ``makedirs(path, [mode])``
 
   works similar to ``mkdir`` (see above, but also makes intermediate
-  directories (like ``os.makedirs``). The ``mode`` parameter is
+  directories, like ``os.makedirs``). The ``mode`` parameter is
   only there for compatibility with ``os.makedirs`` and is
   ignored.
 
 - ``rmdir(path)``
 
-  removes the given remote directory.
+  removes the given remote directory. If it's not empty, raise
+  a ``PermanentError``.
 
-  In previous versions of ``ftputil``, it depended on the remote
-  server whether non-empty directories could be deleted. ``ftputil``
-  version 2.0 and up by default allow only to delete empty
-  directories.
+- ``rmtree(path, ignore_errors=False, onerror=None)``
 
-  If you want to update to ``ftputil`` 2.0 with minimal changes
-  to your source code, pass in an additional parameter
-  ``_remove_only_empty=False``. Note that this is deprecated and
-  will probably be unsupported in future ``ftputil`` versions.
+  removes the given remote, possibly non-empty, directory tree.
+  The interface of this method is rather complex, in favor of
+  compatibility with ``shutil.rmtree``.
+
+  If ``ignore_errors`` is set to a true value, errors are ignored.
+  If ``ignore_errors`` is a false value *and* ``onerror`` isn't
+  set, all exceptions occuring during the tree iteration and
+  processing are raised. These exceptions are all of type
+  ``PermanentError``.
+
+  To distinguish between error situations and/or pass in a callable
+  for ``onerror``. This callable must accept three arguments:
+  ``func``, ``path`` and ``exc_info``). ``func`` is a bound method
+  object, *for example* ``your_host_object.listdir``. ``path`` is
+  the path that was the recent argument of the respective method
+  (``listdir``, ``remove``, ``rmdir``). ``exc_info`` is the exception
+  info as it is got from ``sys.exc_info``.
+
+  The code of ``rmtree`` is taken from Python's ``shutil`` module
+  and adapted for ``ftputil``.
+
+  **Note: I find this interface rather complicated and would like to
+  simplify it without making error handling too difficult. Possible
+  changes to ``rmtree`` will depend on the discussion between the
+  versions 2.1b and 2.1.**
 
 - ``remove(path)``
 
-  removes a file on the remote host (similar to ``os.remove``).
+  removes a file or link on the remote host (similar to ``os.remove``).
 
 - ``unlink(path)``
 
@@ -414,13 +470,16 @@ Files and directories
 - ``listdir(path)``
 
   returns a list containing the names of the files and directories
-  in the given path; similar to ``os.listdir``.
+  in the given path; similar to ``os.listdir``. The special names
+  ``.`` and ``..`` are not in the list.
+
+.. _`FTPHost.walk`:
 
 - ``walk(top, topdown=True, onerror=None)``
 
-  iterates over a directory tree, similar to `os.walk`_ in Python 2.3.
-  Actually, ``FTPHost.walk`` uses the code from Python with just the
-  necessary modifications, so see the linked documentation.
+  iterates over a directory tree, similar to `os.walk`_ in Python 2.3
+  and above. Actually, ``FTPHost.walk`` uses the code from Python with
+  just the necessary modifications, so see the linked documentation.
 
   Unless the rest of ftputil, which should work with every Python
   version from 2.0 on, the ``walk`` method requires generators
@@ -465,7 +524,7 @@ Uploading and downloading files
 
     # transfer in ASCII mode
     host.upload_if_newer('source_file', 'target_file', 'a')
-    # won't transfer the file again
+    # won't transfer the file again, which is bad!
     host.upload_if_newer('source_file', 'target_file', 'b')
 
   Similarly, if a transfer is interrupted, the remote file will have a
@@ -496,46 +555,15 @@ Uploading and downloading files
 Stat'ing files and directories
 ``````````````````````````````
 
-The methods ``lstat`` and ``stat`` (and others) rely on the
-directory listing format used by the FTP server. When connecting
-to a host, ``FTPHost``'s constructor tries to guess the right
-format, which mostly succeeds. However, if you get strange results
-(or exceptions), it may be necessary to set the directory format
-"manually". This is done - immediately after connecting - with
+The methods ``lstat`` and ``stat`` (and others) rely on the directory
+listing format used by the FTP server. When connecting to a host,
+``FTPHost``'s constructor tries to guess the right format, which
+mostly succeeds. However, if you get strange results or
+``ParserError`` exceptions by a mere ``lstat`` call, please `file a
+bug`_.
 
-.. _`set_directory_format`:
-
-- ``set_directory_format(server_format)``
-
-  ``server_format`` is one of the strings "unix" or "ms". To choose
-  the correct format, you have to start a command line FTP client and
-  request a directory listing (most clients do this with the ``DIR``
-  command).
-
-  If the resulting lines look like
-
-  ::
-
-      drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
-      -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
-
-  use "unix" as the argument.
-
-  If the output looks like
-
-  ::
-
-      12-07-01  02:05PM       <DIR>          XPLaunch
-      07-17-00  02:08PM             12266720 digidash.exe
-
-  use "ms" as the argument string ``server_format``.
-
-  If none of the above settings help, contact me. It would be very
-  helpful if you could provide an example listing (``DIR``'s output).
-
-If calling ``lstat`` or ``stat`` yields wrong modification dates
-or times, look at the methods that deal with time zone differences
-(`time shift`_).
+If ``lstat`` or ``stat`` yield wrong modification dates or times, look
+at the methods that deal with time zone differences (`time shift`_).
 
 .. _`FTPHost.lstat`:
 
@@ -566,22 +594,20 @@ or times, look at the methods that deal with time zone differences
 
   - Items that can't be determined at all are set to ``None``.
 
-  - There's a special problem with stat'ing the root directory. In
+  - There's a special problem with stat'ing the root directory.
+    (Stat'ing things *in* the root directory is fine though.) In
     this case, a ``RootDirError`` is raised. This has to do with the
     algorithm used by ``(l)stat`` and I know of no approach which
-    solves this problem.
-
-.. update for other servers
+    mends this problem.
 
 ..
 
-  Currently, ``ftputil`` recognizes the MS Robin FTP server.
-  Otherwise, a format commonly used by Unix servers is assumed. If you
-  need to parse output from another server type, please contact me
-  under the email address at the end of this text.
+  Currently, ``ftputil`` recognizes the common Unix-style and
+  Microsoft/DOS-style directory formats. If you need to parse output
+  from another server type, please write to the `ftputil mailing
+  list`_.
 
-.. implement and document support for setting the directory parser
-   "manually"
+.. _`ftputil mailing list`: http://ftputil.sschwarzer.net/mailinglist
 
 .. _`FTPHost.stat`:
 
@@ -645,24 +671,25 @@ in the Library Reference.
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
 
-Tips and tricks / FAQ
+FAQ / Tips and tricks
 ---------------------
 
 Where can I get the latest version?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-See http://www.sschwarzer.net/python/python_software.html#ftputil .
-Announcements will also be sent to the mailing list (see the question
-below). Announcements on major updates will also be posted to the
+See the `download page`_. Announcements will be sent to the `mailing
+list`_. Announcements on major updates will also be posted to the
 newsgroup `comp.lang.python`_ .
 
+.. _`download page`: http://ftputil.sschwarzer.net/download
+.. _`mailing list`: http://ftputil.sschwarzer.net/mailinglist
 .. _`comp.lang.python`: news:comp.lang.python
 
 Is there a mailing list on ``ftputil``?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Yes, you can subscribe at http://codespeak.net/mailman/listinfo/ftputil
-or read the archives at http://codespeak.net/pipermail/ftputil/ .
+Yes, please visit http://ftputil.sschwarzer.net/mailinglist to
+subscribe or read the archives.
 
 I found a bug! What now?
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -670,28 +697,12 @@ I found a bug! What now?
 Before reporting a bug, make sure that you already tried the latest
 version of ``ftputil``. There the bug might have already been fixed.
 
-Please send your bug report to the ``ftputil`` mailing list (see
-above for the address) or to me (email address at the top of this
-file). In *either* case you *must not* include confidential
-information (user id, password, file names, etc.) in the mail.
-
-When reporting a bug, please provide the following information:
-
-- version of ``ftputil``
-
-- version of Python
-
-- type and version of FTP server (should be visible in its "welcome
-  message")
-
-- operating system and version for server and client (output of
-  ``uname -a`` on Unix)
-
-- bug description
-
-- if possible, a short code example which reproduces the bug
-
-- if possible, ideas that might help to find the cause of the bug
+Please see http://ftputil.sschwarzer.net/issuetrackernotes for
+guidelines on entering a bug in ``ftputil``'s ticket system. If you
+are unsure if the behaviour you found is a bug or not, you can write
+to the `ftputil mailing list`_. In *either* case you *must not*
+include confidential information (user id, password, file names, etc.)
+in the problem report! Be careful!
 
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -738,37 +749,32 @@ server is in a different time zone than the client on which
 Wrong dates or times when stat'ing on a server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please see the previous and the next tip.
-
-File-related query methods (e. g. ``listdir``) return unexpected results
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-If, for example, ``listdir`` or ``lstat`` return a wrong value or
-raise an exception, it may be because of a wrongly determined
-directory format. Please see the discussion of
-`set_directory_format`_.
+Please see the previous tip.
 
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Please send me an email with your question, and I'll see what I can
-do for you. :-) Probably a better way is to send your question to the
-mailing list at ftputil@codespeak.net; potentially more people might
-be able to help you.
+Please send an email with your problem report or question to the
+`ftputil mailing list`_, and we'll see what we can do for you. :-)
 
 Bugs and limitations
 --------------------
 
-- ``ftputil`` needs at least Python 2.0 to work.
+- ``ftputil`` needs at least Python 2.1 to work, or Python 2.0 if you
+  remove the ``from __future__ import ...`` statements from the code.
 
 - Due to the implementation of ``lstat`` it can not return a sensible
-  value for the root directory ``/``. If you know an implementation that
+  value for the root directory ``/`` though stat'ing entries *in* the
+  root directory isn't a problem. If you know an implementation that
   can do this, please let me know. The root directory is handled
   appropriately in ``FTPHost.path.exists/isfile/isdir/islink``, though.
 
 - Timeouts of individual child sessions currently are not handled.
   This is only a problem if your ``FTPHost`` object or the generated
-  ``FTPFile`` objects are inactive for about ten minutes or longer.
+  ``FTPFile`` objects are inactive for about ten minutes or longer. A
+  workaround is to keep the respective connections busy, e. g. call
+  ``getcwd`` on ``FTPHost`` objects or ``write("")`` on remote
+  file-like objects.
 
 - Until now, I haven't paid attention to thread safety. In principle,
   at least, different ``FTPFile`` objects should be usable in different
