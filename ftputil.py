@@ -557,16 +557,23 @@ class FTPHost:
 
     def rmtree(self, path, ignore_errors=False, onerror=None):
         """
-        Recursively delete a directory tree rooted at `path`.
+        Remove the given remote, possibly non-empty, directory tree.
+        The interface of this method is rather complex, in favor of
+        compatibility with `shutil.rmtree`.
 
-        If `ignore_errors` is set, errors are ignored; otherwise, if
-        `onerror` is set, it is called to handle the error with
-        arguments (func, path, exc_info) where `func` is a function
-        object, that is the bound method `listdir`, `remove`, or
-        `rmdir` for this `FTPHost` object; `path` is the argument to
-        that function that caused it to fail; and `exc_info` is a
-        tuple returned by `sys.exc_info()`. If `ignore_errors` is
-        false and `onerror` is `None`, an exception is raised.
+        If `ignore_errors` is set to a true value, errors are ignored.
+        If `ignore_errors` is a false value _and_ `onerror` isn't set,
+        all exceptions occuring during the tree iteration and
+        processing are raised. These exceptions are all of type
+        `PermanentError`.
+        
+        To distinguish between error situations and/or pass in a
+        callable for `onerror`. This callable must accept three
+        arguments: `func`, `path` and `exc_info`). `func` is a bound
+        method object, _for example_ `your_host_object.listdir`.
+        `path` is the path that was the recent argument of the
+        respective method (`listdir`, `remove`, `rmdir`). `exc_info`
+        is the exception info as it's got from `sys.exc_info`.
         
         Implementation note: The code is copied from `shutil.rmtree`
         in Python 2.4 and adapted to ftputil.
