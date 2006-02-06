@@ -553,27 +553,17 @@ class FTPHost:
                 if not self.path.isdir(next_directory):
                     raise
 
-    def rmdir(self, path, _remove_only_empty=True):
+    def rmdir(self, path):
         """
         Remove the _empty_ directory `path` on the remote host.
 
         Compatibility note:
 
-        Previous versions of ftputil simply delegated the `rmdir`
-        call to the FTP server's `RMD` command, thus often allowing
-        to delete non-empty directories. By default, that's no
-        longer possible and should be avoided.
-
-        If you really need the old behaviour, pass in an argument
-        `_remove_only_empty=False` and `rmdir` will delegate to the
-        FTP server, as before. Note, however, that deleting non-empty
-        directories may be disallowed in future versions of ftputil.
+        Previous versions of ftputil could possibly delete non-
+        empty directories as well, - if the server allowed it. This
+        is no longer supported.
         """
-        #XXX Though in a local file system it's forbidden to remove
-        # non-empty directories with `rmdir`, some (most?) FTP servers
-        # allow to delete non-empty directories via their `RMD`
-        # command. See the compatibilty note in the docstring.
-        if _remove_only_empty and self.listdir(path):
+        if self.listdir(path):
             path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
