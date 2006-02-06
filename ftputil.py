@@ -155,43 +155,22 @@ class FTPHost:
         self.set_time_shift(0.0)
 
     #
-    # setting the directory format for the remote server
+    # setting the directory parser format for the remote server
     #
     # Note: there's now an autodetection of the format in
     #  `ftp_stat._Stat`, so calling this method should never
-    #  be necessary. Thus `set_directory_parser` is obsolete
+    #  be necessary. Thus `set_directory_format` is obsolete
     #  and will be removed in ftputil 2.2 !
     #
-    def set_directory_parser(self, directory_parser):
+    def set_directory_format(self, directory_format):
         """
+        This method is deprecated. All its applications should
+        now be handled automatically.
+
         Tell this `FTPHost` object the directory format of the remote
-        server. Ideally, this should never be necessary, but you can
-        use it as a resort if the automatic server detection does not
-        work as it should.
-
-        `directory_parser` is one of the following strings:
-
-        "unix": Use this if the directory listing from the server
-        looks like
-
-        drwxr-sr-x   2 45854    200           512 Jul 30 17:14 image
-        -rw-r--r--   1 45854    200          4604 Jan 19 23:11 index.html
-
-        "ms": Use this if the directory listing from the server looks
-        like
-
-        12-07-01  02:05PM       <DIR>          XPLaunch
-        07-17-00  02:08PM             12266720 digidash.exe
-
-        If the argument is none of the above strings, a `ValueError`
-        is raised.
+        server.
         """
         pass
-
-    # keep `set_directory_format` as a now _deprecated_ alias;
-    #  keep this for ftputil 2.1.x for compatibilty with old ftputil
-    #  client code, then remove the alias
-    set_directory_format = set_directory_parser
 
     #
     # dealing with child sessions and file-like objects
