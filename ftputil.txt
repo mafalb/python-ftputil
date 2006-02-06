@@ -73,17 +73,17 @@ results with Python versions 2.0 and 2.1.
 * Create and remove directories (``mkdir``, ``makedirs``, ``rmdir``,
   ``rmtree``) and remove files (``remove``)
 
-* Read files from and write files to remote hosts via
-  file-like objects (``FTPHost.file``; the generated file-like
-  objects have many common methods like ``read``, ``readlines``,
-  ``write``, ``close`` and can do automatical line ending
-  conversions on the fly, i. e. text/binary mode)
-
 * Get information about directories, files and links (``listdir``,
   ``stat``, ``lstat``, ``exists``, ``isdir``, ``isfile``, ``islink``,
   ``abspath``, ``split``, ``join``, ``dirname``, ``basename`` etc.)
 
 * Iterate over remote file systems (``walk``)
+
+* Read files from and write files to remote hosts via
+  file-like objects (``FTPHost.file``; the generated file-like
+  objects have many common methods like ``read``, ``readlines``,
+  ``write``, ``close`` and can do automatical line ending
+  conversions on the fly, i. e. text/binary mode)
 
 
 Exception hierarchy
@@ -318,83 +318,8 @@ Attributes
 
 .. _`time shift`:
 
-Time zone correction
-````````````````````
-
-.. _`set_time_shift`:
-
-- ``set_time_shift(time_shift)``
-
-  sets the so-called time shift value (measured in seconds). The time
-  shift is the difference between the local time of the server and the
-  local time of the client at a given moment, i. e. by definition
-
-  ::
-
-    time_shift = server_time - client_time
-
-  Setting this value is important if `upload_if_newer`_ and
-  `download_if_newer`_ should work correctly even if the time zone of
-  the FTP server differs from that of the client (where ``ftputil``
-  runs). Note that the time shift value *can* be negative.
-
-  If the time shift value is invalid, e. g. no multiple of a full hour
-  or its absolute (unsigned) value larger than 24 hours, a
-  ``TimeShiftError`` is raised.
-
-  See also `synchronize_times`_ for a way to set the time shift with a
-  simple method call.
-
-- ``time_shift()``
-
-  return the currently-set time shift value. See ``set_time_shift``
-  (above) for its definition.
-
-.. _`synchronize_times`:
-
-- ``synchronize_times()``
-
-  synchronizes the local times of the server and the client, so that
-  `upload_if_newer`_ and `download_if_newer`_ work as expected, even
-  if the client and the server are in different time zones. For this
-  to work, *all* of the following conditions must be true:
-
-  - The connection between server and client is established.
-
-  - The client has write access to the directory that is current when
-    ``synchronize_times`` is called.
-
-  If you can't fulfill these conditions, you can nevertheless set the
-  time shift value manually with `set_time_shift`_. Trying to call
-  ``synchronize_times`` if the above conditions aren't true results in
-  a ``TimeShiftError`` exception.
-
-Files and directories
-`````````````````````
-
-- ``file(path, mode='r')``
-
-  returns a file-like object that refers to the path on the remote
-  host. This path may be absolute or relative to the current directory
-  on the remote host (this directory can be determined with the getcwd
-  method). As with local file objects the default mode is "r", i. e.
-  reading text files. Valid modes are "r", "rb", "w", and "wb".
-
-- ``open(path, mode='r')``
-
-  is an alias for ``file`` (see above).
-
-- ``copyfileobj(source, target, length=64*1024)``
-
-  copies the contents from the file-like object source to the
-  file-like object target. The only difference to
-  ``shutil.copyfileobj`` is the default buffer size.
-
-- ``close()``
-
-  closes the connection to the remote host. After this, no more
-  interaction with the FTP server is possible without using a new
-  ``FTPHost`` object.
+Remote file system navigation
+`````````````````````````````
 
 - ``getcwd()``
 
@@ -405,87 +330,6 @@ Files and directories
 
   sets the current directory on the FTP server. This resembles
   ``os.chdir``, as you may have expected.
-
-- ``mkdir(path, [mode])``
-
-  makes the given directory on the remote host. This doesn't construct
-  "intermediate" directories which don't already exist. The ``mode``
-  parameter is ignored; this is for compatibility with ``os.mkdir`` if
-  an ``FTPHost`` object is passed into a function instead of the os
-  module (see the subsection on Python exceptions above for an
-  explanation).
-
-- ``makedirs(path, [mode])``
-
-  works similar to ``mkdir`` (see above, but also makes intermediate
-  directories, like ``os.makedirs``). The ``mode`` parameter is
-  only there for compatibility with ``os.makedirs`` and is
-  ignored.
-
-- ``rmdir(path)``
-
-  removes the given remote directory. If it's not empty, raise
-  a ``PermanentError``.
-
-- ``rmtree(path, ignore_errors=False, onerror=None)``
-
-  removes the given remote, possibly non-empty, directory tree.
-  The interface of this method is rather complex, in favor of
-  compatibility with ``shutil.rmtree``.
-
-  If ``ignore_errors`` is set to a true value, errors are ignored.
-  If ``ignore_errors`` is a false value *and* ``onerror`` isn't
-  set, all exceptions occuring during the tree iteration and
-  processing are raised. These exceptions are all of type
-  ``PermanentError``.
-
-  To distinguish between error situations and/or pass in a callable
-  for ``onerror``. This callable must accept three arguments:
-  ``func``, ``path`` and ``exc_info``). ``func`` is a bound method
-  object, *for example* ``your_host_object.listdir``. ``path`` is
-  the path that was the recent argument of the respective method
-  (``listdir``, ``remove``, ``rmdir``). ``exc_info`` is the exception
-  info as it is got from ``sys.exc_info``.
-
-  The code of ``rmtree`` is taken from Python's ``shutil`` module
-  and adapted for ``ftputil``.
-
-  **Note: I find this interface rather complicated and would like to
-  simplify it without making error handling too difficult. Possible
-  changes to ``rmtree`` will depend on the discussion between the
-  versions 2.1b and 2.1.**
-
-- ``remove(path)``
-
-  removes a file or link on the remote host (similar to ``os.remove``).
-
-- ``unlink(path)``
-
-  is an alias for ``remove``.
-
-- ``rename(source, target)``
-
-  renames the source file (or directory) on the FTP server.
-
-- ``listdir(path)``
-
-  returns a list containing the names of the files and directories
-  in the given path; similar to ``os.listdir``. The special names
-  ``.`` and ``..`` are not in the list.
-
-.. _`FTPHost.walk`:
-
-- ``walk(top, topdown=True, onerror=None)``
-
-  iterates over a directory tree, similar to `os.walk`_ in Python 2.3
-  and above. Actually, ``FTPHost.walk`` uses the code from Python with
-  just the necessary modifications, so see the linked documentation.
-
-  Unless the rest of ftputil, which should work with every Python
-  version from 2.0 on, the ``walk`` method requires generators
-  and thus will only work with Python 2.2 and above.
-
-.. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
 
 Uploading and downloading files
 ```````````````````````````````
@@ -552,8 +396,129 @@ Uploading and downloading files
   If it seems that a file is downloaded unnecessarily, read the
   subsection on `time shift`_ settings.
 
-Stat'ing files and directories
-``````````````````````````````
+Time zone correction
+````````````````````
+
+.. _`set_time_shift`:
+
+- ``set_time_shift(time_shift)``
+
+  sets the so-called time shift value (measured in seconds). The time
+  shift is the difference between the local time of the server and the
+  local time of the client at a given moment, i. e. by definition
+
+  ::
+
+    time_shift = server_time - client_time
+
+  Setting this value is important if `upload_if_newer`_ and
+  `download_if_newer`_ should work correctly even if the time zone of
+  the FTP server differs from that of the client (where ``ftputil``
+  runs). Note that the time shift value *can* be negative.
+
+  If the time shift value is invalid, e. g. no multiple of a full hour
+  or its absolute (unsigned) value larger than 24 hours, a
+  ``TimeShiftError`` is raised.
+
+  See also `synchronize_times`_ for a way to set the time shift with a
+  simple method call.
+
+- ``time_shift()``
+
+  return the currently-set time shift value. See ``set_time_shift``
+  (above) for its definition.
+
+.. _`synchronize_times`:
+
+- ``synchronize_times()``
+
+  synchronizes the local times of the server and the client, so that
+  `upload_if_newer`_ and `download_if_newer`_ work as expected, even
+  if the client and the server are in different time zones. For this
+  to work, *all* of the following conditions must be true:
+
+  - The connection between server and client is established.
+
+  - The client has write access to the directory that is current when
+    ``synchronize_times`` is called.
+
+  If you can't fulfill these conditions, you can nevertheless set the
+  time shift value manually with `set_time_shift`_. Trying to call
+  ``synchronize_times`` if the above conditions aren't true results in
+  a ``TimeShiftError`` exception.
+
+Creating and removing directories and removing files
+````````````````````````````````````````````````````
+
+- ``mkdir(path, [mode])``
+
+  makes the given directory on the remote host. This doesn't construct
+  "intermediate" directories which don't already exist. The ``mode``
+  parameter is ignored; this is for compatibility with ``os.mkdir`` if
+  an ``FTPHost`` object is passed into a function instead of the os
+  module (see the subsection on Python exceptions above for an
+  explanation).
+
+- ``makedirs(path, [mode])``
+
+  works similar to ``mkdir`` (see above, but also makes intermediate
+  directories, like ``os.makedirs``). The ``mode`` parameter is
+  only there for compatibility with ``os.makedirs`` and is
+  ignored.
+
+- ``rmdir(path)``
+
+  removes the given remote directory. If it's not empty, raise
+  a ``PermanentError``.
+
+- ``rmtree(path, ignore_errors=False, onerror=None)``
+
+  removes the given remote, possibly non-empty, directory tree.
+  The interface of this method is rather complex, in favor of
+  compatibility with ``shutil.rmtree``.
+
+  If ``ignore_errors`` is set to a true value, errors are ignored.
+  If ``ignore_errors`` is a false value *and* ``onerror`` isn't
+  set, all exceptions occuring during the tree iteration and
+  processing are raised. These exceptions are all of type
+  ``PermanentError``.
+
+  To distinguish between error situations and/or pass in a callable
+  for ``onerror``. This callable must accept three arguments:
+  ``func``, ``path`` and ``exc_info``). ``func`` is a bound method
+  object, *for example* ``your_host_object.listdir``. ``path`` is
+  the path that was the recent argument of the respective method
+  (``listdir``, ``remove``, ``rmdir``). ``exc_info`` is the exception
+  info as it is got from ``sys.exc_info``.
+
+  The code of ``rmtree`` is taken from Python's ``shutil`` module
+  and adapted for ``ftputil``.
+
+  **Note: I find this interface rather complicated and would like to
+  simplify it without making error handling too difficult. Possible
+  changes to ``rmtree`` will depend on the discussion between the
+  versions 2.1b and 2.1.**
+
+- ``remove(path)``
+
+  removes a file or link on the remote host (similar to ``os.remove``).
+
+- ``unlink(path)``
+
+  is an alias for ``remove``.
+
+- ``rename(source, target)``
+
+  renames the source file (or directory) on the FTP server.
+
+Retrieving information about directories, files and links
+`````````````````````````````````````````````````````````
+
+- ``listdir(path)``
+
+  returns a list containing the names of the files and directories
+  in the given path; similar to ``os.listdir``. The special names
+  ``.`` and ``..`` are not in the list.
 
 The methods ``lstat`` and ``stat`` (and others) rely on the directory
 listing format used by the FTP server. When connecting to a host,
@@ -617,14 +582,11 @@ at the methods that deal with time zone differences (`time shift`_).
   directory is found. If an infinite link chain is encountered, a
   ``PermanentError`` is raised.
 
-``FTPHost.path``
-~~~~~~~~~~~~~~~~
+.. _`FTPHost.path`:
 
 ``FTPHost`` objects contain an attribute named ``path``, similar to
 `os.path`_. The following methods can be applied to the remote host
 with the same semantics as for ``os.path``:
-
-.. _`FTPHost.path.walk`:
 
 ::
 
@@ -647,12 +609,71 @@ with the same semantics as for ``os.path``:
     splitext(path)
     walk(path, func, arg)
 
-``FTPFile`` objects
--------------------
+Iteration over diretories and files
+```````````````````````````````````
+
+.. _`FTPHost.walk`:
+
+- ``walk(top, topdown=True, onerror=None)``
+
+  iterates over a directory tree, similar to `os.walk`_ in Python 2.3
+  and above. Actually, ``FTPHost.walk`` uses the code from Python with
+  just the necessary modifications, so see the linked documentation.
+
+  Unless the rest of ftputil, which should work with every Python
+  version from 2.0 on, the ``walk`` method requires generators
+  and thus will only work with Python 2.2 and above.
+
+.. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
+
+.. _`FTPHost.path.walk`:
+
+For Python 2.1 the ``walk`` method in `FTPHost.path`_ can be used.
+
+Other methods
+`````````````
+
+- ``copyfileobj(source, target, length=64*1024)``
+
+  copies the contents from the file-like object source to the
+  file-like object target. The only difference to
+  ``shutil.copyfileobj`` is the default buffer size. Note that
+  arbitrary file-like objects can be used as arguments (e. g.
+  local files, remote FTP files). See `File-like objects`_ for
+  construction and use of remote file-like objects.
+
+- ``close()``
+
+  closes the connection to the remote host. After this, no more
+  interaction with the FTP server is possible without using a new
+  ``FTPHost`` object.
+
+
+File-like objects
+-----------------
+
+Construction
+~~~~~~~~~~~~
 
 ``FTPFile`` objects as returned by a call to ``FTPHost.file`` (or
-``FTPHost.open``) have the following methods - with the same arguments and
-semantics as for local files::
+``FTPHost.open``).
+
+- ``FTPHost.file(path, mode='r')``
+
+  returns a file-like object that refers to the path on the remote
+  host. This path may be absolute or relative to the current directory
+  on the remote host (this directory can be determined with the getcwd
+  method). As with local file objects the default mode is "r", i. e.
+  reading text files. Valid modes are "r", "rb", "w", and "wb".
+
+- ``FTPHost.open(path, mode='r')``
+
+  is an alias for ``file`` (see above).
+
+Attributes and methods
+~~~~~~~~~~~~~~~~~~~~~~
+
+The methods
 
     close()
     read([count])
@@ -662,11 +683,11 @@ semantics as for local files::
     writelines(string_sequence)
     xreadlines()
 
-and the attribute ``closed``. For details, see the section `File objects`_
-in the Library Reference.
+and the attribute ``closed`` have the same semantics as for file
+objects of a local disk file system: . For details, see the section
+`File objects`_ in the Library Reference.
 
-.. _`file objects`:
-   http://www.python.org/doc/current/lib/bltin-file-objects.html
+.. _`file objects`: http://www.python.org/doc/current/lib/bltin-file-objects.html
 
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
@@ -757,6 +778,7 @@ I don't find an answer to my problem in this document
 Please send an email with your problem report or question to the
 `ftputil mailing list`_, and we'll see what we can do for you. :-)
 
+
 Bugs and limitations
 --------------------
 
@@ -791,6 +813,7 @@ Bugs and limitations
 - The ``UserTuple`` class, provided in ``UserTuple.py``, is not thoroughly
   tested. If you encouter problems, please notify me.
 
+
 Files
 -----
 
@@ -803,6 +826,7 @@ reside in the ``ftputil`` package. The documentation (in
 The files ``_test_*.py`` and ``_mock_ftplib.py`` are for unit-testing.
 If you only *use* ``ftputil`` (i. e. *not* modifying it), you can
 delete these files.
+
 
 References
 ----------
@@ -818,6 +842,7 @@ References
    http://www.connextra.com/aboutUs/mockobjects.pdf
 .. _`RFC 959 - File Transfer Protocol (FTP)`: http://www.ietf.org/rfc/rfc959.txt
 .. _`Python Library Reference`: http://www.python.org/doc/current/lib/lib.html
+
 
 Author
 ------
