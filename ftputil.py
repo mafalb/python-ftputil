@@ -350,8 +350,6 @@ class FTPHost:
         - The connection between server and client is established.
         - The client has write access to the directory that is
           current when `synchronize_times` is called.
-        - That directory is _not_ the root directory (i. e. `/`) of
-          the FTP server.
 
         The usual usage pattern of `synchronize_times` is to call it
         directly after the connection is established. (As can be
@@ -366,12 +364,7 @@ class FTPHost:
         try:
             file_ = self.file(helper_file_name, 'w')
             file_.close()
-            # get the modification time of the new file
-            try:
-                server_time = self.path.getmtime(helper_file_name)
-            except ftp_error.RootDirError:
-                raise ftp_error.TimeShiftError(
-                      "can't use root directory for temp file")
+            server_time = self.path.getmtime(helper_file_name)
         finally:
             # remove the just written file
             self.unlink(helper_file_name)
