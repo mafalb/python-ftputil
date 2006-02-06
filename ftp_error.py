@@ -58,13 +58,12 @@ class FTPError:
 class InternalError(FTPError): pass
 class RootDirError(InternalError): pass
 class InaccessibleLoginDirError(InternalError): pass
-
-class TimeShiftError(FTPError): pass
+class TimeShiftError(InternalError): pass
+class ParserError(InternalError): pass
 
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
-class ParserError(FTPOSError): pass
 
 #XXX Do you know better names for `_try_with_oserror` and
 #    `_try_with_ioerror`?
