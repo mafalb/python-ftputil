@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 
-# Copyright (C) 2003-2004, Stefan Schwarzer
+# Copyright (C) 2003-2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: setup.py,v 1.8 2004/02/27 23:34:52 schwa Exp $
+# $Id$
 
 """
 setup.py - installation script for Python distutils
@@ -52,7 +52,7 @@ _data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
 more_args = {}
 if sys.version_info > (2, 2, 2):
     more_args['download_url'] = \
-      "http://www.sschwarzer.net/download/%s-%s.tar.gz" % (_name, _version)
+      "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" % (_name, _version)
 
 core.setup(
   # installation data
