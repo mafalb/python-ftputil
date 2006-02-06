@@ -82,6 +82,7 @@ from __future__ import generators
 
 import ftplib
 import os
+import stat
 import sys
 import time
 
@@ -575,6 +576,7 @@ class FTPHost:
         if _remove_only_empty and self.listdir(path):
             path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
+        #XXX how will `rmd` work with links?
         ftp_error._try_with_oserror(self._session.rmd, path)
 
     def remove(self, path):
@@ -590,6 +592,53 @@ class FTPHost:
     def unlink(self, path):
         """Remove the given file."""
         self.remove(path)
+
+    def rmtree(self, path, ignore_errors=False, onerror=None):
+        """
+        Recursively delete a directory tree rooted at `path`.
+
+        If `ignore_errors` is set, errors are ignored; otherwise, if
+        `onerror` is set, it is called to handle the error with
+        arguments (func, path, exc_info) where `func` is a function
+        object, that is the bound method `listdir`, `remove`, or
+        `rmdir` for this `FTPHost` object; `path` is the argument to
+        that function that caused it to fail; and `exc_info` is a
+        tuple returned by `sys.exc_info()`. If `ignore_errors` is
+        false and `onerror` is `None`, an exception is raised.
+        
+        Implementation note: The code is copied from `shutil.rmtree`
+        in Python 2.4 and adapted to ftputil.
+        """
+        # the following code is an adapted version of Python 2.4's
+        #  `shutil.rmtree` function
+        if ignore_errors:
+            def onerror(*args):
+                pass
+        elif onerror is None:
+            def onerror(*args):
+                raise
+        names = []
+        try:
+            names = self.listdir(path)
+        except ftp_error.FTPOSError:
+            onerror(self.listdir, path, sys.exc_info())
+        for name in names:
+            full_name = self.path.join(path, name)
+            try:
+                mode = self.lstat(full_name).st_mode
+            except ftp_error.FTPOSError:
+                mode = 0
+            if stat.S_ISDIR(mode):
+                self.rmtree(full_name, ignore_errors, onerror)
+            else:
+                try:
+                    self.remove(full_name)
+                except ftp_error.FTPOSError:
+                    onerror(self.remove, full_name, sys.exc_info())
+        try:
+            self.rmdir(path)
+        except ftp_error.FTPOSError:
+            onerror(self.rmdir, path, sys.exc_info())
 
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
@@ -685,7 +734,7 @@ class FTPHost:
         function (see http://docs.python.org/lib/os-file-dir.html ).
 
         Implementation note: The code is copied from `os.walk` in
-        Python 2.3 and adapted to ftputil.
+        Python 2.4 and adapted to ftputil.
         """
         # this method won't work for Python versions before 2.2;
         #  these don't know generators

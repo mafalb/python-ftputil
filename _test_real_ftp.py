@@ -66,6 +66,10 @@ class RealFTPTest(unittest.TestCase):
     def tearDown(self):
         self.host.close()
 
+    def make_file(self, path):
+        file = self.host.file(path, 'wb')
+        file.close()
+
     def test_time_shift(self):
         self.host.synchronize_times()
         self.assertEqual(self.host.time_shift(), EXPECTED_TIME_SHIFT)
@@ -124,9 +128,7 @@ class RealFTPTest(unittest.TestCase):
     def test_makedirs_with_file_in_the_way(self):
         host = self.host
         host.mkdir('dir1')
-        # this is the equivalent of touch(1)
-        f = host.file('dir1/file1', 'w')
-        f.close()
+        self.make_file('dir1/file1')
         # try it
         self.assertRaises(ftp_error.PermanentError, host.makedirs, 'dir1/file1')
         self.assertRaises(ftp_error.PermanentError, host.makedirs,
@@ -161,6 +163,52 @@ class RealFTPTest(unittest.TestCase):
         host.makedirs('rootdir2/dir2/dir3')
         # clean up
         host.rmdir('rootdir2/dir2/dir3')
+
+    def test_rmtree_without_error_handler(self):
+        host = self.host
+        # build a tree
+        host.makedirs('dir1/dir2')
+        self.make_file('dir1/file1')
+        self.make_file('dir1/file2')
+        self.make_file('dir1/dir2/file3')
+        self.make_file('dir1/dir2/file4')
+        # try to remove a _file_ with `rmtree`
+        self.assertRaises(ftp_error.FTPOSError, host.rmtree, 'dir1/file2')
+        # remove dir2
+        host.rmtree('dir1/dir2')
+        self.failIf(host.path.exists('dir1/dir2'))
+        self.failUnless(host.path.exists('dir1/file2'))
+        # remake dir2 and remove dir1
+        host.mkdir('dir1/dir2')
+        self.make_file('dir1/dir2/file3')
+        self.make_file('dir1/dir2/file4')
+        host.rmtree('dir1')
+        self.failIf(host.path.exists('dir1'))
+
+    def test_rmtree_with_error_handler(self):
+        host = self.host
+        host.mkdir('dir1')
+        self.make_file('dir1/file1')
+        # prepare error "handler"
+        log = []
+        def error_handler(*args):
+            log.append(args)
+        # try to remove a file as root "directory"
+        host.rmtree('dir1/file1', ignore_errors=True, onerror=error_handler)
+        self.assertEqual(log, [])
+        host.rmtree('dir1/file1', ignore_errors=False, onerror=error_handler)
+        self.assertEqual(log[0][0], host.listdir)
+        self.assertEqual(log[0][1], 'dir1/file1')
+        self.assertEqual(log[1][0], host.rmdir)
+        self.assertEqual(log[1][1], 'dir1/file1')
+        host.rmtree('dir1')
+        # try to remove a non-existent directory
+        del log[:]
+        host.rmtree('dir1', ignore_errors=False, onerror=error_handler)
+        self.assertEqual(log[0][0], host.listdir)
+        self.assertEqual(log[0][1], 'dir1')
+        self.assertEqual(log[1][0], host.rmdir)
+        self.assertEqual(log[1][1], 'dir1')
 
     def test_stat(self):
         host = self.host
