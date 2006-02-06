@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2006, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -227,7 +227,4 @@ class _FTPFile:
             ftp_error._try_with_ioerror(self._conn.close)
             ftp_error._try_with_ioerror(self._session.voidresp)
             self.closed = True
-
-    def __del__(self):
-        self.close()
 
