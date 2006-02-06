@@ -316,8 +316,6 @@ Attributes
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
-.. _`time shift`:
-
 Remote file system navigation
 `````````````````````````````
 
@@ -396,6 +394,8 @@ Uploading and downloading files
   If it seems that a file is downloaded unnecessarily, read the
   subsection on `time shift`_ settings.
 
+.. _`time shift`:
+
 Time zone correction
 ````````````````````
 
@@ -447,8 +447,8 @@ Time zone correction
   ``synchronize_times`` if the above conditions aren't true results in
   a ``TimeShiftError`` exception.
 
-Creating and removing directories and removing files
-````````````````````````````````````````````````````
+Creating and removing directories
+`````````````````````````````````
 
 - ``mkdir(path, [mode])``
 
@@ -499,6 +499,9 @@ Creating and removing directories and removing files
   changes to ``rmtree`` will depend on the discussion between the
   versions 2.1b and 2.1.**
 
+Removing files and links
+````````````````````````
+
 - ``remove(path)``
 
   removes a file or link on the remote host (similar to ``os.remove``).
@@ -506,10 +509,6 @@ Creating and removing directories and removing files
 - ``unlink(path)``
 
   is an alias for ``remove``.
-
-- ``rename(source, target)``
-
-  renames the source file (or directory) on the FTP server.
 
 Retrieving information about directories, files and links
 `````````````````````````````````````````````````````````
@@ -628,10 +627,16 @@ Iteration over diretories and files
 
 .. _`FTPHost.path.walk`:
 
-For Python 2.1 the ``walk`` method in `FTPHost.path`_ can be used.
+- ``path.walk(path, func, arg)``
+
+    For Python 2.1 the ``walk`` method in `FTPHost.path`_ can be used.
 
 Other methods
 `````````````
+
+- ``rename(source, target)``
+
+  renames the source file (or directory) on the FTP server.
 
 - ``copyfileobj(source, target, length=64*1024)``
 
@@ -655,7 +660,7 @@ File-like objects
 Construction
 ~~~~~~~~~~~~
 
-``FTPFile`` objects as returned by a call to ``FTPHost.file`` (or
+``FTPFile`` objects are returned by a call to ``FTPHost.file`` (or
 ``FTPHost.open``).
 
 - ``FTPHost.file(path, mode='r')``
@@ -675,6 +680,8 @@ Attributes and methods
 
 The methods
 
+::
+
     close()
     read([count])
     readline([count])
@@ -684,7 +691,7 @@ The methods
     xreadlines()
 
 and the attribute ``closed`` have the same semantics as for file
-objects of a local disk file system: . For details, see the section
+objects of a local disk file system. For details, see the section
 `File objects`_ in the Library Reference.
 
 .. _`file objects`: http://www.python.org/doc/current/lib/bltin-file-objects.html
@@ -715,8 +722,10 @@ subscribe or read the archives.
 I found a bug! What now?
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-Before reporting a bug, make sure that you already tried the latest
-version of ``ftputil``. There the bug might have already been fixed.
+Before reporting a bug, make sure that you already tried the `latest
+version`_ of ``ftputil``. There the bug might have already been fixed.
+
+.. _`latest version`: http://ftputil.sschwarzer.net/download
 
 Please see http://ftputil.sschwarzer.net/issuetrackernotes for
 guidelines on entering a bug in ``ftputil``'s ticket system. If you
