@@ -311,19 +311,52 @@ class RealFTPTest(unittest.TestCase):
             self.assertEqual(actual[index], expected[index])
 
     def test_keep_connection(self):
-        # just make sure that `keep_alive` doesn't cause an error (exception)
-        host = self.host
+        # adjust server timeout (in seconds) here
+        server_timeout = 3 * 60.0
         # host
+        host = self.host
         host.keep_alive()
-        # written file
+        # prepare file to read (below)
         written_file = host.file("_test_file_", "w")
-        written_file.keep_alive()
+        written_file.write("Test")
         written_file.close()
-        # read file
+        # open files
         read_file = host.file("_test_file_", "r")
-        read_file.keep_alive()
-        read_file.close()
-        host.remove("_test_file_")
+        written_file = host.file("_test_file2_", "w")
+        written_file.write("x")
+        stale_read_file = host.file("_test_file_")
+        stale_written_file = host.file("_test_file3_", "w")
+        stale_read_file.close()
+        stale_written_file.write("abc")
+        stale_written_file.close()
+        try:
+            # wait for would-be connection timeout (plus a bit more, to be sure)
+            interval_length = 30.0
+            intervals = int(server_timeout / interval_length) + 2
+            for i in range(intervals):
+                print "Keeping host alive (%d of %d) " % (i+1, intervals)
+                host.keep_alive(ignore_errors=True)
+                time.sleep(interval_length)
+            # do some tests; order of statements is important
+            # - access the open files (must be left open so that the stale
+            #   files get reused)
+            self.assertEqual(read_file.read(2), "Te")
+            written_file.write("xyz")
+            # - try to reuse the stale files
+            written_file2 = host.file("_test_file3_", "w")
+            read_file2 = host.file("_test_file_")
+            written_file2.write("blah")
+            self.assertEqual(read_file2.read(2), "Te")
+            written_file2.close()
+            read_file2.close()
+            read_file.close()
+            written_file.close()
+        finally:
+            # clean up
+            print 2, host.listdir(".")
+#             host.remove("_test_file_")
+#             host.remove("_test_file2_")
+#             host.remove("_test_file3_")
 
 
 if __name__ == '__main__':
