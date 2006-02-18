@@ -336,12 +336,16 @@ class RealFTPTest(unittest.TestCase):
             for i in range(intervals):
                 print "Keeping host alive (%d of %d) " % (i+1, intervals)
                 host.keep_alive(ignore_errors=True)
+                self.assertRaises(ftp_error.KeepAliveError, host.keep_alive)
+                # open written files can't be "kept alive",
+                #  so cause some activity
+                written_file.write("x")
+                written_file.flush()
                 time.sleep(interval_length)
             # do some tests; order of statements is important
             # - access the open files (must be left open so that the stale
             #   files get reused)
             self.assertEqual(read_file.read(2), "Te")
-            written_file.write("xyz")
             # - try to reuse the stale files
             written_file2 = host.file("_test_file3_", "w")
             read_file2 = host.file("_test_file_")
@@ -353,10 +357,9 @@ class RealFTPTest(unittest.TestCase):
             written_file.close()
         finally:
             # clean up
-            print 2, host.listdir(".")
-#             host.remove("_test_file_")
-#             host.remove("_test_file2_")
-#             host.remove("_test_file3_")
+            host.remove("_test_file_")
+            host.remove("_test_file2_")
+            host.remove("_test_file3_")
 
 
 if __name__ == '__main__':

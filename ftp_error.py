@@ -60,6 +60,7 @@ class RootDirError(InternalError): pass
 class InaccessibleLoginDirError(InternalError): pass
 class TimeShiftError(InternalError): pass
 class ParserError(InternalError): pass
+class KeepAliveError(InternalError): pass
 
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass

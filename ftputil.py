@@ -248,7 +248,7 @@ class FTPHost:
         # alias for `file` method
         return self.file(path, mode)
 
-    def keep_alive(self, also_files=True):
+    def keep_alive(self, also_files=True, ignore_errors=False):
         """
         Do something without side effects to keep the connection to
         the server. This can be used to prevent broken connections due
@@ -259,13 +259,19 @@ class FTPHost:
         open file-like objects. In multi-threaded applications, you
         may want to set `also_files` to `False` and call the
         `keep_alive` method of the file-like objects individually.
+
+        If `ignore_errors` is set to a false value (the default),
+        keep-alive attempts on writable files will raise a
+        `KeepAliveError` (because there doesn't seem to be a way to
+        implement this functionality). Set `ignore_errors` to a true
+        value to mask such errors.
         """
-        # just prevent loss of the connection, so discard the result
+        # discard result
         self.getcwd()
         # refresh also connections of associated file-like objects
         if also_files:
             for host in self._children:
-                host._file.keep_alive()
+                host._file.keep_alive(ignore_errors=ignore_errors)
 
     def close(self):
         """Close host connection."""

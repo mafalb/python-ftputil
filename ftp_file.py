@@ -98,14 +98,14 @@ class _FTPFile:
         if mode not in ('r', 'rb', 'w', 'wb'):
             raise ftp_error.FTPIOError("invalid mode '%s'" % mode)
         # remember convenience variables instead of mode
-        self._binmode = 'b' in mode
-        self._readmode = 'r' in mode
+        self._bin_mode = 'b' in mode
+        self._read_mode = 'r' in mode
         # select ASCII or binary mode
-        transfer_type = ('A', 'I')[self._binmode]
+        transfer_type = ('A', 'I')[self._bin_mode]
         command = 'TYPE %s' % transfer_type
         ftp_error._try_with_ioerror(self._session.voidcmd, command)
         # make transfer command
-        command_type = ('STOR', 'RETR')[self._readmode]
+        command_type = ('STOR', 'RETR')[self._read_mode]
         command = '%s %s' % (command_type, path)
         # ensure we can process the raw line separators;
         #  force to binary regardless of transfer type
@@ -130,7 +130,7 @@ class _FTPFile:
     def read(self, *args):
         """Return read bytes, normalized if in text transfer mode."""
         data = self._fo.read(*args)
-        if self._binmode:
+        if self._bin_mode:
             return data
         data = _crlf_to_python_linesep(data)
         if args == ():
@@ -163,7 +163,7 @@ class _FTPFile:
     def readline(self, *args):
         """Return one read line, normalized if in text transfer mode."""
         data = self._fo.readline(*args)
-        if self._binmode:
+        if self._bin_mode:
             return data
         # if necessary, complete begun newline
         if data.endswith('\r'):
@@ -173,7 +173,7 @@ class _FTPFile:
     def readlines(self, *args):
         """Return read lines, normalized if in text transfer mode."""
         lines = self._fo.readlines(*args)
-        if self._binmode:
+        if self._bin_mode:
             return lines
         # more memory-friendly than `return [... for line in lines]`
         for i in range( len(lines) ):
@@ -185,19 +185,19 @@ class _FTPFile:
         Return an appropriate `xreadlines` object with built-in line
         separator conversion support.
         """
-        if self._binmode:
+        if self._bin_mode:
             return self._fo.xreadlines()
         return _XReadlines(self)
 
     def write(self, data):
         """Write data to file. Do linesep conversion for text mode."""
-        if not self._binmode:
+        if not self._bin_mode:
             data = _python_to_crlf_linesep(data)
         self._fo.write(data)
 
     def writelines(self, lines):
         """Write lines to file. Do linesep conversion for text mode."""
-        if self._binmode:
+        if self._bin_mode:
             self._fo.writelines(lines)
             return
         # we can't modify the list of lines in-place, as in the
@@ -220,15 +220,30 @@ class _FTPFile:
         raise AttributeError(
               "'FTPFile' object has no attribute '%s'" % attr_name)
 
-    def keep_alive(self):
+    def keep_alive(self, ignore_errors=False):
         """
         Keep the connection busy to prevent lost connections
         because of server timeouts.
+
+        Since this doesn't seem to work for writable files,
+        `ignore_errors` must be set to a true value to avoid that a
+        `KeepAliveError` is raised. By default, `ignore_errors` is a
+        false value, so errors can't pass silently.
         """
-        if self._readmode:
+        if self.closed:
+            self._host.getcwd()
+        elif self._read_mode:
             self.read(0)
         else:
-            self.write("")
+            # I thought about putting `self.flush()` here; this will
+            #  work if the client wrote at least a byte in the file
+            #  since the last flush. However, using `flush()` here
+            #  could lead to subtle failures in ftputil client code.
+            #  Post on the ftputil mailing list if you think the
+            #  `flush` call is appropriate here.
+            if not ignore_errors:
+                raise ftp_error.KeepAliveError(
+                      "keep-alive doesn't work for writable files")
 
     def close(self):
         """Close the `FTPFile`."""
