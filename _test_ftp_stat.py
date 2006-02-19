@@ -121,9 +121,31 @@ class TestDirectoryParsers(unittest.TestCase):
           "drwxr-sr-    2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
-          "drwxr-sr-x     45854    200           512 May  4  2000 chemeng"
           ]
         self._test_invalid_lines(ftp_stat._UnixDirectoryParser, lines)
+
+    def test_alternative_unix_format(self):
+        # see http://ftputil.sschwarzer.net/trac/ticket/12 for a
+        #  description for the need for an alternative format
+        lines = [
+          "drwxr-sr-x   2   200           512 May  4  2000 chemeng",
+          # the year value for this line will change with the actual time
+          "-rw-r--r--   1   200          4604 Dec 19 23:11 index.html",
+          "drwxr-sr-x   2   200           512 May 29  2000 os2",
+          "lrwxrwxrwx   2   200           512 May 29  2000 osup -> ../os2"
+          ]
+        expected_stat_results = [
+          [17901, None, None, 2, None, '200', 512, None,
+           (2000, 5, 4, 0, 0, 0), None],
+          [33188, None, None, 1, None, '200', 4604, None,
+           (self._expected_year(), 12, 19, 23, 11, 0), None],
+          [17901, None, None, 2, None, '200', 512, None,
+           (2000, 5, 29, 0, 0, 0), None],
+          [41471, None, None, 2, None, '200', 512, None,
+           (2000, 5, 29, 0, 0, 0), None]
+          ]
+        self._test_valid_lines(ftp_stat._UnixDirectoryParser, lines,
+                               expected_stat_results)
 
     def test_valid_ms_lines(self):
         lines = [

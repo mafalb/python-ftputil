@@ -112,6 +112,36 @@ class _UnixDirectoryParser(_DirectoryParser):
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
+    def _split_line(self, line):
+        """
+        Split a line in metadata, nlink, user, group, size, month,
+        day, year_or_time and name and return the result as an
+        eight-element tuple of these values.
+        """
+        # This method encapsulates the recognition of an unusual
+        #  Unix format variant (see ticket
+        #  http://ftputil.sschwarzer.net/trac/ticket/12 )
+        parts = line.split(None, 8)
+        if len(parts) == 9:
+            if parts[-1].startswith("-> "):
+                # for the alternative format, the last part will not be
+                #  "link_name -> link_target" but "-> link_target" and the
+                #  link name will be in the previous field;
+                # this heuristic will fail for names starting with "-> "
+                #  which should be _quite_ rare
+                # insert `None` for the user field
+                parts.insert(2, None)
+                parts[-2] = "%s %s" % tuple(parts[-2:])
+                del parts[-1]
+            return parts
+        elif len(parts) == 8:
+            # alternative unusual format, insert `None` for the user field
+            parts.insert(2, None)
+            return parts
+        else:
+            # "unpack list of wrong size"
+            raise ftp_error.ParserError("line '%s' can't be parsed" % line)
+
     def parse_line(self, line, time_shift=0.0):
         """
         Return a `_StatResult` instance corresponding to the given
@@ -120,12 +150,8 @@ class _UnixDirectoryParser(_DirectoryParser):
 
         If the line can't be parsed, raise a `ParserError`.
         """
-        try:
-            metadata, nlink, user, group, size, month, day, \
-              year_or_time, name = line.split(None, 8)
-        except ValueError:
-            # "unpack list of wrong size"
-            raise ftp_error.ParserError("line '%s' can't be parsed" % line )
+        metadata, nlink, user, group, size, month, day, \
+          year_or_time, name = self._split_line(line)
         # st_mode
         st_mode = 0
         if len(metadata) != 10:
