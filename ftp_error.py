@@ -38,6 +38,8 @@ ftp_error.py - exception classes and wrappers
 import ftplib
 import sys
 
+import ftputil_version
+
 
 class FTPError:
     """General error class."""
@@ -51,7 +53,8 @@ class FTPError:
         self.filename = None
 
     def __str__(self):
-        return self.strerror
+        return "%s\nDebugging info: %s" % \
+               (self.strerror, ftputil_version.version_info)
 
 # internal errors are those that have more to do with the inner
 #  workings of ftputil than with errors on the server side

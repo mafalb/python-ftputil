@@ -90,6 +90,7 @@ import ftp_error
 import ftp_file
 import ftp_path
 import ftp_stat
+import ftputil_version
 
 # make exceptions available in this module for backwards compatibilty
 from ftp_error import *
@@ -102,7 +103,7 @@ from true_false import *
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
-__version__ = '2.1b2'
+__version__ = ftputil_version.__version__
 
 
 #####################################################################

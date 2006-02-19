@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2006, Stefan Schwarzer
+# Copyright (C) 2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,58 +29,17 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id$
+# $Id: $
 
+import sys
 
-SHELL=/bin/sh
-PROJECT_DIR=/home/schwa/sd/python/ftputil
-DOC_FILES=README.html ftputil.html ftputil_ru.html
-STYLESHEET_PATH=/usr/share/doc/docutils-0.3.7/html/tools/stylesheets/default.css
-WWW_DIR=${HOME}/www
+# ftputil version number
+__version__ = '2.1b2'
 
-.PHONY: dist extdist test docs clean register patch
-.SUFFIXES: .txt .html
+_ftputil_version = __version__
+_python_version = sys.version.split()[0]
+_python_platform = sys.platform
 
-test:
-	for file in `ls _test_*.py`; \
-	do \
-		python $$file ; \
-	done
-
-
-ftputil_ru.html: ftputil_ru_utf8.txt
-	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
-		--input-encoding=utf-8 $< $@
-
-.txt.html:
-	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet $< $@
-
-patch:
-	@echo "Patching files"
-	sed -i'' -r -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil_version.py
-	sed -i'' -r -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
-	sed -i'' -r -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
-	#TODO add rules for Russian translation
-
-docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
-
-dist: clean patch docs
-	python setup.py sdist
-
-localcopy:
-	@echo "Copying archive and documentation to local webspace"
-	cp -p dist/ftputil-`cat VERSION`.tar.gz ${WWW_DIR}/download
-	cp -p ftputil.html ${WWW_DIR}/python
-	touch ${WWW_DIR}/python/python_software.tmpl
-
-register:
-	@echo "Registering new version with PyPI"
-	python setup.py register
-
-extdist: test dist localcopy register
-
-clean:
-	rm -f ${DOC_FILES}
-# use absolute path to ensure we delete the right directory
-	rm -rf ${PROJECT_DIR}/build
+version_info = "ftputil %s, Python %s (%s)" % \
+               (_ftputil_version, _python_version, _python_platform)
 
