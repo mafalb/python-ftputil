@@ -116,7 +116,7 @@ class _UnixDirectoryParser(_DirectoryParser):
         """
         Split a line in metadata, nlink, user, group, size, month,
         day, year_or_time and name and return the result as an
-        eight-element tuple of these values.
+        nine-element list of these values.
         """
         # This method encapsulates the recognition of an unusual
         #  Unix format variant (see ticket
