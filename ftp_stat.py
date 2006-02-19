@@ -139,7 +139,7 @@ class _UnixDirectoryParser(_DirectoryParser):
             parts.insert(2, None)
             return parts
         else:
-            # "unpack list of wrong size"
+            # no known Unix-style format
             raise ftp_error.ParserError("line '%s' can't be parsed" % line)
 
     def parse_line(self, line, time_shift=0.0):
