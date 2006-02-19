@@ -17,5 +17,6 @@ ftputil.html
 ftputil.py
 ftputil.txt
 ftputil_ru_utf8.txt
+ftputil_version.py
 setup.py
 true_false.py
