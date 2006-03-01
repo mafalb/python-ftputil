@@ -84,5 +84,8 @@ for i in range(500):
         print "NOT OK"
         failed += 1
 
+host.remove("remote_data")
+host.close()
+
 print "\n%d tests passed, %d tests failed" % (passed, failed)
 
