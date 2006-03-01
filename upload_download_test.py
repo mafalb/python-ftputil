@@ -53,7 +53,7 @@ def test_data():
     data = [chr(random.randint(0, 255)) for i in range(length)]
     return "".join(data)
     
-# open connection and read local data
+# open connection
 login_data_ = login_data()
 host = ftputil.FTPHost(*login_data_)
 
