@@ -45,8 +45,7 @@ def login_data():
     remote_host = raw_input("Host: ")
     user = raw_input("User name: ")
     password = getpass.getpass("Password: ")
-    return "localhost", 'ftptest', 'd605581757de5eb56d568a4419f4126e'
-    #return remote_host, user, password
+    return remote_host, user, password
 
 def test_data():
     """Return a pseudo-random string of length between 0 and 5120."""
