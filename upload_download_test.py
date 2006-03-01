@@ -1,3 +1,5 @@
+#! /usr/bin/env python
+
 # Copyright (C) 2006, Stefan Schwarzer
 # All rights reserved.
 #
@@ -42,10 +44,13 @@ import ftputil
 
 def login_data():
     """Get host, user, password and return them as a triple."""
-    remote_host = raw_input("Host: ")
+    print "Please enter login data:"
+    remote_host = raw_input("Remote host: ")
     user = raw_input("User name: ")
     password = getpass.getpass("Password: ")
-    return remote_host, user, password
+    print
+    return "localhost", 'ftptest', 'd605581757de5eb56d568a4419f4126e'
+    #return remote_host, user, password
 
 def test_data():
     """Return a pseudo-random string of length between 0 and 5120."""
@@ -53,12 +58,13 @@ def test_data():
     data = [chr(random.randint(0, 255)) for i in range(length)]
     return "".join(data)
     
-# open connection
+# open connection and read local data
 login_data_ = login_data()
 host = ftputil.FTPHost(*login_data_)
 
 # download and test several times
-for i in range(100):
+passed = failed = 0
+for i in range(500):
     # save and upload random data and try to test remote integrity
     data = test_data()
     local_data_file = open("local_data", "wb")
@@ -66,13 +72,17 @@ for i in range(100):
     local_data_file.close()
     host.upload("local_data", "remote_data", "b")
     # download file and compare it with the expected data
-    host.download("remote_data", "remote_data", "b")
-    remote_data_file = open("remote_data", "rb")
-    remote_data = remote_data_file.read()
-    remote_data_file.close()
-    print "Downloaded file %3d (length %4d) is" % ((i+1), len(data)),
-    if data == remote_data:
-        print "OK"
+    host.download("remote_data", "local_data", "b")
+    local_data_file = open("local_data", "rb")
+    local_data = local_data_file.read()
+    local_data_file.close()
+    print "File %3d (length %4d) is" % ((i+1), len(data)),
+    if data == local_data:
+        print "ok"
+        passed += 1
     else:
         print "NOT OK"
+        failed += 1
+
+print "\n%d tests passed, %d tests failed" % (passed, failed)
 
