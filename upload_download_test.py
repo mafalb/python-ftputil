@@ -66,14 +66,12 @@ for i in range(100):
     local_data_file.write(data)
     local_data_file.close()
     host.upload("local_data", "remote_data", "b")
-    assert host.stat("remote_data").st_size == len(data), \
-           "remote data file is currupt"
     # download file and compare it with the expected data
     host.download("remote_data", "remote_data", "b")
     remote_data_file = open("remote_data", "rb")
     remote_data = remote_data_file.read()
     remote_data_file.close()
-    print "downloaded file %3d (length %4d) is" % ((i+1), len(data)),
+    print "Downloaded file %3d (length %4d) is" % ((i+1), len(data)),
     if data == remote_data:
         print "OK"
     else:
