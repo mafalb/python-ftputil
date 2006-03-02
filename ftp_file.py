@@ -220,31 +220,6 @@ class _FTPFile:
         raise AttributeError(
               "'FTPFile' object has no attribute '%s'" % attr_name)
 
-    def keep_alive(self, ignore_errors=False):
-        """
-        Keep the connection busy to prevent lost connections
-        because of server timeouts.
-
-        Since this doesn't seem to work for writable files,
-        `ignore_errors` must be set to a true value to avoid that a
-        `KeepAliveError` is raised. By default, `ignore_errors` is a
-        false value, so errors can't pass silently.
-        """
-        if self.closed:
-            self._host.getcwd()
-        elif self._read_mode:
-            self.read(0)
-        else:
-            # I thought about putting `self.flush()` here; this will
-            #  work if the client wrote at least a byte in the file
-            #  since the last flush. However, using `flush()` here
-            #  could lead to subtle failures in ftputil client code.
-            #  Post on the ftputil mailing list if you think the
-            #  `flush` call is appropriate here.
-            if not ignore_errors:
-                raise ftp_error.KeepAliveError(
-                      "keep-alive doesn't work for writable files")
-
     def close(self):
         """Close the `FTPFile`."""
         if not self.closed:
