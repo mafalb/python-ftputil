@@ -10,9 +10,13 @@ Things to do for a new release:
 
 - `make test && make dist`
 
+- tag release
+
 - add new version to Download page on the website
 
 - register new version with Python Cheese Shop
+
+- post announcement to ftputil mailing list
 
 - for changes in minor version (i. e. not only a bugfix release),
   send announcement to comp.lang.python; update file `announcements`
