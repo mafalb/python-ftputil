@@ -65,10 +65,10 @@ core.setup(
   # metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
-  url="http://www.sschwarzer.net/python/python_software.html",
+  url="http://ftputil.sschwarzer.net/",
   description="High-level FTP client library (virtual filesystem and more)",
-  license="Open source (BSD-style)",
-  platforms=["Pure Python (Python version >= 2.0)"],
+  license="Open source (modified BSD license)",
+  platforms=["Pure Python (Python version >= 2.1)"],
   long_description="""\
 ftputil is a high-level FTP client library for the Python programming
 language. ftputil implements a virtual file system for accessing FTP servers,
