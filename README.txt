@@ -4,40 +4,49 @@ ftputil
 Purpose
 -------
 
-ftputil is a high-level alternative to Python's ftplib module. With
-ftputil, you can access directories and files on remote FTP servers
-almost as if they were in your local file system. This includes using
-file-like objects representing remote files.
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
 
 What's new?
 -----------
 
-From version 1.1 to 2.0, the following has changed:
+From version 2.0 to 2.1, the following has changed:
 
-- ftputil has been re-organized and is now a Python package (the
-  import statement is still the same)
+- Added new methods to the FTPHost class, namely makedirs, walk,
+  rmtree.
 
-- installation via Python distutils
+- The FTP server directory format ("Unix" vs. "Windows") is now set
+  automatically (thanks to Andrew Ittner for testing it).
 
-- stat, upload_if_newer, download_if_newer etc. work correctly if the
-  server is in another time zone than the client running ftputil (with
-  help from Andrew Ittner); see section "Time zone correction" in the
-  documentation
+- Border cases like inaccessible login directories and whitespace in
+  directory names, are now handled more gracefully (based on input
+  from Valeriy Pogrebitskiy, Tommy Sundström and H. Y. Chu).
 
-- it's possible to set the directory listing format "manually" (though
-  in most cases it's recognized automatically); see section "Stat'ing
-  files and directories"
+- The documentation was updated.
 
-- added a workaround regarding whitespace in directory names (thanks
-  to Tommy Sundström and H. Y. Chu)
+- A Russian translation of the documentation (currently slightly
+  behind) was contributed by Anton Stepanov. It's also on the website
+  at http://ftputil.sschwarzer.net/trac/wiki/RussianDocumentation .
 
-- extended documentation and converted it to HTML format (now
-  generated from reStructured Text)
+- New website, http://ftputil.sschwarzer.net/ with wiki, issue tracker
+  and Subversion repository (thanks to Trac!)
 
-- several bugfixes
+  Please enter not only bugs but also enhancement request into
+  the issue tracker!
 
-- there's now a mailing list at http://codespeak.net/mailman/listinfo/ftputil
-  (thanks to Holger Krekel)
+Possible incompatibilities:
+
+- The exception hierarchy was changed slightly, which might break
+  client code. See http://ftputil.sschwarzer.net/trac/changeset/489
+  for the change details and the possibly necessary code changes.
+
+- FTPHost.rmdir no longer removes non-empty directories. Use the new
+  method FTPHost.rmtree for this.
 
 Documentation
 -------------
