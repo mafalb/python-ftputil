@@ -2,20 +2,17 @@ Things to do for a new release:
 
 - update info on new version in `README.txt`
 
-- increase version number in
-  - `VERSION`
-  - `ftputil.py` (`__version__`)
-  - `ftputil.txt`
+- write announcement in announcements.txt
+
+- increase version number in `VERSION` (`ftputil_version.py` 
+  and `ftputil.txt` are handled by the `sed` invocation through
+  `make dist`)
 
 - `make test && make dist`
 
-- copy distribution file to download directory (`~/www/download`)
+- add new version to Download page on the website
 
-- copy new documentation file to `~/www/python/ftputil.html`
-
-- update version summary in file `~/www/python/python_software.tmpl`
-
-- update the files on the remote WWW server (e. g. with `sitecopy`)
+- register new version with Python Cheese Shop
 
 - for changes in minor version (i. e. not only a bugfix release),
   send announcement to comp.lang.python; update file `announcements`
