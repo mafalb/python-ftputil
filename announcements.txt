@@ -46,6 +46,12 @@ os.path and shutil modules. ftputil has convenience functions for
 conditional uploads and downloads, and handles FTP clients and servers
 in different timezones.
 
+License
+-------
+
+ftputil 2.1 is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
 Stefan
 
 ----------------------------------------------------------------------
