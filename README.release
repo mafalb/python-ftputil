@@ -14,7 +14,9 @@ Things to do for a new release:
 
 - add new version to Download page on the website
 
-- register new version with Python Cheese Shop
+- update documentation on the website
+
+- register new version with PyPI
 
 - post announcement to ftputil mailing list
 
