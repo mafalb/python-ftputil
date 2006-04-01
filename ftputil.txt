@@ -831,7 +831,7 @@ reside in the ``ftputil`` package. The documentation (in
 .. _`reStructured Text`: http://docutils.sourceforge.net/rst.html
 
 The files ``_test_*.py`` and ``_mock_ftplib.py`` are for unit-testing.
-If you only *use* ``ftputil`` (i. e. *not* modifying it), you can
+If you only *use* ``ftputil`` (i. e. *don't* modify it), you can
 delete these files.
 
 
