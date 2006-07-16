@@ -67,6 +67,7 @@ core.setup(
   author_email="sschwarzer@sschwarzer.net",
   url="http://ftputil.sschwarzer.net/",
   description="High-level FTP client library (virtual filesystem and more)",
+  keywords="FTP, client, virtual file system",
   license="Open source (revised BSD license)",
   platforms=["Pure Python (Python version >= 2.1)"],
   long_description="""\
