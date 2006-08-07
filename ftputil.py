@@ -240,8 +240,8 @@ class FTPHost:
         except ftp_error.PermanentError:
             # similarly to a failed `file` in a local filesystem, we
             #  raise an `IOError`, not an `OSError`
-            raise ftp_error.FTPIOError("directory '%s' doesn't exist or "
-                  "has insufficient access rights" % effective_dir)
+            raise ftp_error.FTPIOError("remote directory '%s' doesn't exist "
+                  "or has insufficient access rights" % effective_dir)
         host._file._open(effective_file, mode)
         return host._file
 
