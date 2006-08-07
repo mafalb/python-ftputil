@@ -240,8 +240,8 @@ class FTPHost:
         except ftp_error.PermanentError:
             # similarly to a failed `file` in a local filesystem, we
             #  raise an `IOError`, not an `OSError`
-            raise ftp_error.FTPIOError("directory '%s' is not accessible" %
-                                       effective_dir)
+            raise ftp_error.FTPIOError("directory '%s' doesn't exist or "
+                  "has insufficient access rights" % effective_dir)
         host._file._open(effective_file, mode)
         return host._file
 
@@ -550,7 +550,7 @@ class FTPHost:
             ftp_error._try_with_oserror(self._session.delete, path)
         else:
             raise ftp_error.PermanentError("remove/unlink can only delete "
-			                               "files and links, not directories")
+                                           "files and links, not directories")
 
     def unlink(self, path):
         """Remove the given file."""
