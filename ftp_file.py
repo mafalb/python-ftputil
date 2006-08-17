@@ -228,7 +228,7 @@ class _FTPFile:
             try:
                 ftp_error._try_with_ioerror(self._session.voidresp)
             except ftp_error.FTPIOError, exception_:
-                # ignore some errors, see ticket #17,
+                # ignore some errors, see ticket #17 at
                 #  http://ftputil.sschwarzer.net/trac/ticket/17
                 error_code = str(exception_).split()[0]
                 if error_code not in ("426", "450"):
