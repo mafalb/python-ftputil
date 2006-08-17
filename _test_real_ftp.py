@@ -67,8 +67,17 @@ class RealFTPTest(unittest.TestCase):
         self.host.close()
 
     def make_file(self, path):
-        file = self.host.file(path, 'wb')
-        file.close()
+        file_ = self.host.file(path, 'wb')
+        file_.close()
+
+    def test_open_for_reading(self):
+        # test for issue #17, http://ftputil.sschwarzer.net/trac/ticket/17
+        file1 = self.host.file("debian-keyring.tar.gz", 'rb')
+        file1.close()
+        # make sure that there are no problems if the connection is reused
+        file2 = self.host.file("debian-keyring.tar.gz", 'rb')
+        file2.close()
+        self.failUnless(file1._session is file2._session)
 
     def test_time_shift(self):
         self.host.synchronize_times()

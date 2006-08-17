@@ -225,6 +225,13 @@ class _FTPFile:
         if not self.closed:
             self._fo.close()
             ftp_error._try_with_ioerror(self._conn.close)
-            ftp_error._try_with_ioerror(self._session.voidresp)
+            try:
+                ftp_error._try_with_ioerror(self._session.voidresp)
+            except ftp_error.FTPIOError, exception_:
+                # ignore some errors, see ticket #17,
+                #  http://ftputil.sschwarzer.net/trac/ticket/17
+                error_code = str(exception_).split()[0]
+                if error_code not in ("426", "450"):
+                    raise
             self.closed = True
 
