@@ -37,6 +37,7 @@ PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html ftputil_ru.html
 STYLESHEET_PATH=/usr/share/doc/docutils-0.3.7/html/tools/stylesheets/default.css
 WWW_DIR=${HOME}/www
+SED=sed -i'' -r -e
 
 .PHONY: dist extdist test docs clean register patch
 .SUFFIXES: .txt .html
@@ -57,10 +58,14 @@ ftputil_ru.html: ftputil_ru_utf8.txt
 
 patch:
 	@echo "Patching files"
-	sed -i'' -r -e "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" ftputil_version.py
-	sed -i'' -r -e "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
-	sed -i'' -r -e "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
+	${SED} "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" \
+		ftputil_version.py
+	${SED} "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
+	${SED} "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
 	#TODO add rules for Russian translation
+	${SED} "s/^Version: .*/Version: `cat VERSION`/" PKG-INFO
+	${SED} "s/(\/wiki\/Download\/ftputil-)2.1(\.tar\.gz)/\1`cat VERSION`\2/" \
+		PKG-INFO
 
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
 
