@@ -3,7 +3,7 @@ http://ftputil.sschwarzer.net/download .
 
 This release fixes a bug which happened when a client opened
 a large file on the server as a file-like object and read
-only a part of it. Details can be found at
+only a part of it. For details, see
 http://ftputil.sschwarzer.net/trac/ticket/17 .
 
 Stefan
