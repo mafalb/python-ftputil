@@ -97,6 +97,9 @@ class _Path:
     # by the exception handling in `isfile`, `isdir` and `islink`.
 
     def isfile(self, path):
+        # workaround if we can't go up from the current directory
+        if path == self._host.getcwd():
+            return False
         try:
             stat_result = self._host.stat(
                           path, _exception_for_missing_path=False)
@@ -108,6 +111,9 @@ class _Path:
             return False
 
     def isdir(self, path):
+        # workaround if we can't go up from the current directory
+        if path == self._host.getcwd():
+            return True
         try:
             stat_result = self._host.stat(
                           path, _exception_for_missing_path=False)
