@@ -403,10 +403,14 @@ class FTPHost:
         """
         source_mode, target_mode = self.__get_modes(mode)
         source = source_open(source, source_mode)
-        target = target_open(target, target_mode)
-        self.copyfileobj(source, target)
-        source.close()
-        target.close()
+        try:
+            target = target_open(target, target_mode)
+            try:
+                self.copyfileobj(source, target)
+            finally:
+                target.close()
+        finally:
+            source.close()
 
     def upload(self, source, target, mode=''):
         """
