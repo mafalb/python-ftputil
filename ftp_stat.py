@@ -444,7 +444,7 @@ class _Stat:
             if visited_paths.has_key(path):
                 # we had this path already
                 raise ftp_error.PermanentError(
-                      "recursive link structure detected for path '%s'" %
+                      "recursive link structure detected for remote path '%s'" %
                       original_path)
             # remember the path we have encountered
             visited_paths[path] = True
