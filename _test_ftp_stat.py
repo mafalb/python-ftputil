@@ -219,7 +219,7 @@ class TestDirectoryParsers(unittest.TestCase):
         to full hours.
         """
         host = _test_base.ftp_host_factory()
-        # use Unix format parser explicitly
+        # explicitly use Unix format parser
         host._stat._parser = ftp_stat._UnixDirectoryParser()
         host.set_time_shift(supposed_time_shift)
         server_time = time.time() + supposed_time_shift + deviation

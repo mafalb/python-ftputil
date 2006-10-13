@@ -40,9 +40,6 @@ import stat
 
 import ftp_error
 
-# `True`, `False`
-from true_false import *
-
 
 class _Path:
     """

@@ -45,10 +45,6 @@ import ftp_error
 import ftp_file
 import ftputil
 
-# `True`, `False`
-from true_false import *
-
-
 #
 # helper functions to generate random data
 #
@@ -114,10 +110,10 @@ class InaccessibleDirSession(_mock_ftplib.MockSession):
 #
 class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
     def upload(self, source, target, mode=''):
-        assert 0, "`FTPHost.upload` should not have been called"
+        assert False, "`FTPHost.upload` should not have been called"
 
     def download(self, source, target, mode=''):
-        assert 0, "`FTPHost.download` should not have been called"
+        assert False, "`FTPHost.download` should not have been called"
 
 class TimeShiftFTPHost(ftputil.FTPHost):
     class _Path:

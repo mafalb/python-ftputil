@@ -76,10 +76,6 @@ Note: ftputil currently is not threadsafe. More specifically, you can
       using a single `FTPHost` object in different threads.
 """
 
-# for Python 2.2; note that we can't use try/except here, see FAQ in
-#  http://www.python.org/peps/pep-0236.html
-from __future__ import generators
-
 import ftplib
 import os
 import stat
@@ -94,8 +90,6 @@ import ftputil_version
 
 # make exceptions available in this module for backwards compatibilty
 from ftp_error import *
-# `True`, `False`
-from true_false import *
 
 
 # it's recommended to use the error classes via the `ftp_error` module;
@@ -188,7 +182,7 @@ class FTPHost:
         # if a session factory had been given on the instantiation of
         #  this `FTPHost` object, use the same factory for this
         #  `FTPHost` object's child sessions
-        if kwargs.has_key('session_factory'):
+        if 'session_factory' in kwargs:
             factory = kwargs['session_factory']
             del kwargs['session_factory']
         else:
@@ -628,9 +622,8 @@ class FTPHost:
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
         lines = []
-        # use `lines=lines` for Python versions which don't support
-        #  "nested scopes"
-        callback = lambda line, lines=lines: lines.append(line)
+        def callback(line):
+            lines.append(line)
         # see below for this decision logic
         if path.find(" ") == -1:
             # use straight-forward approach, without changing directories
@@ -710,11 +703,6 @@ class FTPHost:
         Implementation note: The code is copied from `os.walk` in
         Python 2.4 and adapted to ftputil.
         """
-        # this method won't work for Python versions before 2.2;
-        #  these don't know generators
-        if sys.version_info < (2, 2, 0):
-            raise RuntimeError("FTPHost.walk needs Python >= 2.2")
-
         # code from `os.walk` ...
         try:
             # Note that listdir and error are globals in this module due

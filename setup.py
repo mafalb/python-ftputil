@@ -48,12 +48,6 @@ _package = "ftputil"
 _version = open("VERSION").read().strip()
 _data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
 
-# add `download_url` parameter if the version of distutils supports it
-more_args = {}
-if sys.version_info > (2, 2, 2):
-    more_args['download_url'] = \
-      "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" % (_name, _version)
-
 core.setup(
   # installation data
   name=_name,
@@ -77,6 +71,8 @@ that is, it can generate file-like objects for remote files. The library
 supports many functions similar to those in the os, os.path and
 shutil modules. ftputil has convenience functions for conditional uploads
 and downloads, and handles FTP clients and servers in different timezones.""",
-  **more_args
+  download_url=
+    "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" %
+    (_name, _version)
   )
 

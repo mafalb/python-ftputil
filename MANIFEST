@@ -1,7 +1,6 @@
 MANIFEST
 README.html
 README.txt
-UserTuple.py
 VERSION
 __init__.py
 _mock_ftplib.py
@@ -19,4 +18,3 @@ ftputil.txt
 ftputil_ru_utf8.txt
 ftputil_version.py
 setup.py
-true_false.py

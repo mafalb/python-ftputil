@@ -41,24 +41,8 @@ import time
 
 import ftp_error
 
-from true_false import *
 
-
-# Set up the base class for the stat results, depending on the
-#  capabilities of the used Python version. In older Python versions,
-#  classes can't inherit from builtin types.
-try:
-    class __InheritanceTest(tuple):
-        pass
-    _StatResultBase = tuple
-    del __InheritanceTest
-except TypeError:
-    # "base is not a class object"
-    import UserTuple
-    _StatResultBase = UserTuple.UserTuple
-
-
-class _StatResult(_StatResultBase):
+class _StatResult(tuple):
     """
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
