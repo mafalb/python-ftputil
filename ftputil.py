@@ -137,7 +137,7 @@ class FTPHost:
         self.path = ftp_path._Path(self)
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
-        # save current directory
+        # save (cache) current directory
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
         self._children = []
@@ -495,7 +495,10 @@ class FTPHost:
     def chdir(self, path):
         """Change the directory on the host."""
         ftp_error._try_with_oserror(self._session.cwd, path)
-        self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
+        self._current_dir = self.path.normpath(self.path.join(
+                                               # use "old" current dir
+                                               self._current_dir, path))
+        #self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
 
     def mkdir(self, path, mode=None):
         """
