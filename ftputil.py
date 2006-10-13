@@ -82,7 +82,6 @@ import stat
 import sys
 import time
 
-#import ftp_dir_cache
 import ftp_error
 import ftp_file
 import ftp_path
@@ -142,8 +141,6 @@ class FTPHost:
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
         self._children = []
-        # directory listing cache for stat calls
-        #self._dir_cache = ftp_dir_cache.Cache()
         # now opened
         self.closed = False
         # set curdir, pardir etc. for the remote host; RFC 959 states
@@ -259,7 +256,6 @@ class FTPHost:
                 host.close()
             # now deal with our-self
             ftp_error._try_with_oserror(self._session.close)
-            #self._dir_cache.clear()
             self._children = []
             self.closed = True
 
@@ -542,16 +538,11 @@ class FTPHost:
         empty directories as well, - if the server allowed it. This
         is no longer supported.
         """
-        #self._dir_cache.enabled = False
-        #path = self.path.abspath(path)
-        #self._dir_cache.invalidate(path)
-        #self._dir_cache.invalidate(self.path.dirname(path))
         if self.listdir(path):
             path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
         ftp_error._try_with_oserror(self._session.rmd, path)
-        #self._dir_cache.enabled = True
 
     def remove(self, path):
         """Remove the given file or link."""
@@ -631,11 +622,6 @@ class FTPHost:
     #  `_session`'s `dir` method
     def _dir(self, path):
         """Return a directory listing as made by FTP's `DIR` command."""
-        #absolute_path = self.path.abspath(path)
-        #try:
-        #    return self._dir_cache[absolute_path]
-        #except ftp_dir_cache.CacheMissError:
-        #    pass
         # we can't use `self.path.isdir` in this method because that
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
@@ -671,7 +657,6 @@ class FTPHost:
             finally:
                 # restore the old directory
                 self.chdir(old_dir)
-        #self._dir_cache[absolute_path] = lines
         return lines
 
     def listdir(self, path):
