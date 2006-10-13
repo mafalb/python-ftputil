@@ -336,7 +336,7 @@ class _Stat:
         #  (however, the string may be _anywhere_ on the line but not
         #  necessarily the file's basename; e. g. the string could
         #  occur as the name of the file's group)
-        return [line  for line in lines  if line.find(wanted_name) != -1]
+        return [line  for line in lines  if wanted_name in line]
 
     def _real_lstat(self, path, _exception_for_missing_path=True):
         """
