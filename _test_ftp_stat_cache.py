@@ -70,6 +70,17 @@ class TestStatCache(unittest.TestCase):
         self.cache["path2"] = "test2"
         self.assertEqual(len(self.cache), 2)
 
+    def test_disabled(self):
+        self.cache["path1"] = "test1"
+        self.cache.disable()
+        self.cache["path2"] = "test2"
+        self.assertEqual(self.cache["path1"], "test1")
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path2")
+        self.assertEqual(len(self.cache), 1)
+        # don't raise a `CacheMissError` for missing paths
+        self.cache.invalidate("path2")
+
 
 if __name__ == '__main__':
     unittest.main()
