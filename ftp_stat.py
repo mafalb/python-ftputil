@@ -317,7 +317,6 @@ class _Stat:
                   "550 %s: no such directory or wrong directory parser used" %
                   path)
         # set up for loop
-        dirname, basename = self._path.split(path)
         lines = self._host_dir(path)
         names = []
         for line in lines:
@@ -327,7 +326,7 @@ class _Stat:
                 #  correct timestamp values in the cache
                 stat_result = self._parser.parse_line(line,
                                                       self._host.time_shift())
-                loop_path = self._path.join(dirname, stat_result._st_name)
+                loop_path = self._path.join(path, stat_result._st_name)
                 self._lstat_cache[loop_path] = stat_result
                 st_name = stat_result._st_name
                 if st_name not in (self._host.curdir, self._host.pardir):
