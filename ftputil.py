@@ -138,6 +138,7 @@ class FTPHost:
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
         self.stat_cache = self._stat._lstat_cache
+        self.stat_cache.enable()
         # save (cache) current directory
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
