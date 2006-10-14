@@ -45,10 +45,10 @@ class StatCache(object):
         self._cache = {}
         self._debug = False
         self.enabled = True
+        #self.enabled = False
 
-    def _debug_output(self, text):
-        if self._debug:
-            print "***", text
+    def clear(self):
+        self._cache.clear()
 
     def invalidate(self, path):
         try:
@@ -56,17 +56,18 @@ class StatCache(object):
         except KeyError:
             pass
 
-    def clear(self):
-        self._cache.clear()
-
     def __getitem__(self, path):
+        """
+        Return the stat entry for the `path`. If there's no stored
+        stat entry, raise `CacheMissError`.
+        """
         try:
             lines = self._cache[path]
             self._debug_output("Requested path %s ... found" % path)
             return lines
         except KeyError:
             self._debug_output("Requested path %s ... _not_ found" % path)
-            raise CacheMissError
+            raise CacheMissError("no path %s in cache" % path)
 
     def __setitem__(self, path, lines):
         if not self.enabled:
@@ -76,11 +77,19 @@ class StatCache(object):
         self._debug_output("%d cache entries" % len(self._cache))
 
     def __contains__(self, path):
-        return path in self._cache
+        return (path in self._cache)
+
+    # the following methods are only intended for debugging!
+    def _debug_output(self, text):
+        if self._debug:
+            print "***", text
+
+    def __len__(self):
+        return len(self._cache)
 
     def __str__(self):
         lines = []
         for key in sorted(self._cache):
-            lines.append(key)
+            lines.append("%s: %s" % (key, self[key]))
         return "\n".join(lines)
 
