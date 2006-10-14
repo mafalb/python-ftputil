@@ -137,6 +137,7 @@ class FTPHost:
         self.path = ftp_path._Path(self)
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
+        self.stat_cache = self._stat._lstat_cache
         # save (cache) current directory
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
@@ -498,7 +499,6 @@ class FTPHost:
         self._current_dir = self.path.normpath(self.path.join(
                                                # use "old" current dir
                                                self._current_dir, path))
-        #self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
 
     def mkdir(self, path, mode=None):
         """
@@ -541,14 +541,16 @@ class FTPHost:
         empty directories as well, - if the server allowed it. This
         is no longer supported.
         """
+        path = self.path.abspath(path)
         if self.listdir(path):
-            path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
         ftp_error._try_with_oserror(self._session.rmd, path)
+        self.stat_cache.invalidate(path)
 
     def remove(self, path):
         """Remove the given file or link."""
+        path = self.path.abspath(path)
         # though `isfile` includes also links to files, `islink`
         #  is needed to include links to directories
         if self.path.isfile(path) or self.path.islink(path):
@@ -556,6 +558,7 @@ class FTPHost:
         else:
             raise ftp_error.PermanentError("remove/unlink can only delete "
                                            "files and links, not directories")
+        self.stat_cache.invalidate(path)
 
     def unlink(self, path):
         """Remove the given file."""

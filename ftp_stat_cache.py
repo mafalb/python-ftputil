@@ -44,7 +44,7 @@ class StatCache(object):
     def __init__(self):
         self._cache = {}
         self._debug = False
-        self.enabled = False
+        self.enabled = True
 
     def _debug_output(self, text):
         if self._debug:

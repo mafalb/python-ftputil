@@ -324,11 +324,13 @@ class TestLstatAndStat(unittest.TestCase):
     def test_parser_switching_with_permanent_error(self):
         """Test non-switching of parser format with `PermanentError`."""
         self.assertEqual(self.stat._allow_parser_switching, True)
-        # if there's a `PermanentError`, don't switch because we
-        #  don't know if the file was missed due to a wrong parser
+        # with these directory contents, we get a `ParserError` for
+        #  the Unix parser, so `_allow_parser_switching` can be
+        #  switched off no matter whether we got a `PermanentError`
+        #  or not
         self.assertRaises(ftp_error.PermanentError, self.stat.lstat,
                           "/home/msformat/nonexistent")
-        self.assertEqual(self.stat._allow_parser_switching, True)
+        self.assertEqual(self.stat._allow_parser_switching, False)
 
     def test_parser_switching_default_to_unix(self):
         """Test non-switching of parser format; stay with Unix."""

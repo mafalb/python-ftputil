@@ -121,6 +121,8 @@ class TimeShiftFTPHost(ftputil.FTPHost):
             self._mtime = mtime
         def getmtime(self, file_name):
             return self._mtime
+        def abspath(self, path):
+            return "/home/sschwarzer/_ftputil_sync_"
         # needed for `isdir` in `FTPHost.remove`
         def isfile(self, path):
             return True
