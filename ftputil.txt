@@ -735,6 +735,38 @@ to the `ftputil mailing list`_. In *either* case you *must not*
 include confidential information (user id, password, file names, etc.)
 in the problem report! Be careful!
 
+Does ``ftputil`` support SSL?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``ftputil`` has no built-in SSL support. On the other hand,
+you can use M2Crypto_ (in the source code archive, look for the
+file ``M2Crypto/ftpslib.py``) which has a class derived from
+``ftplib.FTP`` that supports SSL. You then can use a class
+(not an object of it) similar to the following as a "session
+factory" in ``ftputil.FTPHost``'s constructor::
+
+    import ftputil
+
+    from M2Crypto import ftpslib
+
+    class SSLFTPSession(ftpslib.FTP_TLS):
+        def __init__(self, host, userid, password):
+            """
+            Use M2Crypto's `FTP_TLS` class to establish an
+            SSL connection.
+            """
+            ftpslib.FTP_TLS.__init__(self)
+            self.connect(host, port)
+            self.login(userid, password)
+            # do anything necessary to set up the SSL connection
+
+    # note the `session_factory` parameter
+    host = ftputil.FTPHost(host, userid, password,
+                           session_factory=SSLFTPSession)
+    # use `host` as usual
+ 
+.. _M2Crypto: http://wiki.osafoundation.org/bin/view/Projects/MeTooCrypto#Downloads
+
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
