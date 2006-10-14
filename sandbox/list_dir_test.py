@@ -34,6 +34,10 @@
 
 # $Id: $
 
+# use experimental ftputil version
+import sys
+sys.path.insert(0, "/home/schwa/sd/python/ftputil.add_stat_caching")
+
 import ftputil
 
 
@@ -50,6 +54,9 @@ def main():
         print
         if top == "pub/FreeBSD/doc/fr_FR.ISO8859-1/books/ppp-primer":
             break
+    print "Stat cache:"
+    print ftp_host.stat_cache
+    print len(ftp_host.stat_cache), "entries in cache"
     ftp_host.close()
 
 
