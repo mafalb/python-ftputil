@@ -44,8 +44,13 @@ class StatCache(object):
     def __init__(self):
         self._cache = {}
         self._debug = False
-        self.enabled = True
-        #self.enabled = False
+        self.enable()
+
+    def enable(self):
+        self._enabled = True
+
+    def disable(self):
+        self._enabled = False
 
     def clear(self):
         self._cache.clear()
@@ -69,17 +74,19 @@ class StatCache(object):
             self._debug_output("Requested path %s ... _not_ found" % path)
             raise CacheMissError("no path %s in cache" % path)
 
-    def __setitem__(self, path, lines):
-        if not self.enabled:
+    def __setitem__(self, path, stat_result):
+        if not self._enabled:
             return
-        self._cache[path] = lines
+        self._cache[path] = stat_result
         self._debug_output("Set path %s" % path)
-        self._debug_output("%d cache entries" % len(self._cache))
+        self._debug_output("%d cache entries" % len(self))
 
     def __contains__(self, path):
         return (path in self._cache)
 
+    #
     # the following methods are only intended for debugging!
+    #
     def _debug_output(self, text):
         if self._debug:
             print "***", text
