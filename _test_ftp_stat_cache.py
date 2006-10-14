@@ -29,5 +29,48 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: $
+# $Id$
+
+import unittest
+
+import ftp_stat_cache
+
+
+class TestStatCache(unittest.TestCase):
+    def setUp(self):
+        self.cache = ftp_stat_cache.StatCache()
+
+    def test_get_set(self):
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path")
+        self.cache["path"] = "test"
+        self.assertEqual(self.cache["path"], "test")
+
+    def test_invalidate(self):
+        # don't raise a `CacheMissError` for missing paths
+        self.cache.invalidate("test")
+        self.cache["path"] = "test"
+        self.cache.invalidate("path")
+        self.assertEqual(self.cache._cache, {})
+
+    def test_clear(self):
+        self.cache["path1"] = "test1"
+        self.cache["path2"] = "test2"
+        self.cache.clear()
+        self.assertEqual(self.cache._cache, {})
+
+    def test_contains(self):
+        self.cache["path1"] = "test1"
+        self.assertEqual("path1" in self.cache, True)
+        self.assertEqual("path2" in self.cache, False)
+
+    def test_len(self):
+        self.assertEqual(len(self.cache), 0)
+        self.cache["path1"] = "test1"
+        self.cache["path2"] = "test2"
+        self.assertEqual(len(self.cache), 2)
+
+
+if __name__ == '__main__':
+    unittest.main()
 
