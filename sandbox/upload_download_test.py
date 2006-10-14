@@ -31,7 +31,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id$
+# $Id: upload_download_test.py 570 2006-10-14 01:33:14Z schwa $
 
 # Test script for ticket #13 (reported by Pete Schott)
 
