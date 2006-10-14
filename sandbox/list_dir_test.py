@@ -88,4 +88,8 @@ if __name__ == '__main__':
 # user    0m0.480s
 # sys     0m0.112s
 
+# Dito, together with caching in listdir
+# real    0m49.677s
+# user    0m0.424s
+# sys     0m0.100s
 
