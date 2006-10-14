@@ -257,6 +257,7 @@ class FTPHost:
                 host.close()
             # now deal with our-self
             ftp_error._try_with_oserror(self._session.close)
+            self.stat_cache.clear()
             self._children = []
             self.closed = True
 
