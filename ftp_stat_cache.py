@@ -47,15 +47,32 @@ class StatCache(object):
         self.enable()
 
     def enable(self):
+        """Enable storage of stat results."""
         self._enabled = True
 
     def disable(self):
+        """
+        Disable the cache. Further storage attempts with `__setitem__`
+        won't have any visible effect.
+
+        Disabling the cache only effects new storage attempts. Values
+        stored before calling `disable` can still be retrieved.
+        """
         self._enabled = False
 
     def clear(self):
+        """Clear (invalidate) all cache entries."""
         self._cache.clear()
 
     def invalidate(self, path):
+        """
+        Invalidate the cache entry for `path` if present. After
+        that, the stat result data for `path` can no longer be
+        retrieved, as if it had never been stored.
+
+        If no stat result for `path` is in the cache, do _not_
+        raise an exception.
+        """
         try:
             del self._cache[path]
         except KeyError:
@@ -75,6 +92,10 @@ class StatCache(object):
             raise CacheMissError("no path %s in cache" % path)
 
     def __setitem__(self, path, stat_result):
+        """
+        Put the stat data for `path` into the cache, unless it's
+        disabled.
+        """
         if not self._enabled:
             return
         self._cache[path] = stat_result
@@ -82,6 +103,10 @@ class StatCache(object):
         self._debug_output("%d cache entries" % len(self))
 
     def __contains__(self, path):
+        """
+        Support for the `in` operator. Return a true value, if data
+        for `path` is in the cache, else return a false value.
+        """
         return (path in self._cache)
 
     #
@@ -92,9 +117,11 @@ class StatCache(object):
             print "***", text
 
     def __len__(self):
+        """Return the number of entries in the cache."""
         return len(self._cache)
 
     def __str__(self):
+        """Return a string representation of the cache contents."""
         lines = []
         for key in sorted(self._cache):
             lines.append("%s: %s" % (key, self[key]))
