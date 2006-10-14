@@ -716,8 +716,6 @@ class FTPHost:
         """
         # code from `os.walk` ...
         try:
-            # Note that listdir and error are globals in this module due
-            # to earlier import-*.
             names = self.listdir(top)
         except ftp_error.FTPOSError, err:
             if onerror is not None:
