@@ -68,12 +68,12 @@ class LRUCache(object):
     cache['foo'] = get_file_contents('foo') # or whatever
 
     if 'foo' in cache: # if it's still in cache...
-	    # use cached version
+        # use cached version
         contents = cache['foo']
     else:
-	    # recalculate
+        # recalculate
         contents = get_file_contents('foo')
-	    # store in cache for next time
+        # store in cache for next time
         cache['foo'] = contents
 
     print cache.size # Maximum size
