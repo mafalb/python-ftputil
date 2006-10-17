@@ -3,6 +3,10 @@
 # Copyright 2004 Evan Prodromou <evan@bad.dynu.ca>
 # Licensed under the Academic Free License 2.1
 
+# Licensed for ftputil under the revised BSD license
+# with permission by the author, Evan Prodromou. Many
+# thanks, Evan! :-)
+
 # arch-tag: LRU cache main module
 
 """a simple LRU (Least-Recently-Used) cache module
