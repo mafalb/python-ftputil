@@ -43,12 +43,11 @@ class CacheMissError(Exception):
 
 
 class StatCache(object):
-    # number of cache entries
+    # default number of cache entries
     _DEFAULT_CACHE_SIZE = 2000
 
     def __init__(self):
         self._cache = lrucache.LRUCache(self._DEFAULT_CACHE_SIZE)
-        self._debug = False
         self.enable()
 
     def enable(self):
@@ -103,11 +102,8 @@ class StatCache(object):
         stat entry, raise `CacheMissError`.
         """
         try:
-            stat_result = self._cache[path]
-            self._debug_output("Requested path %s ... found" % path)
-            return stat_result
+            return self._cache[path]
         except lrucache.CacheKeyError:
-            self._debug_output("Requested path %s ... _not_ found" % path)
             raise CacheMissError("no path %s in cache" % path)
 
     def __setitem__(self, path, stat_result):
@@ -118,8 +114,6 @@ class StatCache(object):
         if not self._enabled:
             return
         self._cache[path] = stat_result
-        self._debug_output("Set path %s" % path)
-        self._debug_output("%d cache entries" % len(self))
 
     def __contains__(self, path):
         """
@@ -131,10 +125,6 @@ class StatCache(object):
     #
     # the following methods are only intended for debugging!
     #
-    def _debug_output(self, text):
-        if self._debug:
-            print "***", text
-
     def __len__(self):
         """Return the number of entries in the cache."""
         return len(self._cache)
