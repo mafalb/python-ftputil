@@ -35,14 +35,19 @@
 ftp_stat_cache.py - cache for (l)stat data
 """
 
+import lrucache
+
 
 class CacheMissError(Exception):
     pass
 
 
 class StatCache(object):
+    _CACHE_SIZE = 5000
+
     def __init__(self):
-        self._cache = {}
+        # number of cache entries
+        self._cache = lrucache.LRUCache(self._CACHE_SIZE)
         self._debug = False
         self.enable()
 
@@ -62,7 +67,9 @@ class StatCache(object):
 
     def clear(self):
         """Clear (invalidate) all cache entries."""
-        self._cache.clear()
+        # implicitly clear the cache by setting the size to zero
+        self._cache.size = 0
+        self._cache.size = self._CACHE_SIZE
 
     def invalidate(self, path):
         """
@@ -75,7 +82,7 @@ class StatCache(object):
         """
         try:
             del self._cache[path]
-        except KeyError:
+        except lrucache.CacheKeyError:
             pass
 
     def __getitem__(self, path):
@@ -84,10 +91,10 @@ class StatCache(object):
         stat entry, raise `CacheMissError`.
         """
         try:
-            lines = self._cache[path]
+            stat_result = self._cache[path]
             self._debug_output("Requested path %s ... found" % path)
-            return lines
-        except KeyError:
+            return stat_result
+        except lrucache.CacheKeyError:
             self._debug_output("Requested path %s ... _not_ found" % path)
             raise CacheMissError("no path %s in cache" % path)
 

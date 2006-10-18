@@ -51,13 +51,13 @@ class TestStatCache(unittest.TestCase):
         self.cache.invalidate("test")
         self.cache["path"] = "test"
         self.cache.invalidate("path")
-        self.assertEqual(self.cache._cache, {})
+        self.assertEqual(len(self.cache), 0)
 
     def test_clear(self):
         self.cache["path1"] = "test1"
         self.cache["path2"] = "test2"
         self.cache.clear()
-        self.assertEqual(self.cache._cache, {})
+        self.assertEqual(len(self.cache), 0)
 
     def test_contains(self):
         self.cache["path1"] = "test1"
