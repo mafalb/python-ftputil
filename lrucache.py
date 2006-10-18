@@ -6,6 +6,9 @@
 # Licensed for ftputil under the revised BSD license
 # with permission by the author, Evan Prodromou. Many
 # thanks, Evan! :-)
+#
+# The original file is available in lrucache 0.2 at
+# http://cheeseshop.python.org/pypi/lrucache/0.2 .
 
 # arch-tag: LRU cache main module
 
