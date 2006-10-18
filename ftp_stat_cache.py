@@ -43,11 +43,11 @@ class CacheMissError(Exception):
 
 
 class StatCache(object):
-    _CACHE_SIZE = 5000
+    # number of cache entries
+    _DEFAULT_CACHE_SIZE = 2000
 
     def __init__(self):
-        # number of cache entries
-        self._cache = lrucache.LRUCache(self._CACHE_SIZE)
+        self._cache = lrucache.LRUCache(self._DEFAULT_CACHE_SIZE)
         self._debug = False
         self.enable()
 
@@ -61,15 +61,27 @@ class StatCache(object):
         won't have any visible effect.
 
         Disabling the cache only effects new storage attempts. Values
-        stored before calling `disable` can still be retrieved.
+        stored before calling `disable` can still be retrieved unless
+        disturbed by a `resize` command or normal cache expiration.
         """
         self._enabled = False
 
+    def resize(self, new_size):
+        """
+        Set number of cache entries to the integer `new_size`.
+        If the new size is greater than the current cache size,
+        relatively long-unused elements will be removed.
+        """
+        self._cache.size = new_size
+
     def clear(self):
         """Clear (invalidate) all cache entries."""
-        # implicitly clear the cache by setting the size to zero
-        self._cache.size = 0
-        self._cache.size = self._CACHE_SIZE
+        old_size = self._cache.size
+        try:
+            # implicitly clear the cache by setting the size to zero
+            self.resize(0)
+        finally:
+            self.resize(old_size)
 
     def invalidate(self, path):
         """

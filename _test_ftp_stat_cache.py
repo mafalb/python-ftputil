@@ -70,6 +70,12 @@ class TestStatCache(unittest.TestCase):
         self.cache["path2"] = "test2"
         self.assertEqual(len(self.cache), 2)
 
+    def test_resize(self):
+        self.cache.resize(100)
+        for i in xrange(150):
+            self.cache["/%d" % i] = i
+        self.assertEqual(len(self.cache), 100)
+
     def test_disabled(self):
         self.cache["path1"] = "test1"
         self.cache.disable()
