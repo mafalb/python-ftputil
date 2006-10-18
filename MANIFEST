@@ -19,4 +19,5 @@ ftputil.py
 ftputil.txt
 ftputil_ru_utf8.txt
 ftputil_version.py
+lrucache.py
 setup.py
