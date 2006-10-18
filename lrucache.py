@@ -7,7 +7,7 @@
 # with permission by the author, Evan Prodromou. Many
 # thanks, Evan! :-)
 #
-# The original file is available in lrucache 0.2 at
+# The original file is available at
 # http://cheeseshop.python.org/pypi/lrucache/0.2 .
 
 # arch-tag: LRU cache main module
