@@ -186,6 +186,22 @@ class _FTPFile:
             return self._fo.xreadlines()
         return _XReadlines(self)
 
+    def __iter__(self):
+        """Return an file iterator."""
+        return self
+
+    def next(self):
+        """
+        Return the next line or raise `StopIteration`, if there are
+        no more.
+        """
+        # apply implicit line ending conversion
+        line = self.readline()
+        if line:
+            return line
+        else:
+            raise StopIteration
+
     def write(self, data):
         """Write data to file. Do linesep conversion for text mode."""
         if not self._bin_mode:

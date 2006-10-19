@@ -324,6 +324,28 @@ class TestFileOperations(unittest.TestCase):
         # try to read beyond EOF
         self.assertRaises(IndexError, operator.__getitem__, xrl_obj, 3)
 
+    def test_binary_iterator(self):
+        """Test the iterator interface of `FTPFile` objects."""
+        host = _test_base.ftp_host_factory(session_factory=ReadMockSession)
+        input_ = host.file('dummy')
+        input_iterator = iter(input_)
+        self.assertEqual(input_iterator.next(), "line 1\n")
+        self.assertEqual(input_iterator.next(), "another line\n")
+        self.assertEqual(input_iterator.next(), "yet another line")
+        self.assertRaises(StopIteration, input_iterator.next)
+        input_.close()
+
+    def test_ascii_iterator(self):
+        """Test the iterator interface of `FTPFile` objects."""
+        host = _test_base.ftp_host_factory(session_factory=ReadMockSession)
+        input_ = host.file('dummy', 'rb')
+        input_iterator = iter(input_)
+        self.assertEqual(input_iterator.next(), "line 1\r\n")
+        self.assertEqual(input_iterator.next(), "another line\r\n")
+        self.assertEqual(input_iterator.next(), "yet another line")
+        self.assertRaises(StopIteration, input_iterator.next)
+        input_.close()
+
     def test_read_unknown_file(self):
         """Test whether reading a file which isn't there fails."""
         host = _test_base.ftp_host_factory()
