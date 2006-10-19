@@ -155,24 +155,6 @@ class FTPHost:
         self.set_time_shift(0.0)
 
     #
-    # setting the directory parser format for the remote server
-    #
-    # Note: there's now an autodetection of the format in
-    #  `ftp_stat._Stat`, so calling this method should never
-    #  be necessary. Thus `set_directory_format` is obsolete
-    #  and will be removed in ftputil 2.2 !
-    #
-    def set_directory_format(self, directory_format):
-        """
-        This method is deprecated. All its applications should
-        now be handled automatically.
-
-        Tell this `FTPHost` object the directory format of the remote
-        server.
-        """
-        pass
-
-    #
     # dealing with child sessions and file-like objects
     #  (rather low-level)
     #
