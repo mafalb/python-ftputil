@@ -242,6 +242,8 @@ class FTPHost:
             raise ftp_error.FTPIOError("remote directory '%s' doesn't exist "
                   "or has insufficient access rights" % effective_dir)
         host._file._open(effective_file, mode)
+        if 'w' in mode:
+            self.stat_cache.invalidate(effective_path)
         return host._file
 
     def open(self, path, mode='r'):
@@ -419,6 +421,8 @@ class FTPHost:
         text copies, or 'b' for binary copies.
         """
         self.__copy_file(source, target, mode, open, self.file)
+        # the path in the stat cache is implicitly invalidated when
+        #  the file is opened on the remote host
 
     def download(self, source, target, mode=''):
         """
