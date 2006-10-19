@@ -24,10 +24,18 @@ From version 2.1 to 2.2, the following has changed:
 - The current directory is also locally cached, resulting in further
   but usually lesser speedups.
 
+- File-like objects generated via ``FTPHost.file`` now support the
+  iterator protocol (for line in some_file: ...).
+
+- The documentation has been updated accordingly.
+
 Possible incompatibilities:
 
 - This release requires at least Python 2.3. (Previous releases
   worked with Python versions from 2.1 up.)
+
+- The method ``FTPHost.set_directory_format`` has been removed,
+  since the directory format is set automatically.
 
 Documentation
 -------------
@@ -39,7 +47,7 @@ from ftputil.txt).
 Prerequisites
 -------------
 
-To use ftputil, you need Python, at least version 2.0. Python is a
+To use ftputil, you need Python, at least version 2.3. Python is a
 programming language, available from http://www.python.org for free.
 
 Installation
@@ -71,13 +79,14 @@ Installation
   install on Windows.
 
   If you want to customize the installation paths, please read
-  http://www.python.org/doc/current/inst/inst.html .
+  http://docs.python.org/inst/inst.html .
 
 License
 -------
 
-ftputil is Open Source Software. It is distributed under a BSD-style
-license (see the top of ftputil.py).
+ftputil is Open Source Software. It is distributed under the
+new/modified/revised BSD license (see
+http://www.opensource.org/licenses/bsd-license.html ).
 
 Author
 ------
