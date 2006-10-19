@@ -99,8 +99,10 @@ class StatCache(object):
     def __getitem__(self, path):
         """
         Return the stat entry for the `path`. If there's no stored
-        stat entry, raise `CacheMissError`.
+        stat entry or the cache is disabled, raise `CacheMissError`.
         """
+        if not self._enabled:
+            raise CacheMissError("cache is disabled")
         try:
             return self._cache[path]
         except lrucache.CacheKeyError:

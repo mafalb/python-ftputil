@@ -80,7 +80,8 @@ class TestStatCache(unittest.TestCase):
         self.cache["path1"] = "test1"
         self.cache.disable()
         self.cache["path2"] = "test2"
-        self.assertEqual(self.cache["path1"], "test1")
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path1")
         self.assertRaises(ftp_stat_cache.CacheMissError,
                           self.cache.__getitem__, "path2")
         self.assertEqual(len(self.cache), 1)
