@@ -69,8 +69,8 @@ class StatCache(object):
     def __init__(self):
         # can be reset with method `resize`
         self._cache = lrucache.LRUCache(self._DEFAULT_CACHE_SIZE)
-        # (practically) never expire
-        self.max_age = 1e100
+        # never expire
+        self.max_age = 0
         self.enable()
 
     def enable(self):
@@ -138,7 +138,8 @@ class StatCache(object):
         """
         if not self._enabled:
             raise CacheMissError("cache is disabled")
-        if self._age(path) > self.max_age:
+        # possibly raise a `CacheMissError` in `_age`
+        if self.max_age != 0 and self._age(path) > self.max_age:
             self.invalidate(path)
             raise CacheMissError("entry for path %s has expired" % path)
         else:
