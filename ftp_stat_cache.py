@@ -35,6 +35,8 @@
 ftp_stat_cache.py - cache for (l)stat data
 """
 
+import time
+
 import lrucache
 
 
@@ -43,11 +45,32 @@ class CacheMissError(Exception):
 
 
 class StatCache(object):
+    """
+    Implement an LRU (least-recently-used) cache.
+
+    `StatCache` objects have an attribute `max_age`. After this
+    duration after _setting_ it a cache entry will expire. For
+    example, if you code
+
+    my_cache = StatCache()
+    my_cache.max_age = 10
+    my_cache["/home"] = ...
+
+    the value my_cache["/home"] can be retrieved for 10 seconds. After
+    that, the entry will be treated as if it had never been in the
+    cache and should be fetched again from the remote host.
+
+    Note that the `__len__` method does no age tests and thus may
+    include some or many already expired entries.
+    """
     # default number of cache entries
     _DEFAULT_CACHE_SIZE = 2000
 
     def __init__(self):
+        # can be reset with method `resize`
         self._cache = lrucache.LRUCache(self._DEFAULT_CACHE_SIZE)
+        # (practically) never expire
+        self.max_age = 1e100
         self.enable()
 
     def enable(self):
@@ -72,6 +95,16 @@ class StatCache(object):
         relatively long-unused elements will be removed.
         """
         self._cache.size = new_size
+
+    def _age(self, path):
+        """
+        Return the age of a cache entry for `path` in seconds. If
+        the path isn't in the cache, raise a `CacheMissError`.
+        """
+        try:
+            return time.time() - self._cache.mtime(path)
+        except lrucache.CacheKeyError:
+            raise CacheMissError("no entry for path %s in cache" % path)
 
     def clear(self):
         """Clear (invalidate) all cache entries."""
@@ -103,10 +136,16 @@ class StatCache(object):
         """
         if not self._enabled:
             raise CacheMissError("cache is disabled")
-        try:
-            return self._cache[path]
-        except lrucache.CacheKeyError:
-            raise CacheMissError("no path %s in cache" % path)
+        if self._age(path) > self.max_age:
+            self.invalidate(path)
+            raise CacheMissError("entry for path %s has expired" % path)
+        else:
+            #XXX I don't know if this may raise a `CacheMissError` in
+            #  case of race conditions; I'll prefer robust code
+            try:
+                return self._cache[path]
+            except lrucache.CacheKeyError:
+                raise CacheMissError("entry for path %s not found" % path)
 
     def __setitem__(self, path, stat_result):
         """
@@ -122,13 +161,22 @@ class StatCache(object):
         Support for the `in` operator. Return a true value, if data
         for `path` is in the cache, else return a false value.
         """
-        return (path in self._cache)
+        try:
+            # implicitly do an age test which may raise `CacheMissError`;
+            #  deliberately ignore the return value `stat_result`
+            stat_result = self[path]
+            return True
+        except CacheMissError:
+            return False
 
     #
     # the following methods are only intended for debugging!
     #
     def __len__(self):
-        """Return the number of entries in the cache."""
+        """
+        Return the number of entries in the cache. Note that this
+        may include some (or many) expired entries.
+        """
         return len(self._cache)
 
     def __str__(self):

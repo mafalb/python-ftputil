@@ -31,6 +31,7 @@
 
 # $Id$
 
+import time
 import unittest
 
 import ftp_stat_cache
@@ -75,6 +76,32 @@ class TestStatCache(unittest.TestCase):
         for i in xrange(150):
             self.cache["/%d" % i] = i
         self.assertEqual(len(self.cache), 100)
+
+    def test_max_age1(self):
+        """Set expiration after setting a cache item."""
+        self.cache["path1"] = "test1"
+        # expire after one second
+        self.cache.max_age = 1
+        time.sleep(0.5)
+        # should still be present
+        self.assertEqual(self.cache["path1"], "test1")
+        time.sleep(0.6)
+        # should have expired (_setting_ the cache counts)
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path1")
+
+    def test_max_age2(self):
+        """Set expiration before setting a cache item."""
+        # expire after one second
+        self.cache.max_age = 1
+        self.cache["path1"] = "test1"
+        time.sleep(0.5)
+        # should still be present
+        self.assertEqual(self.cache["path1"], "test1")
+        time.sleep(0.6)
+        # should have expired (_setting_ the cache counts)
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path1")
 
     def test_disabled(self):
         self.cache["path1"] = "test1"
