@@ -725,12 +725,13 @@ days a stat call may still access cache data that old. To avoid this,
 you can set the ``max_age`` attribute::
 
     host = ftputil.FTPHost(server, user, password)
-    host.stat_cache.max_age = 60 * 60  # = 3600
+    host.stat_cache.max_age = 60 * 60  # = 3600 seconds
 
-This sets the maximum age of entries in the cache to an hour (3600
-seconds). This means any entry older won't be retrieved from the cache
-but its data instead fetched again from the remote host (and then
-again stored for up to an hour).
+This sets the maximum age of entries in the cache to an hour. This
+means any entry older won't be retrieved from the cache but its data
+instead fetched again from the remote host (and then again stored for
+up to an hour). To reset `max_age` to the default of unlimited age,
+i. e. cache entries never expire, use ``None`` as value.
 
 If you are certain that the cache is in the way, you can disable and
 later re-enable it completely with ``disable`` and ``enable``::
