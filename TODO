@@ -1,7 +1,5 @@
 Planned:
 
-- remove xreadlines support from file objects; support iterator
-  protocol
 - write a ftputil_mirror.py script
   a) as a usage example of ftputil
   b) for benchmarking
