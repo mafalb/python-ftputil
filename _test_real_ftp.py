@@ -319,6 +319,27 @@ class RealFTPTest(unittest.TestCase):
         for index in range(len(actual)):
             self.assertEqual(actual[index], expected[index])
 
+    def test_concurrent_access(self):
+        self.make_file("_testfile_")
+        host1 = ftputil.FTPHost(server, user, password)
+        host2 = ftputil.FTPHost(server, user, password)
+        stat_result1 = host1.stat("_testfile_")
+        stat_result2 = host2.stat("_testfile_")
+        self.assertEqual(stat_result1, stat_result2)
+        host2.remove("_testfile_")
+        # can still get the result via `host1`
+        stat_result1 = host1.stat("_testfile_")
+        self.assertEqual(stat_result1, stat_result2)
+        # stat'ing on `host2` gives an exception
+        self.assertRaises(ftp_error.PermanentError, host2.stat, "_testfile_")
+        # stat'ing on `host1` after invalidation
+        absolute_path = host1.path.join(host1.getcwd(), "_testfile_")
+        host1.stat_cache.invalidate(absolute_path)
+        self.assertRaises(ftp_error.PermanentError, host1.stat, "_testfile_")
+        # clean up
+        host1.close()
+        host2.close()
+
 
 if __name__ == '__main__':
     print """\
