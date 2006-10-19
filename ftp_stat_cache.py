@@ -64,7 +64,7 @@ class StatCache(object):
     include some or many already expired entries.
     """
     # default number of cache entries
-    _DEFAULT_CACHE_SIZE = 2000
+    _DEFAULT_CACHE_SIZE = 1000
 
     def __init__(self):
         # can be reset with method `resize`
