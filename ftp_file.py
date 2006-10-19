@@ -173,8 +173,8 @@ class _FTPFile:
         if self._bin_mode:
             return lines
         # more memory-friendly than `return [... for line in lines]`
-        for i in range(len(lines)):
-            lines[i] = _crlf_to_python_linesep(lines[i])
+        for index, line in enumerate(lines):
+            lines[index] = _crlf_to_python_linesep(line)
         return lines
 
     def xreadlines(self):
