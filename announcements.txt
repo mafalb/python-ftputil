@@ -5,6 +5,8 @@ With respect to the previous alpha release, the cache now uses the
 lrucache module by Evan Prodromou which is bundled with the ftputil
 distribution. (Evan also gave his permission to include the module
 under ftputil's modified BSD license instead of the Academic License.)
+The documentation for the cache and its control have been added to
+ftputil.txt / ftputil.html .
 
 File objects generated with FTPHost.file now support the iterator
 protocol (for line in some_file: ...).
