@@ -650,7 +650,7 @@ directory entries fetched with ``listdir``. This is done by the
 where the argument is the maximal number of ``lstat`` results to store
 (the default is 1000). Note that each path on the server, e. g.
 "/home/schwa/some_dir", corresponds to a single cache entry. (Methods
-like ``exists`` or ``mtime`` all derive their results from a
+like ``exists`` or ``getmtime`` all derive their results from a
 previously fetched ``lstat`` result.)
 
 The value 2000 above means that the cache will hold at most 2000
@@ -667,11 +667,11 @@ There are two ways to get such out-of-date stat data. The first
 happens when an ``FTPHost`` instance modifies a file path for which it
 has a cache entry, e. g. by calling ``remove`` or ``rmdir``. Such
 changes are handled transparently; the path will be deleted from the
-cache. Another matter are changes unknown to the ``FTPHost`` object
-which reads its cache. Obviously, these are changes by programs
-running on the remote host. On the other hand, cache inconsistencies
-can also occur if two ``FTPHost`` objects change a file system
-simultaneously::
+cache. A different matter are changes unknown to the ``FTPHost``
+object which reads its cache. Obviously, for example, these are
+changes by programs running on the remote host. On the other hand,
+cache inconsistencies can also occur if two ``FTPHost`` objects change
+a file system simultaneously::
 
     host1 = ftputil.FTPHost(server, user1, password1)
     host2 = ftputil.FTPHost(server, user1, password1)
@@ -694,8 +694,8 @@ to be very error-prone. For example, it won't help with different
 processes using ``ftputil``. So, if you have to deal with concurrent
 write accesses to a server, you have to handle them explicitly.
 
-The most useful tool probably is the ``invalidate`` method. In the
-example above, it could be used as::
+The most useful tool for this probably is the ``invalidate`` method.
+In the example above, it could be used as::
 
     host1 = ftputil.FTPHost(server, user1, password1)
     host2 = ftputil.FTPHost(server, user1, password1)
@@ -725,7 +725,7 @@ days a stat call may still access cache data that old. To avoid this,
 you can set the ``max_age`` attribute::
 
     host = ftputil.FTPHost(server, user, password)
-    host.stat_cache.max_age = 60 * 60
+    host.stat_cache.max_age = 60 * 60  # = 3600
 
 This sets the maximum age of entries in the cache to an hour (3600
 seconds). This means any entry older won't be retrieved from the cache
