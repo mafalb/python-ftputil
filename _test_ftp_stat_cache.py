@@ -49,9 +49,9 @@ class TestStatCache(unittest.TestCase):
 
     def test_invalidate(self):
         # don't raise a `CacheMissError` for missing paths
-        self.cache.invalidate("test")
-        self.cache["path"] = "test"
-        self.cache.invalidate("path")
+        self.cache.invalidate("/path")
+        self.cache["/path"] = "test"
+        self.cache.invalidate("/path")
         self.assertEqual(len(self.cache), 0)
 
     def test_clear(self):
@@ -79,41 +79,41 @@ class TestStatCache(unittest.TestCase):
 
     def test_max_age1(self):
         """Set expiration after setting a cache item."""
-        self.cache["path1"] = "test1"
+        self.cache["/path1"] = "test1"
         # expire after one second
         self.cache.max_age = 1
         time.sleep(0.5)
         # should still be present
-        self.assertEqual(self.cache["path1"], "test1")
+        self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
         # should have expired (_setting_ the cache counts)
         self.assertRaises(ftp_stat_cache.CacheMissError,
-                          self.cache.__getitem__, "path1")
+                          self.cache.__getitem__, "/path1")
 
     def test_max_age2(self):
         """Set expiration before setting a cache item."""
         # expire after one second
         self.cache.max_age = 1
-        self.cache["path1"] = "test1"
+        self.cache["/path1"] = "test1"
         time.sleep(0.5)
         # should still be present
-        self.assertEqual(self.cache["path1"], "test1")
+        self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
         # should have expired (_setting_ the cache counts)
         self.assertRaises(ftp_stat_cache.CacheMissError,
-                          self.cache.__getitem__, "path1")
+                          self.cache.__getitem__, "/path1")
 
     def test_disabled(self):
-        self.cache["path1"] = "test1"
+        self.cache["/path1"] = "test1"
         self.cache.disable()
-        self.cache["path2"] = "test2"
+        self.cache["/path2"] = "test2"
         self.assertRaises(ftp_stat_cache.CacheMissError,
-                          self.cache.__getitem__, "path1")
+                          self.cache.__getitem__, "/path1")
         self.assertRaises(ftp_stat_cache.CacheMissError,
-                          self.cache.__getitem__, "path2")
+                          self.cache.__getitem__, "/path2")
         self.assertEqual(len(self.cache), 1)
         # don't raise a `CacheMissError` for missing paths
-        self.cache.invalidate("path2")
+        self.cache.invalidate("/path2")
 
 
 if __name__ == '__main__':

@@ -117,13 +117,15 @@ class StatCache(object):
 
     def invalidate(self, path):
         """
-        Invalidate the cache entry for `path` if present. After
-        that, the stat result data for `path` can no longer be
+        Invalidate the cache entry for the absolute `path` if present.
+        After that, the stat result data for `path` can no longer be
         retrieved, as if it had never been stored.
 
         If no stat result for `path` is in the cache, do _not_
         raise an exception.
         """
+        #XXX to be 100 % sure, this should be `host.sep`
+        assert path.startswith("/"), "%s must be an absolute path" % path
         try:
             del self._cache[path]
         except lrucache.CacheKeyError:
