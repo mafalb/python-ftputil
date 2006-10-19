@@ -187,7 +187,7 @@ class _FTPFile:
         return _XReadlines(self)
 
     def __iter__(self):
-        """Return an file iterator."""
+        """Return a file iterator."""
         return self
 
     def next(self):
