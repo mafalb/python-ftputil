@@ -35,6 +35,7 @@ ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 
 # $Id$
 
+import re
 import stat
 import sys
 import time
@@ -70,11 +71,29 @@ class Parser(object):
       'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
       'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
 
+    _total_regex = re.compile(r"^total\s+\d+")
+
+    def ignore_line(self, line):
+        """
+        Return a true value if the line should be ignored, i. e. is
+        assumed to _not_ contain actual directory/file/link data.
+        A typical example are summary lines like "total 23" which
+        are emitted by some FTP servers.
+
+        If the line should be used to extract stat data from it,
+        return a false value.
+        """
+        # either a `_SRE_Match` instance or `None`
+        match = self._total_regex.search(line)
+        return bool(match)
+
     def parse_line(self, line, time_shift=0.0):
         """
         Return a `StatResult` object as derived from the string
         `line`. The parser code to use depends on the directory format
         the FTP server delivers (also see examples at end of file).
+
+        If the given text line can't be parsed, raise a `ParserError`.
 
         For the definition of `time_shift` see the docstring of
         `FTPHost.set_time_shift` in `ftputil.py`. Not all parsers
@@ -178,7 +197,7 @@ class _UnixParser(Parser):
             #  last addend allows for small deviations between the
             #  supposed (rounded) and the actual time shift
             # #XXX the downside of this "correction" is that there is
-            #  a one-minute time interval excatly one year ago that
+            #  a one-minute time interval exactly one year ago that
             #  may cause that datetime to be recognized as the current
             #  datetime, but after all the datetime from the server
             #  can only be exact up to a minute
@@ -311,22 +330,18 @@ class _Stat:
             return []
         names = []
         for line in lines:
-            try:
-                # for `listdir`, we are interested in just the names,
-                #  but we use the `time_shift` parameter to have the
-                #  correct timestamp values in the cache
-                stat_result = self._parser.parse_line(line,
-                                                      self._host.time_shift())
-                loop_path = self._path.join(path, stat_result._st_name)
-                self._lstat_cache[loop_path] = stat_result
-                st_name = stat_result._st_name
-                if st_name not in (self._host.curdir, self._host.pardir):
-                    names.append(st_name)
-            except ftp_error.ParserError:
-                # ignore things like "total 17", as found in some
-                #  server listings
-                if not line.lower().startswith("total"):
-                    raise
+            if self._parser.ignore_line(line):
+                continue
+            # for `listdir`, we are interested in just the names,
+            #  but we use the `time_shift` parameter to have the
+            #  correct timestamp values in the cache
+            stat_result = self._parser.parse_line(line,
+                                                  self._host.time_shift())
+            loop_path = self._path.join(path, stat_result._st_name)
+            self._lstat_cache[loop_path] = stat_result
+            st_name = stat_result._st_name
+            if st_name not in (self._host.curdir, self._host.pardir):
+                names.append(st_name)
         return names
 
     def _real_lstat(self, path, _exception_for_missing_path=True):
@@ -363,19 +378,15 @@ class _Stat:
         #  possible
         lines = self._host_dir(dirname)
         for line in lines:
-            try:
-                stat_result = self._parser.parse_line(line,
-                              self._host.time_shift())
-                loop_path = self._path.join(dirname, stat_result._st_name)
-                self._lstat_cache[loop_path] = stat_result
-                # needed to work without cache or with disabled cache
-                if stat_result._st_name == basename:
-                    lstat_result_for_path = stat_result
-            except ftp_error.ParserError:
-                # ignore things like "total 17", as found in some
-                #  server listings
-                if not line.lower().startswith("total"):
-                    raise
+            if self._parser.ignore_line(line):
+                continue
+            stat_result = self._parser.parse_line(line,
+                          self._host.time_shift())
+            loop_path = self._path.join(dirname, stat_result._st_name)
+            self._lstat_cache[loop_path] = stat_result
+            # needed to work without cache or with disabled cache
+            if stat_result._st_name == basename:
+                lstat_result_for_path = stat_result
         if lstat_result_for_path:
             return lstat_result_for_path
         # path was not found
