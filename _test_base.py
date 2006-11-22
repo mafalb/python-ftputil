@@ -29,7 +29,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_base.py,v 1.2 2003/10/05 15:51:23 schwa Exp $
+# $Id$
 
 import _mock_ftplib
 import ftputil

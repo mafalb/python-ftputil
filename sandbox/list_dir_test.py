@@ -1,6 +1,7 @@
 #! /usr/bin/env python
+# coding: iso-8859-1
 
-# Copyright (C) 2003-2006, Stefan Schwarzer
+# Copyright (C) 2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,48 +32,60 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id$
+# $Id: $
 
-"""
-setup.py - installation script for Python distutils
-"""
-
+# use experimental ftputil version
 import sys
+sys.path.insert(0, "/home/schwa/sd/python/ftputil.add_stat_caching")
 
-from distutils import core
-from distutils import sysconfig
+import ftputil
 
 
-_name = "ftputil"
-_package = "ftputil"
-_version = open("VERSION").read().strip()
-_data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
+def main():
+    test_dir = "pub/FreeBSD/doc"
+    ftp_host = ftputil.FTPHost("ftp.de.freebsd.org", 'anonymous',
+                               "sschwarzer@sschwarzer.net")
+    def onerror(err):
+        print err
+    for top, dirs, nondirs in ftp_host.walk(test_dir, onerror=onerror):
+        print top
+        print "  ", dirs
+        print "  ", nondirs
+        print
+        if top == "pub/FreeBSD/doc/fr_FR.ISO8859-1/books/ppp-primer":
+            break
+    print "Stat cache:"
+    print ftp_host.stat_cache
+    print len(ftp_host.stat_cache), "entries in cache"
+    ftp_host.close()
 
-core.setup(
-  # installation data
-  name=_name,
-  version=_version,
-  packages=[_package],
-  package_dir={_package: ""},
-  data_files=[(_data_target, ["ftputil.txt", "ftputil.html",
-                              "README.txt", "README.html"])],
-  # metadata
-  author="Stefan Schwarzer",
-  author_email="sschwarzer@sschwarzer.net",
-  url="http://ftputil.sschwarzer.net/",
-  description="High-level FTP client library (virtual filesystem and more)",
-  keywords="FTP, client, virtual file system",
-  license="Open source (revised BSD license)",
-  platforms=["Pure Python (Python version >= 2.1)"],
-  long_description="""\
-ftputil is a high-level FTP client library for the Python programming
-language. ftputil implements a virtual file system for accessing FTP servers,
-that is, it can generate file-like objects for remote files. The library
-supports many functions similar to those in the os, os.path and
-shutil modules. ftputil has convenience functions for conditional uploads
-and downloads, and handles FTP clients and servers in different timezones.""",
-  download_url=
-    "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" %
-    (_name, _version)
-  )
+
+if __name__ == '__main__':
+    main()
+
+
+# Time without caching:
+# real    18m10.675s
+# user    0m2.660s
+# sys     0m0.796s
+
+# Time without cache, with current directory cache
+# real    13m32.333s
+# user    0m2.404s
+# sys     0m0.672s
+
+# Second day
+# real    14m36.256s
+# user    0m2.080s
+# sys     0m0.672s
+
+# real    13m55.254s
+# user    0m2.868s
+# sys     0m0.824s
+           
+# Time with "infinite" cache, with current directory cache
+# real    1m30.117s
+# user    0m0.480s
+# sys     0m0.112s
+
 

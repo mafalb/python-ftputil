@@ -1,4 +1,4 @@
-# Copyright (C) 2003, Stefan Schwarzer
+# Copyright (C) 2006, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -31,7 +31,46 @@
 
 # $Id$
 
-# import all in this namespace to comply with the old interface
-#  when ftputil was a single module
-from ftputil import *
+import unittest
+
+import ftp_stat_cache
+
+
+class TestStatCache(unittest.TestCase):
+    def setUp(self):
+        self.cache = ftp_stat_cache.StatCache()
+
+    def test_get_set(self):
+        self.assertRaises(ftp_stat_cache.CacheMissError,
+                          self.cache.__getitem__, "path")
+        self.cache["path"] = "test"
+        self.assertEqual(self.cache["path"], "test")
+
+    def test_invalidate(self):
+        # don't raise a `CacheMissError` for missing paths
+        self.cache.invalidate("test")
+        self.cache["path"] = "test"
+        self.cache.invalidate("path")
+        self.assertEqual(self.cache._cache, {})
+
+    def test_clear(self):
+        self.cache["path1"] = "test1"
+        self.cache["path2"] = "test2"
+        self.cache.clear()
+        self.assertEqual(self.cache._cache, {})
+
+    def test_contains(self):
+        self.cache["path1"] = "test1"
+        self.assertEqual("path1" in self.cache, True)
+        self.assertEqual("path2" in self.cache, False)
+
+    def test_len(self):
+        self.assertEqual(len(self.cache), 0)
+        self.cache["path1"] = "test1"
+        self.cache["path2"] = "test2"
+        self.assertEqual(len(self.cache), 2)
+
+
+if __name__ == '__main__':
+    unittest.main()
 

@@ -76,10 +76,6 @@ Note: ftputil currently is not threadsafe. More specifically, you can
       using a single `FTPHost` object in different threads.
 """
 
-# for Python 2.2; note that we can't use try/except here, see FAQ in
-#  http://www.python.org/peps/pep-0236.html
-from __future__ import generators
-
 import ftplib
 import os
 import stat
@@ -94,8 +90,6 @@ import ftputil_version
 
 # make exceptions available in this module for backwards compatibilty
 from ftp_error import *
-# `True`, `False`
-from true_false import *
 
 
 # it's recommended to use the error classes via the `ftp_error` module;
@@ -143,8 +137,12 @@ class FTPHost:
         self.path = ftp_path._Path(self)
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
+        self.stat_cache = self._stat._lstat_cache
+        # save (cache) current directory
+        self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
         self._children = []
+        # now opened
         self.closed = False
         # set curdir, pardir etc. for the remote host; RFC 959 states
         #  that this is, strictly spoken, dependent on the server OS
@@ -188,7 +186,7 @@ class FTPHost:
         # if a session factory had been given on the instantiation of
         #  this `FTPHost` object, use the same factory for this
         #  `FTPHost` object's child sessions
-        if kwargs.has_key('session_factory'):
+        if 'session_factory' in kwargs:
             factory = kwargs['session_factory']
             del kwargs['session_factory']
         else:
@@ -259,6 +257,7 @@ class FTPHost:
                 host.close()
             # now deal with our-self
             ftp_error._try_with_oserror(self._session.close)
+            self.stat_cache.clear()
             self._children = []
             self.closed = True
 
@@ -493,11 +492,14 @@ class FTPHost:
     #
     def getcwd(self):
         """Return the current path name."""
-        return ftp_error._try_with_oserror(self._session.pwd)
+        return self._current_dir
 
     def chdir(self, path):
         """Change the directory on the host."""
         ftp_error._try_with_oserror(self._session.cwd, path)
+        self._current_dir = self.path.normpath(self.path.join(
+                                               # use "old" current dir
+                                               self._current_dir, path))
 
     def mkdir(self, path, mode=None):
         """
@@ -540,14 +542,16 @@ class FTPHost:
         empty directories as well, - if the server allowed it. This
         is no longer supported.
         """
+        path = self.path.abspath(path)
         if self.listdir(path):
-            path = self.path.abspath(path)
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
         ftp_error._try_with_oserror(self._session.rmd, path)
+        self.stat_cache.invalidate(path)
 
     def remove(self, path):
         """Remove the given file or link."""
+        path = self.path.abspath(path)
         # though `isfile` includes also links to files, `islink`
         #  is needed to include links to directories
         if self.path.isfile(path) or self.path.islink(path):
@@ -555,6 +559,7 @@ class FTPHost:
         else:
             raise ftp_error.PermanentError("remove/unlink can only delete "
                                            "files and links, not directories")
+        self.stat_cache.invalidate(path)
 
     def unlink(self, path):
         """Remove the given file."""
@@ -628,11 +633,10 @@ class FTPHost:
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
         lines = []
-        # use `lines=lines` for Python versions which don't support
-        #  "nested scopes"
-        callback = lambda line, lines=lines: lines.append(line)
+        def callback(line):
+            lines.append(line)
         # see below for this decision logic
-        if path.find(" ") == -1:
+        if " " not in path:
             # use straight-forward approach, without changing directories
             ftp_error._try_with_oserror(self._session.dir, path, callback)
         else:
@@ -710,15 +714,8 @@ class FTPHost:
         Implementation note: The code is copied from `os.walk` in
         Python 2.4 and adapted to ftputil.
         """
-        # this method won't work for Python versions before 2.2;
-        #  these don't know generators
-        if sys.version_info < (2, 2, 0):
-            raise RuntimeError("FTPHost.walk needs Python >= 2.2")
-
         # code from `os.walk` ...
         try:
-            # Note that listdir and error are globals in this module due
-            # to earlier import-*.
             names = self.listdir(top)
         except ftp_error.FTPOSError, err:
             if onerror is not None:

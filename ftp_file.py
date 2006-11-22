@@ -37,9 +37,6 @@ ftp_file.py - support for file-like objects on FTP servers
 
 import ftp_error
 
-# `True`, `False`
-from true_false import *
-
 
 # converter for `\r\n` line ends to normalized ones in Python. RFC 959
 #  states that the server will send `\r\n` on text mode transfers, so
@@ -73,7 +70,7 @@ class _XReadlines:
         line = self._ftp_file.readline()
         if not line:
             raise IndexError("_XReadline object out of data")
-        self._next_index = self._next_index + 1
+        self._next_index += 1
         return line
 
 
@@ -176,7 +173,7 @@ class _FTPFile:
         if self._bin_mode:
             return lines
         # more memory-friendly than `return [... for line in lines]`
-        for i in range( len(lines) ):
+        for i in range(len(lines)):
             lines[i] = _crlf_to_python_linesep(lines[i])
         return lines
 

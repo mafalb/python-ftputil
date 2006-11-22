@@ -40,25 +40,10 @@ import sys
 import time
 
 import ftp_error
-
-from true_false import *
-
-
-# Set up the base class for the stat results, depending on the
-#  capabilities of the used Python version. In older Python versions,
-#  classes can't inherit from builtin types.
-try:
-    class __InheritanceTest(tuple):
-        pass
-    _StatResultBase = tuple
-    del __InheritanceTest
-except TypeError:
-    # "base is not a class object"
-    import UserTuple
-    _StatResultBase = UserTuple.UserTuple
+import ftp_stat_cache
 
 
-class _StatResult(_StatResultBase):
+class _StatResult(tuple):
     """
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
@@ -307,6 +292,8 @@ class _Stat:
         # allow one chance to switch to another parser if the default
         #  doesn't work
         self._allow_parser_switching = True
+        # cache only lstat results; `stat` works locally on `lstat` results
+        self._lstat_cache = ftp_stat_cache.StatCache()
 
     def _host_dir(self, path):
         """
@@ -329,13 +316,18 @@ class _Stat:
             raise ftp_error.PermanentError(
                   "550 %s: no such directory or wrong directory parser used" %
                   path)
+        # set up for loop
         lines = self._host_dir(path)
         names = []
         for line in lines:
             try:
-                # we don't need the `time_shift` parameter here
-                #  because we just need the names
-                stat_result = self._parser.parse_line(line)
+                # for `listdir`, we are interested in just the names,
+                #  but we use the `time_shift` parameter to have the
+                #  correct timestamp values in the cache
+                stat_result = self._parser.parse_line(line,
+                                                      self._host.time_shift())
+                loop_path = self._path.join(path, stat_result._st_name)
+                self._lstat_cache[loop_path] = stat_result
                 st_name = stat_result._st_name
                 if st_name not in (self._host.curdir, self._host.pardir):
                     names.append(st_name)
@@ -345,14 +337,6 @@ class _Stat:
                 if not line.lower().startswith("total"):
                     raise
         return names
-
-    def _stat_candidates(self, lines, wanted_name):
-        """Return candidate lines for further analysis."""
-        # return only lines that contain the name of the file to stat
-        #  (however, the string may be _anywhere_ on the line but not
-        #  necessarily the file's basename; e. g. the string could
-        #  occur as the name of the file's group)
-        return [line  for line in lines  if line.find(wanted_name) != -1]
 
     def _real_lstat(self, path, _exception_for_missing_path=True):
         """
@@ -368,34 +352,41 @@ class _Stat:
         (`_exception_for_missing_path` is an implementation aid and
         _not_ intended for use by ftputil clients.)
         """
+        path = self._path.abspath(path)
+        # if the path is in the cache, return the lstat result
+        if path in self._lstat_cache:
+            return self._lstat_cache[path]
         # get output from FTP's `DIR` command
         lines = []
-        path = self._path.abspath(path)
         # Note: (l)stat works by going one directory up and parsing
         #  the output of an FTP `DIR` command. Unfortunately, it is
         #  not possible to do this for the root directory `/`.
         if path == '/':
             raise ftp_error.RootDirError(
-                  "can't invoke stat for remote root directory")
+                  "can't stat remote root directory")
         dirname, basename = self._path.split(path)
+        lstat_result_for_path = None
+        # loop through all lines of the directory listing; we
+        #  probably won't need all lines for the particular path but
+        #  we want to collect as many stat results in the cache as
+        #  possible
         lines = self._host_dir(dirname)
-        # search for name to be stat'ed without parsing the whole
-        #  directory listing
-        candidates = self._stat_candidates(lines, basename)
-        # parse candidates; return the first stat result where the
-        #  calculated name matches the previously determined
-        #  basename
-        for line in candidates:
+        for line in lines:
             try:
                 stat_result = self._parser.parse_line(line,
                               self._host.time_shift())
+                loop_path = self._path.join(dirname, stat_result._st_name)
+                self._lstat_cache[loop_path] = stat_result
+                # needed to work without or with disabled cache
                 if stat_result._st_name == basename:
-                    return stat_result
+                    lstat_result_for_path = stat_result
             except ftp_error.ParserError:
                 # ignore things like "total 17", as found in some
                 #  server listings
                 if not line.lower().startswith("total"):
                     raise
+        if lstat_result_for_path:
+            return lstat_result_for_path
         # path was not found
         if _exception_for_missing_path:
             raise ftp_error.PermanentError(
@@ -441,7 +432,7 @@ class _Stat:
             path = self._path.join(dirname, lstat_result._st_target)
             path = self._path.normpath(path)
             # check for cyclic structure
-            if visited_paths.has_key(path):
+            if path in visited_paths:
                 # we had this path already
                 raise ftp_error.PermanentError(
                       "recursive link structure detected for remote path '%s'" %
