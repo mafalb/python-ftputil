@@ -43,7 +43,7 @@ import ftp_error
 import ftp_stat_cache
 
 
-class _StatResult(tuple):
+class StatResult(tuple):
     """
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
@@ -55,7 +55,7 @@ class _StatResult(tuple):
 
     def __getattr__(self, attr_name):
         if self._index_mapping.has_key(attr_name):
-            return self[ self._index_mapping[attr_name] ]
+            return self[self._index_mapping[attr_name]]
         else:
             raise AttributeError("'_Stat' object has no attribute '%s'" %
                                  attr_name)
@@ -63,10 +63,16 @@ class _StatResult(tuple):
 #
 # FTP directory parsers
 #
-class _DirectoryParser:
+class Parser(object):
+    # map month abbreviations to month numbers
+    _month_numbers = {
+      'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
+      'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
+      'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
+
     def parse_line(self, line, time_shift=0.0):
         """
-        Return a `_StatResult` object as derived from the string
+        Return a `StatResult` object as derived from the string
         `line`. The parser code to use depends on the directory format
         the FTP server delivers (also see examples at end of file).
 
@@ -76,27 +82,9 @@ class _DirectoryParser:
         """
         raise NotImplementedError("must be defined by subclass")
 
-    def parse_lines(self, lines, time_shift=0.0):
-        """
-        Return a list of `_StatResult` objects with one `_StatResult`
-        object per line in the list `lines`. The order of the returned
-        list corresponds to the order in the `lines` argument.
 
-        For the definition of `time_shift` see the docstring of
-        `FTPHost.set_time_shift` in `ftputil.py`. Not all parsers
-        use the `time_shift` parameter.
-        """
-        return [self.parse_line(line, time_shift) for line in lines]
-
-
-class _UnixDirectoryParser(_DirectoryParser):
-    """`_DirectoryParser` class for Unix-specific directory format."""
-    # map month abbreviations to month numbers
-    _month_numbers = {
-      'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
-      'may':  5, 'jun':  6, 'jul':  7, 'aug':  8,
-      'sep':  9, 'oct': 10, 'nov': 11, 'dec': 12}
-
+class _UnixParser(Parser):
+    """`Parser` class for Unix-specific directory format."""
     def _split_line(self, line):
         """
         Split a line in metadata, nlink, user, group, size, month,
@@ -129,7 +117,7 @@ class _UnixDirectoryParser(_DirectoryParser):
 
     def parse_line(self, line, time_shift=0.0):
         """
-        Return a `_StatResult` instance corresponding to the given
+        Return a `StatResult` instance corresponding to the given
         text line. The `time_shift` value is needed to determine
         to which year a datetime without an explicit year belongs.
 
@@ -205,7 +193,7 @@ class _UnixDirectoryParser(_DirectoryParser):
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None
-        stat_result = _StatResult(
+        stat_result = StatResult(
                       (st_mode, st_ino, st_dev, st_nlink, st_uid,
                        st_gid, st_size, st_atime, st_mtime, st_ctime) )
         stat_result._st_name = st_name
@@ -213,11 +201,11 @@ class _UnixDirectoryParser(_DirectoryParser):
         return stat_result
 
 
-class _MSDirectoryParser(_DirectoryParser):
-    """`_DirectoryParser` class for MS-specific directory format."""
+class _MSParser(Parser):
+    """`Parser` class for MS-specific directory format."""
     def parse_line(self, line, time_shift=0.0):
         """
-        Return a `_StatResult` instance corresponding to the given
+        Return a `StatResult` instance corresponding to the given
         text line from a FTP server which emits "Microsoft format"
         (see end of file).
 
@@ -271,7 +259,7 @@ class _MSDirectoryParser(_DirectoryParser):
                                  minute, 0, 0, 0, -1) )
         # st_ctime
         st_ctime = None
-        stat_result = _StatResult(
+        stat_result = StatResult(
                       (st_mode, st_ino, st_dev, st_nlink, st_uid,
                        st_gid, st_size, st_atime, st_mtime, st_ctime) )
         # _st_name and _st_target
@@ -288,7 +276,7 @@ class _Stat:
         self._host = host
         self._path = host.path
         # use the Unix directory parser by default
-        self._parser = _UnixDirectoryParser()
+        self._parser = _UnixParser()
         # allow one chance to switch to another parser if the default
         #  doesn't work
         self._allow_parser_switching = True
@@ -464,7 +452,7 @@ class _Stat:
         except ftp_error.ParserError:
             if self._allow_parser_switching:
                 self._allow_parser_switching = False
-                self._parser = _MSDirectoryParser()
+                self._parser = _MSParser()
                 return method(*args, **kwargs)
             else:
                 raise

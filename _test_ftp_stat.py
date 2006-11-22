@@ -47,7 +47,7 @@ def test_stat():
     host = _test_base.ftp_host_factory()
     stat = ftp_stat._Stat(host)
     # use Unix format parser explicitly
-    stat._parser = ftp_stat._UnixDirectoryParser()
+    stat._parser = ftp_stat._UnixParser()
     return stat
 
 def stat_tuple_to_seconds(t):
@@ -60,7 +60,7 @@ def stat_tuple_to_seconds(t):
     return time.mktime(t + (0, 0, -1))
 
 
-class TestDirectoryParsers(unittest.TestCase):
+class TestParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
         parser = parser_class()
         for line, expected_stat_result in zip(lines, expected_stat_results):
@@ -112,7 +112,7 @@ class TestDirectoryParsers(unittest.TestCase):
           [41471, None, None, 2, '45854', '200', 512, None,
            (2000, 5, 29, 0, 0, 0), None]
           ]
-        self._test_valid_lines(ftp_stat._UnixDirectoryParser, lines,
+        self._test_valid_lines(ftp_stat._UnixParser, lines,
                                expected_stat_results)
 
     def test_invalid_unix_lines(self):
@@ -122,7 +122,7 @@ class TestDirectoryParsers(unittest.TestCase):
           "xrwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
           ]
-        self._test_invalid_lines(ftp_stat._UnixDirectoryParser, lines)
+        self._test_invalid_lines(ftp_stat._UnixParser, lines)
 
     def test_alternative_unix_format(self):
         # see http://ftputil.sschwarzer.net/trac/ticket/12 for a
@@ -144,7 +144,7 @@ class TestDirectoryParsers(unittest.TestCase):
           [41471, None, None, 2, None, '200', 512, None,
            (2000, 5, 29, 0, 0, 0), None]
           ]
-        self._test_valid_lines(ftp_stat._UnixDirectoryParser, lines,
+        self._test_valid_lines(ftp_stat._UnixParser, lines,
                                expected_stat_results)
 
     def test_valid_ms_lines(self):
@@ -161,8 +161,7 @@ class TestDirectoryParsers(unittest.TestCase):
           [33024, None, None, None, None, None, 12266720, None,
            (2000, 7, 17, 14, 8, 0), None]
           ]
-        self._test_valid_lines(ftp_stat._MSDirectoryParser, lines,
-                               expected_stat_results)
+        self._test_valid_lines(ftp_stat._MSParser, lines, expected_stat_results)
 
     def test_invalid_ms_lines(self):
         lines = [
@@ -170,7 +169,7 @@ class TestDirectoryParsers(unittest.TestCase):
           "07-17-00  02:08             12266720 test.exe",
           "07-17-00  02:08AM           1226672x test.exe"
           ]
-        self._test_invalid_lines(ftp_stat._MSDirectoryParser, lines)
+        self._test_invalid_lines(ftp_stat._MSParser, lines)
 
     #
     # the following code checks if the decision logic in the Unix
@@ -220,7 +219,7 @@ class TestDirectoryParsers(unittest.TestCase):
         """
         host = _test_base.ftp_host_factory()
         # explicitly use Unix format parser
-        host._stat._parser = ftp_stat._UnixDirectoryParser()
+        host._stat._parser = ftp_stat._UnixParser()
         host.set_time_shift(supposed_time_shift)
         server_time = time.time() + supposed_time_shift + deviation
         stat_result = host._stat._parser.parse_line(self.dir_line(server_time),
@@ -338,21 +337,17 @@ class TestLstatAndStat(unittest.TestCase):
     def test_parser_switching_default_to_unix(self):
         """Test non-switching of parser format; stay with Unix."""
         self.assertEqual(self.stat._allow_parser_switching, True)
-        self.failUnless(isinstance(self.stat._parser,
-                                   ftp_stat._UnixDirectoryParser))
+        self.failUnless(isinstance(self.stat._parser, ftp_stat._UnixParser))
         stat_result = self.stat.lstat("/home/sschwarzer/index.html")
-        self.failUnless(isinstance(self.stat._parser,
-                                   ftp_stat._UnixDirectoryParser))
+        self.failUnless(isinstance(self.stat._parser, ftp_stat._UnixParser))
         self.assertEqual(self.stat._allow_parser_switching, False)
 
     def test_parser_switching_to_ms(self):
         """Test switching of parser from Unix to MS format."""
         self.assertEqual(self.stat._allow_parser_switching, True)
-        self.failUnless(isinstance(self.stat._parser,
-                                   ftp_stat._UnixDirectoryParser))
+        self.failUnless(isinstance(self.stat._parser, ftp_stat._UnixParser))
         stat_result = self.stat.lstat("/home/msformat/abcd.exe")
-        self.failUnless(isinstance(self.stat._parser,
-                                   ftp_stat._MSDirectoryParser))
+        self.failUnless(isinstance(self.stat._parser, ftp_stat._MSParser))
         self.assertEqual(self.stat._allow_parser_switching, False)
         self.assertEqual(stat_result._st_name, "abcd.exe")
         self.assertEqual(stat_result.st_size, 12266720)
@@ -363,6 +358,7 @@ class TestLstatAndStat(unittest.TestCase):
         result = self.stat.listdir("/home/msformat/XPLaunch/empty")
         self.assertEqual(result, [])
         self.assertEqual(self.stat._allow_parser_switching, True)
+        self.failUnless(isinstance(self.stat._parser, ftp_stat._UnixParser))
 
 
 class TestListdir(unittest.TestCase):
