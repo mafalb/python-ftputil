@@ -254,6 +254,38 @@ class FTPHost:
             pass
 
     #
+    # setting a custom directory parser
+    #
+    def set_parser(self, parser):
+        """
+        Set the parser for extracting stat results from directory
+        listings.
+
+        The parser interface is described in the documentation, but
+        here are the most important things:
+
+        - A parser should derive from `ftp_stat.Parser`.
+
+        - The parser has to implement two methods, `parse_line` and
+          `ignore_line`. For the latter, there's a probably useful
+          default in the class `ftp_stat.Parser`.
+
+        - `parse_line` should try to parse a line of a directory
+          listing and return a `ftp_stat.StatResult` instance. If
+          parsing isn't possible, raise `ftp_error.ParserError` with
+          a useful error message.
+
+        - `ignore_line` should return a true value if the line isn't
+          assumed to contain stat information.
+        """
+        # the cache contents, if any, aren't probably useful
+        self.stat_cache.clear()
+        # set the parser
+        self._stat._parser = parser
+        # we just set a parser, don't allow "smart" switching
+        self._stat._allow_parser_switching = False
+
+    #
     # time shift adjustment between client (i. e. us) and server
     #
     def set_time_shift(self, time_shift):

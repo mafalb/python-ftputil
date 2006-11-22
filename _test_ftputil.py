@@ -43,6 +43,7 @@ import _mock_ftplib
 import _test_base
 import ftp_error
 import ftp_file
+import ftp_stat
 import ftputil
 
 #
@@ -149,6 +150,22 @@ class TestLogin(unittest.TestCase):
         """Login to invalid host must fail."""
         self.assertRaises(ftp_error.FTPOSError, _test_base.ftp_host_factory,
                           FailOnLoginSession)
+
+
+class TestSetParser(unittest.TestCase):
+    def test_set_parser(self):
+        """Test if the selected parser is used."""
+        # this test isn't very practical but should help at least a bit ...
+        host = _test_base.ftp_host_factory()
+        # implicitly fix at Unix format
+        files = host.listdir("/home/sschwarzer")
+        self.assertEqual(files, ['chemeng', 'download', 'image', 'index.html',
+          'os2', 'osup', 'publications', 'python', 'scios2'])
+        host.set_parser(ftp_stat._MSParser())
+        files = host.listdir("/home/msformat/XPLaunch")
+        self.assertEqual(files, ['WindowsXP', 'XPLaunch', 'empty',
+          'abcd.exe', 'O2KKeys.exe'])
+        self.assertEqual(host._stat._allow_parser_switching, False)
 
 
 class TestFileOperations(unittest.TestCase):
