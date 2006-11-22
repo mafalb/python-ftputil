@@ -321,6 +321,9 @@ class TestLstatAndStat(unittest.TestCase):
         self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '/home/bad_link')
 
+    #
+    # test automatic switching of Unix/MS parsers
+    #
     def test_parser_switching_with_permanent_error(self):
         """Test non-switching of parser format with `PermanentError`."""
         self.assertEqual(self.stat._allow_parser_switching, True)
@@ -353,6 +356,13 @@ class TestLstatAndStat(unittest.TestCase):
         self.assertEqual(self.stat._allow_parser_switching, False)
         self.assertEqual(stat_result._st_name, "abcd.exe")
         self.assertEqual(stat_result.st_size, 12266720)
+
+    def test_parser_switching_regarding_empty_dir(self):
+        """Test switching of parser if a directory is empty."""
+        self.assertEqual(self.stat._allow_parser_switching, True)
+        result = self.stat.listdir("/home/msformat/XPLaunch/empty")
+        self.assertEqual(result, [])
+        self.assertEqual(self.stat._allow_parser_switching, True)
 
 
 class TestListdir(unittest.TestCase):

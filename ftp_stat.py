@@ -318,6 +318,9 @@ class _Stat:
                   path)
         # set up for loop
         lines = self._host_dir(path)
+        # exit the method now if there aren't any files
+        if lines == ['']:
+            return []
         names = []
         for line in lines:
             try:
@@ -377,7 +380,7 @@ class _Stat:
                               self._host.time_shift())
                 loop_path = self._path.join(dirname, stat_result._st_name)
                 self._lstat_cache[loop_path] = stat_result
-                # needed to work without or with disabled cache
+                # needed to work without cache or with disabled cache
                 if stat_result._st_name == basename:
                     lstat_result_for_path = stat_result
             except ftp_error.ParserError:
@@ -453,7 +456,10 @@ class _Stat:
         #  parser - which is wrong.
         try:
             result = method(*args, **kwargs)
-            self._allow_parser_switching = False
+            # if a `listdir` call didn't find anything, we can't
+            #  say anything about the usefulness of the parser
+            if result != []:
+                self._allow_parser_switching = False
             return result
         except ftp_error.ParserError:
             if self._allow_parser_switching:

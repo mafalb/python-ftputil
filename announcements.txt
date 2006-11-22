@@ -1,3 +1,48 @@
+The first beta version of ftputil 2.2 is available. You can download
+it from http://ftputil.sschwarzer.net/download .
+
+With respect to the previous alpha release, the cache now uses the
+lrucache module by Evan Prodromou which is bundled with the ftputil
+distribution. (Evan also gave his permission to include the module
+under ftputil's modified BSD license instead of the Academic License.)
+The documentation for the cache and its control have been added to
+ftputil.txt / ftputil.html .
+
+File objects generated with FTPHost.file now support the iterator
+protocol (for line in some_file: ...).
+
+Please download and test the release. Do you miss something which
+should be in this release? Are there any bugs?
+
+Stefan
+
+----------------------------------------------------------------------
+Welcome to the first alpha release of ftputil 2.2, ftputil 2.2a1.
+Please download it from http://ftputil.sschwarzer.net/download .
+
+This version adds caching of stat results to ftputil. This also
+affects indirect calls via FTPHost.path, e. g. methods isfile,
+exists, getmtime, getsize. The test script at
+http://ftputil.sschwarzer.net/trac/browser/tags/release2_2a1/sandbox/list_dir_test.py
+runs about 20 times as fast as before adding caching! :-)
+
+As the "alpha" part implies, this release is not production-ready,
+it's even kind of experimental: The caching works but there's no
+cache entry expiration yet. (I plan to implement an LRU expiration
+strategy or something similar.) Apart from that, the release is
+tested as any production release. I suggest using the --prefix
+option for installing alpha releases.
+
+That said, it would be helpful if you tested this release and
+report your findings. When testing the code, please make sure
+that your code uses the ftputil version you intend (alpha vs.
+production version), e. g. by setting the PYTHONPATH environment
+variable. I'm very interested in the speedups - and any problems
+you encounter.
+
+Stefan
+
+----------------------------------------------------------------------
 ftputil 2.1.1 is now available from
 http://ftputil.sschwarzer.net/download .
 

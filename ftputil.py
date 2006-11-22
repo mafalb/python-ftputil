@@ -138,6 +138,7 @@ class FTPHost:
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
         self.stat_cache = self._stat._lstat_cache
+        self.stat_cache.enable()
         # save (cache) current directory
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
@@ -152,24 +153,6 @@ class FTPHost:
         # set default time shift (used in `upload_if_newer` and
         #  `download_if_newer`)
         self.set_time_shift(0.0)
-
-    #
-    # setting the directory parser format for the remote server
-    #
-    # Note: there's now an autodetection of the format in
-    #  `ftp_stat._Stat`, so calling this method should never
-    #  be necessary. Thus `set_directory_format` is obsolete
-    #  and will be removed in ftputil 2.2 !
-    #
-    def set_directory_format(self, directory_format):
-        """
-        This method is deprecated. All its applications should
-        now be handled automatically.
-
-        Tell this `FTPHost` object the directory format of the remote
-        server.
-        """
-        pass
 
     #
     # dealing with child sessions and file-like objects
@@ -241,6 +224,8 @@ class FTPHost:
             raise ftp_error.FTPIOError("remote directory '%s' doesn't exist "
                   "or has insufficient access rights" % effective_dir)
         host._file._open(effective_file, mode)
+        if 'w' in mode:
+            self.stat_cache.invalidate(effective_path)
         return host._file
 
     def open(self, path, mode='r'):
@@ -418,6 +403,8 @@ class FTPHost:
         text copies, or 'b' for binary copies.
         """
         self.__copy_file(source, target, mode, open, self.file)
+        # the path in the stat cache is implicitly invalidated when
+        #  the file is opened on the remote host
 
     def download(self, source, target, mode=''):
         """

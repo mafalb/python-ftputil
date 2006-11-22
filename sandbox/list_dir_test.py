@@ -55,7 +55,7 @@ def main():
         if top == "pub/FreeBSD/doc/fr_FR.ISO8859-1/books/ppp-primer":
             break
     print "Stat cache:"
-    print ftp_host.stat_cache
+    #print ftp_host.stat_cache
     print len(ftp_host.stat_cache), "entries in cache"
     ftp_host.close()
 
@@ -88,4 +88,13 @@ if __name__ == '__main__':
 # user    0m0.480s
 # sys     0m0.112s
 
+# Ditto, together with caching in listdir
+# real    0m49.677s
+# user    0m0.424s
+# sys     0m0.100s
+
+# Ditto, with LRU cache of 5000 elements instead of "infinite" dictionary
+# real    1m1.007s
+# user    0m12.641s
+# sys     0m0.160s
 

@@ -145,7 +145,16 @@ total 1
 10-23-01  03:25PM       <DIR>          WindowsXP
 12-07-01  02:05PM       <DIR>          XPLaunch
 07-17-00  02:08PM             12266720 abcd.exe
-07-17-00  02:08PM                89264 O2KKeys.exe"""
+07-17-00  02:08PM                89264 O2KKeys.exe""",
+
+      '/home/msformat/XPLaunch': """\
+10-23-01  03:25PM       <DIR>          WindowsXP
+12-07-01  02:05PM       <DIR>          XPLaunch
+12-07-01  02:05PM       <DIR>          empty
+07-17-00  02:08PM             12266720 abcd.exe
+07-17-00  02:08PM                89264 O2KKeys.exe""",
+
+      '/home/msformat/XPLaunch/empty': "total 0",
     }
 
     # file content to be used (indirectly) with transfercmd

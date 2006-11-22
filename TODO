@@ -4,7 +4,6 @@ Planned:
   a) as a usage example of ftputil
   b) for benchmarking
   c) as a useful tool
-- caching of `FTPHost.stat` results; policy?
 - support more directory formats (see mails from Oleg Broytmann)
 - support time resolution in stat results (Oleg Broytmann)
 - add `ftp_session` module containing session classes (e. g. for

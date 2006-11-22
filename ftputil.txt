@@ -1,8 +1,8 @@
 ``ftputil`` - a high-level FTP client library
 =============================================
 
-:Version:   2.1.1
-:Date:      2006-08-19
+:Version:   2.2b
+:Date:      2006-10-20
 :Summary:   high-level FTP client library for Python
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem, pure Python
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
@@ -50,11 +50,6 @@ to `os.stat`_. Even `FTPHost.walk`_ and `FTPHost.path.walk`_ work.
 
 .. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
 
-The distribution contains a custom ``UserTuple`` module to provide stat_
-results with Python versions 2.0 and 2.1.
-
-.. _stat: http://www.python.org/doc/current/lib/module-stat.html
-
 
 ``ftputil`` features
 --------------------
@@ -79,10 +74,13 @@ results with Python versions 2.0 and 2.1.
 
 * Iterate over remote file systems (``walk``)
 
+* Local caching of results from ``lstat`` and ``stat`` calls to reduce
+  network access (also applies to ``exists``, ``getmtime`` etc.).
+
 * Read files from and write files to remote hosts via
   file-like objects (``FTPHost.file``; the generated file-like objects
   have many common methods like ``read``, ``readline``, ``readlines``,
-  ``write``, ``writelines``, ``close`` and can do automatical line
+  ``write``, ``writelines``, ``close`` and can do automatic line
   ending conversions on the fly, i. e. text/binary mode)
 
 
@@ -608,8 +606,158 @@ with the same semantics as for ``os.path``:
     splitext(path)
     walk(path, func, arg)
 
-Iteration over diretories and files
-```````````````````````````````````
+Local caching of file system information
+````````````````````````````````````````
+
+Many of the above methods need access to the remote file system to
+obtain data on directories and files. To get the most recent data,
+*each* call to ``lstat``, ``stat``, ``exists``, ``getmtime`` etc.
+would require to fetch a directory listing from the server, which can
+make the program very slow. This effect is more pronounced for
+operations which mostly scan the file system rather than transferring
+file data.
+
+For this reason, ``ftputil`` by default saves (caches) the results
+from directory listings locally and reuses those results. This reduces
+network accesses and so speeds up the software a lot. However, since
+data is more rarely fetched from the server, the risk of obsolete data
+also increases. This will be discussed below.
+
+Caching can - if necessary at all - be controlled via the
+``stat_cache`` object in an ``FTPHost``'s namespace. For example,
+after calling
+
+::
+
+    host = ftputil.FTPHost(host, user, password, account,
+                           session_factory=ftplib.FTP)
+
+the cache can be accessed as ``host.stat_cache``.
+
+While ``ftputil`` usually manages the cache quite well, there are two
+possible reasons for modifying cache parameters. The first is when the
+number of possible entries is too low. You may notice that when you
+are processing very large directories (e. g. above 1000 directories or
+files) and the program becomes much slower than before. It's common
+for code to read a directory with ``listdir`` and then process the
+found directories and files. For this application, it's a good rule of
+thumb to set the cache size to somewhat more than the number of
+directory entries fetched with ``listdir``. This is done by the
+``resize`` method::
+
+    host.stat_cache.resize(2000)
+
+where the argument is the maximal number of ``lstat`` results to store
+(the default is 1000). Note that each path on the server, e. g.
+"/home/schwa/some_dir", corresponds to a single cache entry. (Methods
+like ``exists`` or ``getmtime`` all derive their results from a
+previously fetched ``lstat`` result.)
+
+The value 2000 above means that the cache will hold at most 2000
+entries. If more are about to be stored, the entries which have not
+been used for the longest time will be deleted to make place for newer
+entries.
+
+Caching is so effective because it reduces network accesses. This can
+also be a disadvantage if the file system data on the remote server
+changes after a stat result has been retrieved; the client, when
+looking at the cached stat data, will use obsolete information.
+
+There are two ways to get such out-of-date stat data. The first
+happens when an ``FTPHost`` instance modifies a file path for which it
+has a cache entry, e. g. by calling ``remove`` or ``rmdir``. Such
+changes are handled transparently; the path will be deleted from the
+cache. A different matter are changes unknown to the ``FTPHost``
+object which reads its cache. Obviously, for example, these are
+changes by programs running on the remote host. On the other hand,
+cache inconsistencies can also occur if two ``FTPHost`` objects change
+a file system simultaneously::
+
+    host1 = ftputil.FTPHost(server, user1, password1)
+    host2 = ftputil.FTPHost(server, user1, password1)
+    try:
+        stat_result1 = host1.stat("some_file")
+        stat_result2 = host2.stat("some_file")
+        host2.remove("some_file")
+        # `host1` will still see the obsolete cache entry!
+        print stat_result1
+        # will raise an exception since an `FTPHost` object
+        #  knows of its own changes
+        print stat_result2
+    finally:
+        host1.close()
+        host2.close()
+
+At first sight, it may appear to be a good idea to have a shared cache
+among several ``FTPHost`` objects. After some thinking, this turns out
+to be very error-prone. For example, it won't help with different
+processes using ``ftputil``. So, if you have to deal with concurrent
+write accesses to a server, you have to handle them explicitly.
+
+The most useful tool for this probably is the ``invalidate`` method.
+In the example above, it could be used as::
+
+    host1 = ftputil.FTPHost(server, user1, password1)
+    host2 = ftputil.FTPHost(server, user1, password1)
+    try:
+        stat_result1 = host1.stat("some_file")
+        stat_result2 = host2.stat("some_file")
+        host2.remove("some_file")
+        # invalidate using an absolute path
+        absolute_path = host1.path.abspath(
+                        host1.path.join(host1.curdir, "some_file"))
+        host1.stat_cache.invalidate(absolute_path)
+        # will now raise an exception as it should
+        print stat_result1
+        # would raise an exception since an `FTPHost` object
+        #  knows of its own changes, even without `invalidate`
+        print stat_result2
+    finally:
+        host1.close()
+        host2.close()
+
+The method ``invalidate`` can be used on any *absolute* path, be it a
+directory, a file or a link.
+
+By default, the cache entries are stored indefinetely, i. e. if you
+start your Python process using ``ftputil`` and let it run for three
+days a stat call may still access cache data that old. To avoid this,
+you can set the ``max_age`` attribute::
+
+    host = ftputil.FTPHost(server, user, password)
+    host.stat_cache.max_age = 60 * 60  # = 3600 seconds
+
+This sets the maximum age of entries in the cache to an hour. This
+means any entry older won't be retrieved from the cache but its data
+instead fetched again from the remote host (and then again stored for
+up to an hour). To reset `max_age` to the default of unlimited age,
+i. e. cache entries never expire, use ``None`` as value.
+
+If you are certain that the cache is in the way, you can disable and
+later re-enable it completely with ``disable`` and ``enable``::
+
+    host = ftputil.FTPHost(server, user, password)
+    host.stat_cache.disable()
+    ...
+    host.stat_cache.enable()
+
+During that time, the cache won't be used; all data will be fetched
+from the network. After enabling the cache, its entries will be the
+same as when the cache was disabled, that is, entries won't get
+updated with newer data during this period. Note that even when the
+cache is disabled, the file system data in the code can become
+inconsistent::
+
+    host = ftputil.FTPHost(server, user, password)
+    host.stat_cache.disable()
+    if host.path.exists("some_file"):
+        mtime = host.path.getmtime("some_file")
+
+In that case, the file ``some_file`` may have been removed by another
+process between the calls to ``exists`` and ``getmtime``!
+
+Iteration over directories
+``````````````````````````
 
 .. _`FTPHost.walk`:
 
@@ -619,17 +767,14 @@ Iteration over diretories and files
   and above. Actually, ``FTPHost.walk`` uses the code from Python with
   just the necessary modifications, so see the linked documentation.
 
-  Unless the rest of ftputil, which should work with every Python
-  version from 2.0 on, the ``walk`` method requires generators
-  and thus will only work with Python 2.2 and above.
-
 .. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
 
 .. _`FTPHost.path.walk`:
 
 - ``path.walk(path, func, arg)``
 
-    For Python 2.1 the ``walk`` method in `FTPHost.path`_ can be used.
+  Similar to ``os.path.walk``, the ``walk`` method in
+  `FTPHost.path`_ can be used.
 
 Other methods
 `````````````
@@ -691,8 +836,18 @@ The methods
     xreadlines()
 
 and the attribute ``closed`` have the same semantics as for file
-objects of a local disk file system. For details, see the section
-`File objects`_ in the Library Reference.
+objects of a local disk file system. The iterator protocol is also
+supported, i. e. you can use a loop to read a file line by line::
+
+    host = ftputil.FTPHost(...)
+    input_file = host.file("some_file")
+    for line in input_file:
+        # do something with the line, e. g.
+        print line.strip().replace("ftplib", "ftputil")
+    input_file.close()
+
+For more on file objects, see the section `File objects`_ in the
+Library Reference.
 
 .. _`file objects`: http://www.python.org/doc/current/lib/bltin-file-objects.html
 
@@ -734,6 +889,38 @@ are unsure if the behaviour you found is a bug or not, you can write
 to the `ftputil mailing list`_. In *either* case you *must not*
 include confidential information (user id, password, file names, etc.)
 in the problem report! Be careful!
+
+Does ``ftputil`` support SSL?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``ftputil`` has no built-in SSL support. On the other hand,
+you can use M2Crypto_ (in the source code archive, look for the
+file ``M2Crypto/ftpslib.py``) which has a class derived from
+``ftplib.FTP`` that supports SSL. You then can use a class
+(not an object of it) similar to the following as a "session
+factory" in ``ftputil.FTPHost``'s constructor::
+
+    import ftputil
+
+    from M2Crypto import ftpslib
+
+    class SSLFTPSession(ftpslib.FTP_TLS):
+        def __init__(self, host, userid, password):
+            """
+            Use M2Crypto's `FTP_TLS` class to establish an
+            SSL connection.
+            """
+            ftpslib.FTP_TLS.__init__(self)
+            self.connect(host, port)
+            self.login(userid, password)
+            # do anything necessary to set up the SSL connection
+
+    # note the `session_factory` parameter
+    host = ftputil.FTPHost(host, userid, password,
+                           session_factory=SSLFTPSession)
+    # use `host` as usual
+
+.. _M2Crypto: http://wiki.osafoundation.org/bin/view/Projects/MeTooCrypto#Downloads
 
 Connecting on another port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -792,8 +979,7 @@ Please send an email with your problem report or question to the
 Bugs and limitations
 --------------------
 
-- ``ftputil`` needs at least Python 2.1 to work, or Python 2.0 if you
-  remove the ``from __future__ import ...`` statements from the code.
+- ``ftputil`` needs at least Python 2.3 to work.
 
 - Due to the implementation of ``lstat`` it can not return a sensible
   value for the root directory ``/`` though stat'ing entries *in* the
@@ -817,8 +1003,9 @@ Bugs and limitations
 - Currently, it is not possible to continue an interrupted upload or
   download. Contact me if you have problems with that.
 
-- The ``UserTuple`` class, provided in ``UserTuple.py``, is not thoroughly
-  tested. If you encouter problems, please notify me.
+- There's exactly one cache for lstat results for each ``FTPHost``
+  object, i. e. there's no sharing of cache results determined by
+  several ``FTPHost`` objects.
 
 
 Files

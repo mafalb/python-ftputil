@@ -15,38 +15,27 @@ in different timezones.
 What's new?
 -----------
 
-From version 2.0 to 2.1, the following has changed:
+From version 2.1 to 2.2, the following has changed:
 
-- Added new methods to the FTPHost class, namely makedirs, walk,
-  rmtree.
+- Results of stat calls (also indirect calls in the submodule `path`,
+  i. e. isdir/isfile/islink, exists, getmtime etc.) are now cached
+  and reused. This results in remarkable speedups for many use cases.
 
-- The FTP server directory format ("Unix" vs. "Windows") is now set
-  automatically (thanks to Andrew Ittner for testing it).
+- The current directory is also locally cached, resulting in further
+  but usually lesser speedups.
 
-- Border cases like inaccessible login directories and whitespace in
-  directory names, are now handled more gracefully (based on input
-  from Valeriy Pogrebitskiy, Tommy Sundström and H. Y. Chu).
+- File-like objects generated via ``FTPHost.file`` now support the
+  iterator protocol (for line in some_file: ...).
 
-- The documentation was updated.
-
-- A Russian translation of the documentation (currently slightly
-  behind) was contributed by Anton Stepanov. It's also on the website
-  at http://ftputil.sschwarzer.net/trac/wiki/RussianDocumentation .
-
-- New website, http://ftputil.sschwarzer.net/ with wiki, issue tracker
-  and Subversion repository (thanks to Trac!)
-
-  Please enter not only bugs but also enhancement request into
-  the issue tracker!
+- The documentation has been updated accordingly.
 
 Possible incompatibilities:
 
-- The exception hierarchy was changed slightly, which might break
-  client code. See http://ftputil.sschwarzer.net/trac/changeset/489
-  for the change details and the possibly necessary code changes.
+- This release requires at least Python 2.3. (Previous releases
+  worked with Python versions from 2.1 up.)
 
-- FTPHost.rmdir no longer removes non-empty directories. Use the new
-  method FTPHost.rmtree for this.
+- The method ``FTPHost.set_directory_format`` has been removed,
+  since the directory format is set automatically.
 
 Documentation
 -------------
@@ -58,7 +47,7 @@ from ftputil.txt).
 Prerequisites
 -------------
 
-To use ftputil, you need Python, at least version 2.0. Python is a
+To use ftputil, you need Python, at least version 2.3. Python is a
 programming language, available from http://www.python.org for free.
 
 Installation
@@ -90,13 +79,14 @@ Installation
   install on Windows.
 
   If you want to customize the installation paths, please read
-  http://www.python.org/doc/current/inst/inst.html .
+  http://docs.python.org/inst/inst.html .
 
 License
 -------
 
-ftputil is Open Source Software. It is distributed under a BSD-style
-license (see the top of ftputil.py).
+ftputil is Open Source Software. It is distributed under the
+new/modified/revised BSD license (see
+http://www.opensource.org/licenses/bsd-license.html ).
 
 Author
 ------

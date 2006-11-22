@@ -173,8 +173,8 @@ class _FTPFile:
         if self._bin_mode:
             return lines
         # more memory-friendly than `return [... for line in lines]`
-        for i in range(len(lines)):
-            lines[i] = _crlf_to_python_linesep(lines[i])
+        for index, line in enumerate(lines):
+            lines[index] = _crlf_to_python_linesep(line)
         return lines
 
     def xreadlines(self):
@@ -185,6 +185,22 @@ class _FTPFile:
         if self._bin_mode:
             return self._fo.xreadlines()
         return _XReadlines(self)
+
+    def __iter__(self):
+        """Return a file iterator."""
+        return self
+
+    def next(self):
+        """
+        Return the next line or raise `StopIteration`, if there are
+        no more.
+        """
+        # apply implicit line ending conversion
+        line = self.readline()
+        if line:
+            return line
+        else:
+            raise StopIteration
 
     def write(self, data):
         """Write data to file. Do linesep conversion for text mode."""

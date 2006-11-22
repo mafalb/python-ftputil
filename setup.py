@@ -73,6 +73,17 @@ shutil modules. ftputil has convenience functions for conditional uploads
 and downloads, and handles FTP clients and servers in different timezones.""",
   download_url=
     "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" %
-    (_name, _version)
+    (_name, _version),
+  classifiers=[
+    "Development Status :: 6 - Mature",
+    "Environment :: Other Environment",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Topic :: Internet :: File Transfer Protocol (FTP)",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Filesystems",
+    ]
   )
 
