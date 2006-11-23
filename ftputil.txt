@@ -873,10 +873,10 @@ Writing directory parsers
 -------------------------
 
 ``ftputil`` recognizes the two most widely-used FTP directory formats
-and adjusts itself automatically. However, if your server uses a
-format which is different from the two provided by ``ftputil``, you
-can plug in an own custom parser and have it used by a single method
-call.
+(Unix and MS style) and adjusts itself automatically. However, if your
+server uses a format which is different from the two provided by
+``ftputil``, you can plug in an own custom parser and have it used by
+a single method call.
 
 For this, you need to write a parser class by inheriting from the
 class ``Parser`` in the ``ftp_stat`` module::
