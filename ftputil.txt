@@ -567,10 +567,10 @@ at the methods that deal with time zone differences (`time shift`_).
   Currently, ``ftputil`` recognizes the common Unix-style and
   Microsoft/DOS-style directory formats. If you need to parse output
   from another server type, please write to the `ftputil mailing
-  list`_. You may even consider to `write your own parser`_.
+  list`_. You may consider to `write your own parser`_.
 
 .. _`ftputil mailing list`: http://ftputil.sschwarzer.net/mailinglist
-.. _`write your own parser`: `Writing your own directory parser`_
+.. _`write your own parser`: `Writing directory parsers`_
 
 .. _`FTPHost.stat`:
 
@@ -606,135 +606,6 @@ with the same semantics as for ``os.path``:
     splitdrive(path)
     splitext(path)
     walk(path, func, arg)
-
-Writing your own directory parser
-`````````````````````````````````
-
-(This subsection is rather advanced. You may
-`skip to the next subsection`_.)
-
-.. _`skip to the next subsection`: `Local caching of file system information`_
-
-As said above, ``ftputil`` recognizes the two most widely-used FTP
-directory formats and adjusts itself automatically. However, if your
-server uses a format which is different from the two provided by
-``ftputil``, you can plug in an own custom parser and have it used
-by a single method call.
-
-For this, you need to write a parser class by inheriting from the
-class ``Parser`` in the ``ftp_stat`` module::
-
-    from ftputil import ftp_error
-    from ftputil import ftp_stat
-
-    class XyzParser(ftp_stat.Parser):
-        """
-        Parse the default format of the FTP server of the XYZ
-        corporation.
-        """
-        def parse_line(self, line, time_shift=0.0):
-            """
-            Parse a `line` from the directory listing and return a
-            corresponding `StatResult` object. If the line can't
-            be parsed, raise `ftp_error.ParserError`.
-
-            The `time_shift` argument can be used to fine-tune the
-            parsing of dates and times. See the class
-            `ftp_stat.UnixParser` for an example.
-            """
-            ...
-            if all_is_well:
-                return ftp_stat.StatResult(...)
-            else:
-                raise ftp_error.ParserError(
-                  """can't parse line "%s"""" % line)
-
-        # define `ignores_line` only if the default in the base class
-        #  doesn't do enough!
-        def ignores_line(self, line):
-            """
-            Return a true value if the line should be ignored. For
-            example, the implementation in the base class handles
-            lines like "total 17". On the other hand, if the line
-            should be used for stat'ing, return a false value.
-            """
-            is_total_line = super(XyzParser, self).ignores_line(line)
-            my_test = ...
-            return is_total_line or my_test
-
-A ``StatResult`` object is similar to the value returned by
-`os.stat`_ and is usually built with statements like
-
-::
-
-    stat_result = StatResult(
-                  (st_mode, st_ino, st_dev, st_nlink, st_uid,
-                   st_gid, st_size, st_atime, st_mtime, st_ctime) )
-    stat_result._st_name = ...
-    stat_result._st_target = ...
-
-where ``st_mode`` and the other arguments of the ``StatResult``
-constructor are described in the following table.
-
-===== ========== ============ =============== =======================
-Index Attribute  os.stat type StatResult type Notes
-===== ========== ============ =============== =======================
-0     st_mode    int          int
-1     st_ino     long         long
-2     st_dev     long         long
-3     st_nlink   int          int
-4     st_uid     int          str             usually only available as string
-5     st_gid     int          str             usually only available as string
-6     st_size    long         long
-7     st_atime   int/float    float
-8     st_mtime   int/float    float
-9     st_ctime   int/float    float
-\-    _st_name   \-           str             file name without directory part
-\-    _st_target \-           str             link target
-===== ========== ============ =============== =======================
-
-If you can't extract all the desirable data from a line (for
-example, the MS format doesn't contain any information about the
-owner of a file), set the corresponding values in the ``StatResult``
-instance to ``None``.
-
-Parser classes can use several helper methods which are defined in
-the class ``Parser``:
-
-- ``parse_unix_mode`` parses strings like "drwxr-xr-x" and returns
-  an appropriate ``st_mode`` value.
-
-- ``parse_unix_time`` returns a float number usable for the
-  ``st_.time`` values by parsing arguments like "Nov"/"23"/"02:33"
-  or "May"/"26"/"2005". Note that the method expects the date string
-  already splitted at whitespace.
-
-- ``parse_ms_time`` parses arguments like "10-23-01"/"03:25PM" and
-  returns a float number like from ``time.mktime``.
-
-Additionally, there's an attribute ``_month_numbers`` which maps
-three-letter month abbreviations to integers.
-
-For more details, see the two "standard" parsers ``UnixParser`` and
-``MSParser`` in the module ``ftp_stat.py``.
-
-To actually *use* the parser, call the method ``set_parser`` of the
-``FTPHost`` instance::
-
-    import ftputil
-
-    import xyz_parser
-
-    host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
-    host.set_parser(xyz_parser.XyzParser())
-    ...
-    host.close()
-
-Note that you have to pass in a parser *instance*, not the class.
-
-If you can't write a parser or don't want to, please ask on the
-`ftputil mailing list`_. Possibly someone has already written a parser
-for your server or can help to do it.
 
 Local caching of file system information
 ````````````````````````````````````````
@@ -897,7 +768,7 @@ Iteration over directories
   and above. Actually, ``FTPHost.walk`` uses the code from Python with
   just the necessary modifications, so see the linked documentation.
 
-.. _`os.walk`: http://docs.python.org/lib/os-file-dir.html#l2h-1638
+.. _`os.walk`: http://www.python.org/doc/2.5/lib/os-file-dir.html#l2h-2707
 
 .. _`FTPHost.path.walk`:
 
@@ -927,6 +798,19 @@ Other methods
   arbitrary file-like objects can be used as arguments (e. g. local
   files, remote FTP files). See `File-like objects`_ for construction
   and use of remote file-like objects.
+
+.. _`set_parser`:
+
+- ``set_parser(parser)``
+
+  sets a custom parser for FTP directories. Note that you have to pass
+  in a parser *instance*, not the class.
+
+  An `extra section`_ shows how to write own parsers. Possibly you
+  are lucky and someone has already written a parser you can use.
+  Please ask on the `mailing list`_.
+
+.. _`extra section`: `Writing directory parsers`_
 
 
 File-like objects
@@ -983,6 +867,124 @@ Library Reference.
 
 Note that ``ftputil`` supports both binary mode and text mode with the
 appropriate line ending conversions.
+
+
+Writing directory parsers
+-------------------------
+
+``ftputil`` recognizes the two most widely-used FTP directory formats
+and adjusts itself automatically. However, if your server uses a
+format which is different from the two provided by ``ftputil``, you
+can plug in an own custom parser and have it used by a single method
+call.
+
+For this, you need to write a parser class by inheriting from the
+class ``Parser`` in the ``ftp_stat`` module::
+
+    from ftputil import ftp_error
+    from ftputil import ftp_stat
+
+    class XyzParser(ftp_stat.Parser):
+        """
+        Parse the default format of the FTP server of the XYZ
+        corporation.
+        """
+        def parse_line(self, line, time_shift=0.0):
+            """
+            Parse a `line` from the directory listing and return a
+            corresponding `StatResult` object. If the line can't
+            be parsed, raise `ftp_error.ParserError`.
+
+            The `time_shift` argument can be used to fine-tune the
+            parsing of dates and times. See the class
+            `ftp_stat.UnixParser` for an example.
+            """
+            # split the `line` argument; if something goes wrong,
+            #  raise an `ftp_error.ParserError`
+            ...
+            # make a `StatResult` object from the parts above
+            stat_result = ftp_stat.StatResult(...)
+            # `_st_name` and `_st_target` are optional
+            stat_result._st_name = ...
+            stat_result._st_target = ...
+            return stat_result
+
+        # define `ignores_line` only if the default in the base class
+        #  doesn't do enough!
+        def ignores_line(self, line):
+            """
+            Return a true value if the line should be ignored. For
+            example, the implementation in the base class handles
+            lines like "total 17". On the other hand, if the line
+            should be used for stat'ing, return a false value.
+            """
+            is_total_line = super(XyzParser, self).ignores_line(line)
+            my_test = ...
+            return is_total_line or my_test
+
+A ``StatResult`` object is similar to the value returned by
+`os.stat`_ and is usually built with statements like
+
+::
+
+    stat_result = StatResult(
+                  (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                   st_gid, st_size, st_atime, st_mtime, st_ctime) )
+    stat_result._st_name = ...
+    stat_result._st_target = ...
+
+where ``st_mode`` and the other arguments of the ``StatResult``
+constructor are described in the following table.
+
+===== ========== ============ =============== =======================
+Index Attribute  os.stat type StatResult type Notes
+===== ========== ============ =============== =======================
+0     st_mode    int          int
+1     st_ino     long         long
+2     st_dev     long         long
+3     st_nlink   int          int
+4     st_uid     int          str             usually only available as string
+5     st_gid     int          str             usually only available as string
+6     st_size    long         long
+7     st_atime   int/float    float
+8     st_mtime   int/float    float
+9     st_ctime   int/float    float
+\-    _st_name   \-           str             file name without directory part
+\-    _st_target \-           str             link target
+===== ========== ============ =============== =======================
+
+If you can't extract all the desirable data from a line (for
+example, the MS format doesn't contain any information about the
+owner of a file), set the corresponding values in the ``StatResult``
+instance to ``None``.
+
+Parser classes can use several helper methods which are defined in
+the class ``Parser``:
+
+- ``parse_unix_mode`` parses strings like "drwxr-xr-x" and returns
+  an appropriate ``st_mode`` value.
+
+- ``parse_unix_time`` returns a float number usable for the
+  ``st_.time`` values by parsing arguments like "Nov"/"23"/"02:33" or
+  "May"/"26"/"2005". Note that the method expects the timestamp string
+  already splitted at whitespace.
+
+- ``parse_ms_time`` parses arguments like "10-23-01"/"03:25PM" and
+  returns a float number like from ``time.mktime``. Note that the
+  method expects the timestamp string already splitted at whitespace.
+
+Additionally, there's an attribute ``_month_numbers`` which maps
+three-letter month abbreviations to integers.
+
+For more details, see the two "standard" parsers ``UnixParser`` and
+``MSParser`` in the module ``ftp_stat.py``.
+
+To actually *use* the parser, call the method `set_parser`_ of the
+``FTPHost`` instance.
+
+If you can't write a parser or don't want to, please ask on the
+`ftputil mailing list`_. Possibly someone has already written a parser
+for your server or can help to do it.
 
 
 FAQ / Tips and tricks
@@ -1107,7 +1109,7 @@ The FTP server you connect to uses a directory format that
 `plug in an own parser`_, or preferably ask on the `mailing list`_ for
 help.
 
-.. _`plug in an own parser`: `Writing your own directory parser`_
+.. _`plug in an own parser`: `Writing directory parsers`_
 
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
