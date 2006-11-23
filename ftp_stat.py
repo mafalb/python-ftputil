@@ -101,6 +101,39 @@ class Parser(object):
         """
         raise NotImplementedError("must be defined by subclass")
 
+    #
+    # helper methods for parts of a directory listing line
+    #
+    def parse_mode(self, mode_string):
+        """
+        Return an integer from the `mode_string`, compatible with
+        the `st_mode` value in stat results. Such a mode string
+        may look like "drwxr-xr-x".
+
+        If the mode string can't be parsed, raise an
+        `ftp_error.ParserError`.
+        """
+        st_mode = 0
+        if len(mode_string) != 10:
+            raise ftp_error.ParserError("invalid mode string '%s'" %
+                                        mode_string)
+        for bit in mode_string[1:10]:
+            bit = (bit != '-')
+            st_mode = (st_mode << 1) + bit
+        if mode_string[3] == 's':
+            st_mode = st_mode | stat.S_ISUID
+        if mode_string[6] == 's':
+            st_mode = st_mode | stat.S_ISGID
+        file_type_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
+                             'c': stat.S_IFCHR, '-': stat.S_IFREG}
+        file_type = mode_string[0]
+        if file_type_to_mode.has_key(file_type):
+            st_mode = st_mode | file_type_to_mode[file_type]
+        else:
+            raise ftp_error.ParserError(
+                  "unknown file type character '%s'" % file_type)
+        return st_mode
+
 
 class UnixParser(Parser):
     """`Parser` class for Unix-specific directory format."""
@@ -142,27 +175,10 @@ class UnixParser(Parser):
 
         If the line can't be parsed, raise a `ParserError`.
         """
-        metadata, nlink, user, group, size, month, day, \
+        mode_string, nlink, user, group, size, month, day, \
           year_or_time, name = self._split_line(line)
         # st_mode
-        st_mode = 0
-        if len(metadata) != 10:
-            raise ftp_error.ParserError("invalid metadata '%s'" % metadata)
-        for bit in metadata[1:10]:
-            bit = (bit != '-')
-            st_mode = (st_mode << 1) + bit
-        if metadata[3] == 's':
-            st_mode = st_mode | stat.S_ISUID
-        if metadata[6] == 's':
-            st_mode = st_mode | stat.S_ISGID
-        char_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
-                        'c': stat.S_IFCHR, '-': stat.S_IFREG}
-        file_type = metadata[0]
-        if char_to_mode.has_key(file_type):
-            st_mode = st_mode | char_to_mode[file_type]
-        else:
-            raise ftp_error.ParserError(
-                  "unknown file type character '%s'" % file_type)
+        st_mode = self.parse_mode(mode_string)
         # st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime
         st_ino = None
         st_dev = None
