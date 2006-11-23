@@ -35,7 +35,7 @@
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html ftputil_ru.html
-STYLESHEET_PATH=/usr/share/doc/docutils-0.3.7/html/tools/stylesheets/default.css
+STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
 
