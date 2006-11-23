@@ -567,9 +567,10 @@ at the methods that deal with time zone differences (`time shift`_).
   Currently, ``ftputil`` recognizes the common Unix-style and
   Microsoft/DOS-style directory formats. If you need to parse output
   from another server type, please write to the `ftputil mailing
-  list`_.
+  list`_. You may even consider to `write your own parser`_.
 
 .. _`ftputil mailing list`: http://ftputil.sschwarzer.net/mailinglist
+.. _`write your own parser`: `Writing your own directory parser`_
 
 .. _`FTPHost.stat`:
 
@@ -605,6 +606,82 @@ with the same semantics as for ``os.path``:
     splitdrive(path)
     splitext(path)
     walk(path, func, arg)
+
+Writing your own directory parser
+`````````````````````````````````
+
+(This subsection is rather advanced. You may
+`skip to the next subsection`_.)
+
+.. _`skip to the next subsection`: `Local caching of file system information`_
+
+As said above, ``ftputil`` recognizes the two most widely-used FTP
+directory formats and adjusts itself automatically. However, if your
+server uses a format which is different from the two provided by
+``ftputil``, you can plug in an own custom parser and have it used
+by a single method call.
+
+For this, you need to write a parser class by inheriting from the
+class ``Parser`` in the ``ftp_stat`` module::
+
+    from ftputil import ftp_error
+    from ftputil import ftp_stat
+
+    class XyzParser(ftp_stat.Parser):
+        """
+        Parse the default format of the FTP server of the XYZ
+        corporation.
+        """
+        def parse_line(self, line, time_shift=0.0):
+            """
+            Parse a `line` from the directory listing and return a
+            corresponding `StatResult` object. If the line can't
+            be parsed, raise `ftp_error.ParserError`.
+
+            The `time_shift` argument can be used to fine-tune the
+            parsing of dates and times. See the class
+            `ftp_stat.UnixParser` for an example.
+            """
+            ...
+            if all_is_well:
+                return ftp_stat.StatResult(...)
+            else:
+                raise ftp_error.ParserError(
+                  """can't parse line "%s"""" % line)
+
+        # define `ignore_line` only if the default in the base class
+        #  doesn't do enough!
+        def ignore_line(self, line):
+            """
+            Return a true value if the line should be ignored. For
+            example, the implementation in the base class handles
+            lines like "total 17". On the other hand, if the line
+            should be used for stat'ing, return a false value.
+            """
+            is_total_line = super(XyzParser, self).ignore_line(line)
+            my_test = ...
+            return is_total_line or my_test
+
+For more detailed examples, look at the two "standard" parsers
+``UnixParser`` and ``MSParser`` in the module ``ftp_stat.py``.
+
+To actually *use* the parser, call the method ``set_parser`` of the
+``FTPHost`` instance::
+
+    import ftputil
+
+    import xyz_parser
+
+    host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
+    host.set_parser(xyz_parser.XyzParser())
+    ...
+    host.close()
+
+Note that you have to pass in a parser *instance*, not the class.
+
+If you can't write a parser or don't want to, please ask on the
+`ftputil mailing list`_. Possibly someone has already written a parser
+for your server or can help to do it.
 
 Local caching of file system information
 ````````````````````````````````````````
@@ -893,7 +970,7 @@ in the problem report! Be careful!
 Does ``ftputil`` support SSL?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``ftputil`` has no built-in SSL support. On the other hand,
+``ftputil`` has no *built-in* SSL support. On the other hand,
 you can use M2Crypto_ (in the source code archive, look for the
 file ``M2Crypto/ftpslib.py``) which has a class derived from
 ``ftplib.FTP`` that supports SSL. You then can use a class
@@ -969,6 +1046,16 @@ Wrong dates or times when stat'ing on a server
 
 Please see the previous tip.
 
+When I use ``ftputil``, all I get is a ``ParserError`` exception
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The FTP server you connect to uses a directory format that
+``ftputil`` doesn't understand. You can either write and
+`plug in an own parser`_, or preferably ask on the `mailing list`_ for
+help.
+
+.. _`plug in an own parser`: `Writing your own directory parser`_
+
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1038,10 +1125,12 @@ References
 .. _`Python Library Reference`: http://www.python.org/doc/current/lib/lib.html
 
 
-Author
-------
+Authors
+-------
 
-``ftputil`` is written by Stefan Schwarzer <sschwarzer@sschwarzer.net>.
+``ftputil`` is mainly written by Stefan Schwarzer
+<sschwarzer@sschwarzer.net>. The ``lrucache`` module is written by
+Evan Prodromou <evan@bad.dynu.ca>.
 
 Feedback is appreciated. :-)
 
