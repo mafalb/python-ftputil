@@ -37,7 +37,7 @@ Possible incompatibilities:
 - This release requires at least Python 2.3. (Previous releases
   worked with Python versions from 2.1 up.)
 
-- The "old" method ``FTPHost.set_directory_format`` has been removed,
+- The method ``FTPHost.set_directory_format`` has been removed,
   since the directory format (Unix or MS) is set automatically. (The
   new method ``set_parser`` is a different animal since it takes
   a parser object to parse "foreign" formats, not a string.)
@@ -46,7 +46,7 @@ Documentation
 -------------
 
 The documentation for ftputil can be found in the file ftputil.txt
-(reStructured Text format) or ftputil.html (recommended, generated
+(reStructuredText format) or ftputil.html (recommended, generated
 from ftputil.txt).
 
 Prerequisites
@@ -97,7 +97,8 @@ Authors
 -------
 
 Stefan Schwarzer <sschwarzer@sschwarzer.net>
-Evan Prodromou <evan@bad.dynu.ca> (contributed lrucache module)
+
+Evan Prodromou <evan@bad.dynu.ca> (lrucache module)
 
 Please provide feedback! It's surely appreciated. :-)
 
