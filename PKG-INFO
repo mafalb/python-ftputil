@@ -14,7 +14,7 @@ Description: ftputil is a high-level FTP client library for the Python programmi
         shutil modules. ftputil has convenience functions for conditional uploads
         and downloads, and handles FTP clients and servers in different timezones.
 Keywords: FTP, client, virtual file system
-Platform: Pure Python (Python version >= 2.1)
+Platform: Pure Python (Python version >= 2.3)
 Classifier: Development Status :: 6 - Mature
 Classifier: Environment :: Other Environment
 Classifier: Intended Audience :: Developers
