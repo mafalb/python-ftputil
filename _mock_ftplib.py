@@ -78,7 +78,7 @@ class MockFile(StringIO.StringIO):
         StringIO.StringIO.close(self)
 
 
-class MockSocket:
+class MockSocket(object):
     """
     Mock class which is used to return something from
     `MockSession.transfercmd`.
@@ -96,7 +96,7 @@ class MockSocket:
         pass
 
 
-class MockSession:
+class MockSession(object):
     """
     Mock class which works like `ftplib.FTP` for the purpose of the
     unit tests.

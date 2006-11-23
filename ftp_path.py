@@ -41,7 +41,7 @@ import stat
 import ftp_error
 
 
-class _Path:
+class _Path(object):
     """
     Support class resembling `os.path`, accessible from the `FTPHost`
     object, e. g. as `FTPHost().path.abspath(path)`.

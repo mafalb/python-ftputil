@@ -103,7 +103,7 @@ __version__ = ftputil_version.__version__
 #####################################################################
 # `FTPHost` class with several methods similar to those of `os`
 
-class FTPHost:
+class FTPHost(object):
     """FTP host class."""
 
     # Implementation notes:

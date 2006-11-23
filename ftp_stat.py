@@ -289,7 +289,7 @@ class MSParser(Parser):
 #
 # Stat'ing operations for files on an FTP server
 #
-class _Stat:
+class _Stat(object):
     """Methods for stat'ing directories, links and regular files."""
     def __init__(self, host):
         self._host = host

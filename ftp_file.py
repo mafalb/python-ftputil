@@ -55,7 +55,7 @@ _python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 
 # helper class for xreadline protocol for ASCII transfers
 #XXX maybe we can use the `xreadlines` module instead of this?
-class _XReadlines:
+class _XReadlines(object):
     """Represents `xreadline` objects for ASCII transfers."""
     def __init__(self, ftp_file):
         self._ftp_file = ftp_file
@@ -74,7 +74,7 @@ class _XReadlines:
         return line
 
 
-class _FTPFile:
+class _FTPFile(object):
     """
     Represents a file-like object connected to an FTP host. File and
     socket are closed appropriately if the `close` operation is
