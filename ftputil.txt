@@ -899,8 +899,8 @@ class ``Parser`` in the ``ftp_stat`` module::
             parsing of dates and times. See the class
             `ftp_stat.UnixParser` for an example.
             """
-            # split the `line` argument; if something goes wrong,
-            #  raise an `ftp_error.ParserError`
+            # split the `line` argument and examine it further; if
+            #  something goes wrong, raise an `ftp_error.ParserError`
             ...
             # make a `StatResult` object from the parts above
             stat_result = ftp_stat.StatResult(...)
@@ -933,8 +933,8 @@ A ``StatResult`` object is similar to the value returned by
     stat_result._st_name = ...
     stat_result._st_target = ...
 
-where ``st_mode`` and the other arguments of the ``StatResult``
-constructor are described in the following table.
+with the arguments of the ``StatResult`` constructor described in
+the following table.
 
 ===== ========== ============ =============== =======================
 Index Attribute  os.stat type StatResult type Notes
