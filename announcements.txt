@@ -1,3 +1,16 @@
+The second beta version of ftputil 2.2 is available. You can download
+it from http://ftputil.sschwarzer.net/download .
+
+With respect to the first beta release, it's now possible to write
+and plug in custom parsers for FTP directory formats that ftputil
+doesn't know natively. The documentation has been updated accordingly.
+
+Please download and test the release. Do you miss something which
+should be in this release? Are there any bugs?
+
+Stefan
+
+----------------------------------------------------------------------
 The first beta version of ftputil 2.2 is available. You can download
 it from http://ftputil.sschwarzer.net/download .
 
