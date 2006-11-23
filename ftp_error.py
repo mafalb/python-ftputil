@@ -41,7 +41,7 @@ import sys
 import ftputil_version
 
 
-class FTPError:
+class FTPError(Exception):
     """General error class."""
     def __init__(self, ftp_exception):
         self.args = (ftp_exception,)
