@@ -5,6 +5,10 @@ With respect to the first beta release, it's now possible to write
 and plug in custom parsers for FTP directory formats that ftputil
 doesn't know natively. The documentation has been updated accordingly.
 
+The documentation for this release is online at
+http://ftputil.sschwarzer.net/trac/wiki/Documentation#Documentationforftputil2.2b2 ,
+so you can read about the extensions in more detail.
+
 Please download and test the release. Do you miss something which
 should be in this release? Are there any bugs?
 
