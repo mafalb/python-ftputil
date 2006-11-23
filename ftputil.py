@@ -267,7 +267,7 @@ class FTPHost(object):
         - A parser should derive from `ftp_stat.Parser`.
 
         - The parser has to implement two methods, `parse_line` and
-          `ignore_line`. For the latter, there's a probably useful
+          `ignores_line`. For the latter, there's a probably useful
           default in the class `ftp_stat.Parser`.
 
         - `parse_line` should try to parse a line of a directory
@@ -275,7 +275,7 @@ class FTPHost(object):
           parsing isn't possible, raise `ftp_error.ParserError` with
           a useful error message.
 
-        - `ignore_line` should return a true value if the line isn't
+        - `ignores_line` should return a true value if the line isn't
           assumed to contain stat information.
         """
         # the cache contents, if any, aren't probably useful

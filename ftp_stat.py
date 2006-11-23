@@ -73,7 +73,7 @@ class Parser(object):
 
     _total_regex = re.compile(r"^total\s+\d+")
 
-    def ignore_line(self, line):
+    def ignores_line(self, line):
         """
         Return a true value if the line should be ignored, i. e. is
         assumed to _not_ contain actual directory/file/link data.
@@ -387,7 +387,7 @@ class _Stat(object):
             return []
         names = []
         for line in lines:
-            if self._parser.ignore_line(line):
+            if self._parser.ignores_line(line):
                 continue
             # for `listdir`, we are interested in just the names,
             #  but we use the `time_shift` parameter to have the
@@ -435,7 +435,7 @@ class _Stat(object):
         #  possible
         lines = self._host_dir(dirname)
         for line in lines:
-            if self._parser.ignore_line(line):
+            if self._parser.ignores_line(line):
                 continue
             stat_result = self._parser.parse_line(line,
                           self._host.time_shift())
