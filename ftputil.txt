@@ -48,7 +48,7 @@ Also, there are `FTPHost.lstat`_ and `FTPHost.stat`_ to request size and
 modification time of a file. The latter can also follow links, similar
 to `os.stat`_. Even `FTPHost.walk`_ and `FTPHost.path.walk`_ work.
 
-.. _`os.stat`: http://www.python.org/doc/current/lib/os-file-dir.html#l2h-1455
+.. _`os.stat`: http://www.python.org/doc/2.5/lib/os-file-dir.html#l2h-2698
 
 
 ``ftputil`` features
@@ -649,21 +649,74 @@ class ``Parser`` in the ``ftp_stat`` module::
                 raise ftp_error.ParserError(
                   """can't parse line "%s"""" % line)
 
-        # define `ignore_line` only if the default in the base class
+        # define `ignores_line` only if the default in the base class
         #  doesn't do enough!
-        def ignore_line(self, line):
+        def ignores_line(self, line):
             """
             Return a true value if the line should be ignored. For
             example, the implementation in the base class handles
             lines like "total 17". On the other hand, if the line
             should be used for stat'ing, return a false value.
             """
-            is_total_line = super(XyzParser, self).ignore_line(line)
+            is_total_line = super(XyzParser, self).ignores_line(line)
             my_test = ...
             return is_total_line or my_test
 
-For more detailed examples, look at the two "standard" parsers
-``UnixParser`` and ``MSParser`` in the module ``ftp_stat.py``.
+A ``StatResult`` object is similar to the value returned by
+`os.stat`_ and is usually built with statements like
+
+::
+
+    stat_result = StatResult(
+                  (st_mode, st_ino, st_dev, st_nlink, st_uid,
+                   st_gid, st_size, st_atime, st_mtime, st_ctime) )
+    stat_result._st_name = ...
+    stat_result._st_target = ...
+
+where ``st_mode`` and the other arguments of the ``StatResult``
+constructor are described in the following table.
+
+===== ========== ============ =============== =======================
+Index Attribute  os.stat type StatResult type Notes
+===== ========== ============ =============== =======================
+0     st_mode    int          int
+1     st_ino     long         long
+2     st_dev     long         long
+3     st_nlink   int          int
+4     st_uid     int          str             usually only available as string
+5     st_gid     int          str             usually only available as string
+6     st_size    long         long
+7     st_atime   int/float    float
+8     st_mtime   int/float    float
+9     st_ctime   int/float    float
+\-    _st_name   \-           str             file name without directory part
+\-    _st_target \-           str             link target
+===== ========== ============ =============== =======================
+
+If you can't extract all the desirable data from a line (for
+example, the MS format doesn't contain any information about the
+owner of a file), set the corresponding values in the ``StatResult``
+instance to ``None``.
+
+Parser classes can use several helper methods which are defined in
+the class ``Parser``:
+
+- ``parse_unix_mode`` parses strings like "drwxr-xr-x" and returns
+  an appropriate ``st_mode`` value.
+
+- ``parse_unix_time`` returns a float number usable for the
+  ``st_.time`` values by parsing arguments like "Nov"/"23"/"02:33"
+  or "May"/"26"/"2005". Note that the method expects the date string
+  already splitted at whitespace.
+
+- ``parse_ms_time`` parses arguments like "10-23-01"/"03:25PM" and
+  returns a float number like from ``time.mktime``.
+
+Additionally, there's an attribute ``_month_numbers`` which maps
+three-letter month abbreviations to integers.
+
+For more details, see the two "standard" parsers ``UnixParser`` and
+``MSParser`` in the module ``ftp_stat.py``.
 
 To actually *use* the parser, call the method ``set_parser`` of the
 ``FTPHost`` instance::
