@@ -58,7 +58,7 @@ class StatResult(tuple):
         if self._index_mapping.has_key(attr_name):
             return self[self._index_mapping[attr_name]]
         else:
-            raise AttributeError("'_Stat' object has no attribute '%s'" %
+            raise AttributeError("'StatResult' object has no attribute '%s'" %
                                  attr_name)
 
 #
