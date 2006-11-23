@@ -104,7 +104,7 @@ class Parser(object):
     #
     # helper methods for parts of a directory listing line
     #
-    def parse_mode(self, mode_string):
+    def parse_unix_mode(self, mode_string):
         """
         Return an integer from the `mode_string`, compatible with
         the `st_mode` value in stat results. Such a mode string
@@ -133,6 +133,92 @@ class Parser(object):
             raise ftp_error.ParserError(
                   "unknown file type character '%s'" % file_type)
         return st_mode
+
+    def parse_unix_time(self, month_abbreviation, day, year_or_time,
+                        time_shift):
+        """
+        Return a floating point number, like from `time.mktime`, by
+        parsing the string arguments `month_abbreviation`, `day` and
+        `year_or_time`. The parameter `time_shift` is the difference
+        "time on server" - "time on client" and is available as the
+        `time_shift` parameter in the `parse_line` interface.
+
+        Times in Unix-style directory listings typically have one of
+        these formats:
+
+        - "Nov 23 02:33" (month name, day of month, time)
+
+        - "May 26  2005" (month name, day of month, year)
+
+        If this method can not make sense of the given arguments, it
+        raises an `ftp_error.ParserError`.
+        """
+        try:
+            month = self._month_numbers[month_abbreviation.lower()]
+        except KeyError:
+            raise ftp_error.ParserError("invalid month name '%s'" % month)
+        day = int(day)
+        if ":" not in year_or_time:
+            # `year_or_time` is really a year
+            year, hour, minute = int(year_or_time), 0, 0
+            st_mtime = time.mktime( (year, month, day,
+                                     hour, minute, 0, 0, 0, -1) )
+        else:
+            # `year_or_time` is a time hh:mm
+            hour, minute = year_or_time.split(':')
+            year, hour, minute = None, int(hour), int(minute)
+            # try the current year
+            year = time.localtime()[0]
+            st_mtime = time.mktime( (year, month, day,
+                                     hour, minute, 0, 0, 0, -1) )
+            # rhs of comparison: transform client time to server time
+            #  (as on the lhs), so both can be compared with respect
+            #  to the set time shift (see the definition of the time
+            #  shift in `FTPHost.set_time_shift`'s docstring); the
+            #  last addend allows for small deviations between the
+            #  supposed (rounded) and the actual time shift
+            # #XXX the downside of this "correction" is that there is
+            #  a one-minute time interval exactly one year ago that
+            #  may cause that datetime to be recognized as the current
+            #  datetime, but after all the datetime from the server
+            #  can only be exact up to a minute
+            if st_mtime > time.time() + time_shift + 60.0:
+                # if it's in the future, use previous year
+                st_mtime = time.mktime( (year-1, month, day,
+                                         hour, minute, 0, 0, 0, -1) )
+        return st_mtime
+
+    def parse_ms_time(self, date, time_, time_shift):
+        """
+        Return a floating point number, like from `time.mktime`, by
+        parsing the string arguments `date` and `time_`. The parameter
+        `time_shift` is the difference
+        "time on server" - "time on client"
+        and is available as the `time_shift` parameter in the
+        `parse_line` interface.
+
+        Times in MS-style directory listings typically have the
+        format "10-23-01 03:25PM" (month-day_of_month-two_digit_year,
+        hour:minute, am/pm).
+
+        If this method can not make sense of the given arguments, it
+        raises an `ftp_error.ParserError`.
+        """
+        try:
+            month, day, year = map(int, date.split('-'))
+            if year >= 70:
+                year = 1900 + year
+            else:
+                year = 2000 + year
+            hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
+            hour, minute = int(hour), int(minute)
+        except (ValueError, IndexError):
+            raise ftp_error.ParserError("invalid time string '%s'" % time_)
+        if am_pm == 'P':
+            hour = hour + 12
+        st_mtime = time.mktime( (year, month, day,
+                                 hour, minute, 0, 0, 0, -1) )
+        return st_mtime
 
 
 class UnixParser(Parser):
@@ -178,7 +264,7 @@ class UnixParser(Parser):
         mode_string, nlink, user, group, size, month, day, \
           year_or_time, name = self._split_line(line)
         # st_mode
-        st_mode = self.parse_mode(mode_string)
+        st_mode = self.parse_unix_mode(mode_string)
         # st_ino, st_dev, st_nlink, st_uid, st_gid, st_size, st_atime
         st_ino = None
         st_dev = None
@@ -188,43 +274,11 @@ class UnixParser(Parser):
         st_size = int(size)
         st_atime = None
         # st_mtime
-        try:
-            month = self._month_numbers[month.lower()]
-        except KeyError:
-            raise ftp_error.ParserError("invalid month name '%s'" % month)
-        day = int(day)
-        if ":" not in year_or_time:
-            # `year_or_time` is really a year
-            year, hour, minute = int(year_or_time), 0, 0
-            st_mtime = time.mktime( (year, month, day, hour,
-                       minute, 0, 0, 0, -1) )
-        else:
-            # `year_or_time` is a time hh:mm
-            hour, minute = year_or_time.split(':')
-            year, hour, minute = None, int(hour), int(minute)
-            # try the current year
-            year = time.localtime()[0]
-            st_mtime = time.mktime( (year, month, day, hour,
-                       minute, 0, 0, 0, -1) )
-            # rhs of comparison: transform client time to server time
-            #  (as on the lhs), so both can be compared with respect
-            #  to the set time shift (see the definition of the time
-            #  shift in `FTPHost.set_time_shift`'s docstring); the
-            #  last addend allows for small deviations between the
-            #  supposed (rounded) and the actual time shift
-            # #XXX the downside of this "correction" is that there is
-            #  a one-minute time interval exactly one year ago that
-            #  may cause that datetime to be recognized as the current
-            #  datetime, but after all the datetime from the server
-            #  can only be exact up to a minute
-            if st_mtime > time.time() + time_shift + 60.0:
-                # if it's in the future, use previous year
-                st_mtime = time.mktime( (year-1, month, day,
-                           hour, minute, 0, 0, 0, -1) )
+        st_mtime = self.parse_unix_time(month, day, year_or_time, time_shift)
         # st_ctime
         st_ctime = None
         # st_name
-        if name.find(' -> ') != -1:
+        if " -> " in name:
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None
@@ -278,20 +332,7 @@ class MSParser(Parser):
         # st_atime
         st_atime = None
         # st_mtime
-        try:
-            month, day, year = map(int, date.split('-'))
-            if year >= 70:
-                year = 1900 + year
-            else:
-                year = 2000 + year
-            hour, minute, am_pm = time_[0:2], time_[3:5], time_[5]
-            hour, minute = int(hour), int(minute)
-        except (ValueError, IndexError):
-            raise ftp_error.ParserError("invalid time string '%s'" % time_)
-        if am_pm == 'P':
-            hour = hour + 12
-        st_mtime = time.mktime( (year, month, day, hour,
-                                 minute, 0, 0, 0, -1) )
+        st_mtime = self.parse_ms_time(date, time_, time_shift)
         # st_ctime
         st_ctime = None
         stat_result = StatResult(
