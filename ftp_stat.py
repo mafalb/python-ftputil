@@ -193,7 +193,7 @@ class UnixParser(Parser):
         except KeyError:
             raise ftp_error.ParserError("invalid month name '%s'" % month)
         day = int(day)
-        if year_or_time.find(':') == -1:
+        if ":" not in year_or_time:
             # `year_or_time` is really a year
             year, hour, minute = int(year_or_time), 0, 0
             st_mtime = time.mktime( (year, month, day, hour,
