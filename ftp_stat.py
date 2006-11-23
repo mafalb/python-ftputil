@@ -457,7 +457,7 @@ class _Stat(object):
             result = method(*args, **kwargs)
             # if a `listdir` call didn't find anything, we can't
             #  say anything about the usefulness of the parser
-            if result != []:
+            if (method is not self._real_listdir) and result:
                 self._allow_parser_switching = False
             return result
         except ftp_error.ParserError:
