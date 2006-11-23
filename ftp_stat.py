@@ -102,7 +102,7 @@ class Parser(object):
         raise NotImplementedError("must be defined by subclass")
 
 
-class _UnixParser(Parser):
+class UnixParser(Parser):
     """`Parser` class for Unix-specific directory format."""
     def _split_line(self, line):
         """
@@ -220,7 +220,7 @@ class _UnixParser(Parser):
         return stat_result
 
 
-class _MSParser(Parser):
+class MSParser(Parser):
     """`Parser` class for MS-specific directory format."""
     def parse_line(self, line, time_shift=0.0):
         """
@@ -295,7 +295,7 @@ class _Stat:
         self._host = host
         self._path = host.path
         # use the Unix directory parser by default
-        self._parser = _UnixParser()
+        self._parser = UnixParser()
         # allow one chance to switch to another parser if the default
         #  doesn't work
         self._allow_parser_switching = True
@@ -463,7 +463,7 @@ class _Stat:
         except ftp_error.ParserError:
             if self._allow_parser_switching:
                 self._allow_parser_switching = False
-                self._parser = _MSParser()
+                self._parser = MSParser()
                 return method(*args, **kwargs)
             else:
                 raise

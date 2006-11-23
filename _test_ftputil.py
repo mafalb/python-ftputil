@@ -161,7 +161,7 @@ class TestSetParser(unittest.TestCase):
         files = host.listdir("/home/sschwarzer")
         self.assertEqual(files, ['chemeng', 'download', 'image', 'index.html',
           'os2', 'osup', 'publications', 'python', 'scios2'])
-        host.set_parser(ftp_stat._MSParser())
+        host.set_parser(ftp_stat.MSParser())
         files = host.listdir("/home/msformat/XPLaunch")
         self.assertEqual(files, ['WindowsXP', 'XPLaunch', 'empty',
           'abcd.exe', 'O2KKeys.exe'])
