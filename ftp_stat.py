@@ -127,7 +127,7 @@ class Parser(object):
         file_type_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
                              'c': stat.S_IFCHR, '-': stat.S_IFREG}
         file_type = mode_string[0]
-        if file_type_to_mode.has_key(file_type):
+        if file_type in file_type_to_mode:
             st_mode = st_mode | file_type_to_mode[file_type]
         else:
             raise ftp_error.ParserError(
