@@ -965,7 +965,7 @@ the class ``Parser``:
   an appropriate ``st_mode`` value.
 
 - ``parse_unix_time`` returns a float number usable for the
-  ``st_.time`` values by parsing arguments like "Nov"/"23"/"02:33" or
+  ``st_...time`` values by parsing arguments like "Nov"/"23"/"02:33" or
   "May"/"26"/"2005". Note that the method expects the timestamp string
   already splitted at whitespace.
 
@@ -1183,8 +1183,9 @@ References
 Authors
 -------
 
-``ftputil`` is mainly written by Stefan Schwarzer
-<sschwarzer@sschwarzer.net>.
+``ftputil`` is written by Stefan Schwarzer
+<sschwarzer@sschwarzer.net>, in part based on suggestions
+from users.
 
 The ``lrucache`` module is written by Evan Prodromou
 <evan@bad.dynu.ca>.
