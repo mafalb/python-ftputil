@@ -477,7 +477,7 @@ Creating and removing directories
 
   If ``ignore_errors`` is set to a true value, errors are ignored.
   If ``ignore_errors`` is a false value *and* ``onerror`` isn't
-  set, all exceptions occuring during the tree iteration and
+  set, all exceptions occurring during the tree iteration and
   processing are raised. These exceptions are all of type
   ``PermanentError``.
 
@@ -720,7 +720,7 @@ In the example above, it could be used as::
 The method ``invalidate`` can be used on any *absolute* path, be it a
 directory, a file or a link.
 
-By default, the cache entries are stored indefinetely, i. e. if you
+By default, the cache entries are stored indefinitely, i. e. if you
 start your Python process using ``ftputil`` and let it run for three
 days a stat call may still access cache data that old. To avoid this,
 you can set the ``max_age`` attribute::
@@ -967,11 +967,11 @@ the class ``Parser``:
 - ``parse_unix_time`` returns a float number usable for the
   ``st_...time`` values by parsing arguments like "Nov"/"23"/"02:33" or
   "May"/"26"/"2005". Note that the method expects the timestamp string
-  already splitted at whitespace.
+  already split at whitespace.
 
 - ``parse_ms_time`` parses arguments like "10-23-01"/"03:25PM" and
   returns a float number like from ``time.mktime``. Note that the
-  method expects the timestamp string already splitted at whitespace.
+  method expects the timestamp string already split at whitespace.
 
 Additionally, there's an attribute ``_month_numbers`` which maps
 three-letter month abbreviations to integers.
@@ -1093,7 +1093,7 @@ Conditional upload/download to/from a server in a different time zone
 You may find that ``ftputil`` uploads or downloads files
 unnecessarily, or not when it should. This can happen when the FTP
 server is in a different time zone than the client on which
-``ftputil`` runs. Please see the the section on setting the
+``ftputil`` runs. Please see the section on setting the
 `time shift`_. It may even be sufficient to call `synchronize_times`_.
 
 Wrong dates or times when stat'ing on a server
