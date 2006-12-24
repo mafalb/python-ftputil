@@ -24,11 +24,11 @@ From version 2.1 to 2.2, the following has changed:
 - The current directory is also locally cached, resulting in further
   speedups.
 
-- File-like objects generated via ``FTPHost.file`` now support the
-  iterator protocol (for line in some_file: ...).
-
 - It's now possible to write and plug in custom parsers for directory
   formats which ftputil doesn't support natively.
+
+- File-like objects generated via ``FTPHost.file`` now support the
+  iterator protocol (for line in some_file: ...).
 
 - The documentation has been updated accordingly.
 
