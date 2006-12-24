@@ -1,3 +1,57 @@
+ftputil 2.2 is now available from
+http://ftputil.sschwarzer.net/download .
+
+Changes since version 2.1
+-------------------------
+
+- Results of stat calls (also indirect calls, i. e. listdir,
+  isdir/isfile/islink, exists, getmtime etc.) are now cached and
+  reused. This results in remarkable speedups for many use cases.
+  Thanks to Evan Prodromou for his permission to add his lrucache
+  module under ftputil's license.
+
+- The current directory is also locally cached, resulting in further
+  speedups.
+
+- It's now possible to write and plug in custom parsers for directory
+  formats which ftputil doesn't support natively.
+
+- File-like objects generated via ``FTPHost.file`` now support the
+  iterator protocol (for line in some_file: ...).
+
+- The documentation has been updated accordingly. Read it under
+  http://ftputil.sschwarzer.net/trac/wiki/Documentation .
+
+Possible incompatibilities:
+
+- This release requires at least Python 2.3. (Previous releases
+  worked with Python versions from 2.1 up.)
+
+- The method ``FTPHost.set_directory_format`` has been removed,
+  since the directory format (Unix or MS) is set automatically. (The
+  new method ``set_parser`` is a different animal since it takes
+  a parser object to parse "foreign" formats, not a string.)
+
+What is ftputil?
+----------------
+
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
+
+License
+-------
+
+ftputil 2.2 is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
+Stefan
+
+----------------------------------------------------------------------
 The second beta version of ftputil 2.2 is available. You can download
 it from http://ftputil.sschwarzer.net/download .
 
