@@ -244,7 +244,7 @@ class _FTPFile(object):
                 # ignore some errors, see ticket #17 at
                 #  http://ftputil.sschwarzer.net/trac/ticket/17
                 error_code = str(exception).split()[0]
-                if error_code not in ("426", "450"):
+                if error_code not in ("426", "450", "451"):
                     raise
             self.closed = True
 
