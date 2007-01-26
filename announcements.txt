@@ -4,8 +4,8 @@ http://ftputil.sschwarzer.net/download .
 Changes since version 2.2
 -------------------------
 
-This release checks for status code 451 for FTPFiles (thanks to
-Alexander Holyapin for the note).
+This bugfix release checks (and ignores) status code 451 when FTPFiles
+are closed (thanks go to Alexander Holyapin). Upgrading is recommended.
 
 What is ftputil?
 ----------------
@@ -17,6 +17,9 @@ The library supports many functions similar to those in the os,
 os.path and shutil modules. ftputil has convenience functions for
 conditional uploads and downloads, and handles FTP clients and servers
 in different timezones.
+
+Read the documentation at
+http://ftputil.sschwarzer.net/trac/wiki/Documentation .
 
 License
 -------
