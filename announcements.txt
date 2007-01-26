@@ -1,3 +1,32 @@
+ftputil 2.2.1 is now available from
+http://ftputil.sschwarzer.net/download .
+
+Changes since version 2.2
+-------------------------
+
+This release checks for status code 451 for FTPFiles (thanks to
+Alexander Holyapin for the note).
+
+What is ftputil?
+----------------
+
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
+
+License
+-------
+
+ftputil is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
+Stefan
+
+----------------------------------------------------------------------
 ftputil 2.2 is now available from
 http://ftputil.sschwarzer.net/download .
 
