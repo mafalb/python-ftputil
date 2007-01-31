@@ -282,7 +282,7 @@ class FTPHost(object):
         self.stat_cache.clear()
         # set the parser
         self._stat._parser = parser
-        # we just set a parser, don't allow "smart" switching
+        # we just set a parser, don't allow "smart" switching anymore
         self._stat._allow_parser_switching = False
 
     #
