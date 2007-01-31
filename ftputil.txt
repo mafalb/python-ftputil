@@ -879,7 +879,7 @@ server uses a format which is different from the two provided by
 a single method call.
 
 For this, you need to write a parser class by inheriting from the
-class ``Parser`` in the ``ftp_stat`` module::
+class ``Parser`` in the ``ftp_stat`` module. Here's an example::
 
     from ftputil import ftp_error
     from ftputil import ftp_stat
@@ -1043,9 +1043,11 @@ factory" in ``ftputil.FTPHost``'s constructor::
             SSL connection.
             """
             ftpslib.FTP_TLS.__init__(self)
+            # do anything necessary to set up the SSL connection
+            ...
             self.connect(host, port)
             self.login(userid, password)
-            # do anything necessary to set up the SSL connection
+            ...
 
     # note the `session_factory` parameter
     host = ftputil.FTPHost(host, userid, password,
