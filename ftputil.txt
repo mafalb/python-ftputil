@@ -681,10 +681,10 @@ a file system simultaneously::
         stat_result2 = host2.stat("some_file")
         host2.remove("some_file")
         # `host1` will still see the obsolete cache entry!
-        print stat_result1
+        print host1.stat("some_file")
         # will raise an exception since an `FTPHost` object
         #  knows of its own changes
-        print stat_result2
+        print host2.stat("some_file")
     finally:
         host1.close()
         host2.close()
@@ -709,10 +709,10 @@ In the example above, it could be used as::
                         host1.path.join(host1.curdir, "some_file"))
         host1.stat_cache.invalidate(absolute_path)
         # will now raise an exception as it should
-        print stat_result1
+        print host1.stat("some_file")
         # would raise an exception since an `FTPHost` object
         #  knows of its own changes, even without `invalidate`
-        print stat_result2
+        print host2.stat("some_file")
     finally:
         host1.close()
         host2.close()
