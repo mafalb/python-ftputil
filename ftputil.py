@@ -169,11 +169,7 @@ class FTPHost(object):
         # if a session factory had been given on the instantiation of
         #  this `FTPHost` object, use the same factory for this
         #  `FTPHost` object's child sessions
-        if 'session_factory' in kwargs:
-            factory = kwargs['session_factory']
-            del kwargs['session_factory']
-        else:
-            factory = ftplib.FTP
+        factory = kwargs.pop('session_factory', ftplib.FTP)
         return ftp_error._try_with_oserror(factory, *args, **kwargs)
 
     def _copy(self):
