@@ -703,18 +703,6 @@ class FTPHost(object):
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
         ftp_error._try_with_oserror(self._session.rename, source, target)
-        return
-        # try to be robust regarding paths with whitespace in them;
-        #  see method `_robust_ftp_command`
-        source_contains_whitespace = " " in source
-        target_contains_whitespace = " " in target
-        if not (source_contains_whitespace or target_contains_whitespace):
-            # everything's ok, no special case
-            ftp_error._try_with_oserror(self._session.rename, source, target)
-        #TODO finish implementation
-        elif source_contains_whitespace:
-            pass
-        ftp_error._try_with_oserror(self._session.rename, source, target)
 
     #XXX one could argue to put this method into the `_Stat` class, but
     #  I refrained from that because then `_Stat` would have to know
