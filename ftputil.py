@@ -505,6 +505,22 @@ class FTPHost(object):
     #
     # helper method to descend into a directory before executing a command
     #
+    def _check_inaccessible_login_directory(self):
+        """
+        Raise an `InaccessibleLoginDirError` exception if we can't
+        change to the login directory. This test is only reliable if
+        the current directory is the login directory.
+        """
+        login_dir = self.getcwd()
+        # bail out with an internal error rather than modifying the
+        #  current directory without hope of restoration
+        try:
+            self.chdir(login_dir)
+        except ftp_error.PermanentError:
+            # `old_dir` is an inaccessible login directory
+            raise ftp_error.InaccessibleLoginDirError(
+                  "directory '%s' is not accessible" % login_dir)
+
     def _robust_ftp_command(self, command, path, descend_deeply=False):
         """
         Run an FTP command on a path.
@@ -533,16 +549,9 @@ class FTPHost(object):
             # nothing special, just apply the command
             return command(self, path)
         else:
+            self._check_inaccessible_login_directory()
             # remember old working directory
             old_dir = self.getcwd()
-            # bail out with an internal error rather than modifying the
-            #  current directory without hope of restoration
-            try:
-                self.chdir(old_dir)
-            except ftp_error.PermanentError:
-                # `old_dir` is an inaccessible login directory
-                raise ftp_error.InaccessibleLoginDirError(
-                      "directory '%s' is not accessible" % old_dir)
             # because of a bug in `ftplib` (or even in FTP servers?)
             #  the straight-forward code
             #    ftp_error._try_with_oserror(self._session.dir, path, callback)
@@ -702,7 +711,25 @@ class FTPHost(object):
 
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
-        ftp_error._try_with_oserror(self._session.rename, source, target)
+        # the following code is in spirit similar to the code in the
+        #  method `_robust_ftp_command`, though we don't do
+        #  _everything_ imaginable
+        self._check_inaccessible_login_directory()
+        source_head, source_tail = self.path.split(source)
+        target_head, target_tail = self.path.split(target)
+        paths_contain_whitespace = (" " in source_head) or (" " in target_head)
+        if paths_contain_whitespace and source_head == target_head:
+            # both items are in the same directory
+            old_dir = self.getcwd()
+            try:
+                self.chdir(source_head)
+                ftp_error._try_with_oserror(self._session.rename,
+                                            source_tail, target_tail)
+            finally:
+                self.chdir(old_dir)
+        else:
+            # use straight-forward command
+            ftp_error._try_with_oserror(self._session.rename, source, target)
 
     #XXX one could argue to put this method into the `_Stat` class, but
     #  I refrained from that because then `_Stat` would have to know

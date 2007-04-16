@@ -340,6 +340,27 @@ class RealFTPTest(unittest.TestCase):
         host1.close()
         host2.close()
 
+    def test_rename(self):
+        host = self.host
+        self.make_file("testfile1")
+        host.rename("testfile1", "testfile2")
+        self.failIf(host.path.exists("testfile1"))
+        self.failUnless(host.path.exists("testfile2"))
+        host.remove("testfile2")
+        host.close()
+        
+    def test_rename_with_spaces_in_directory(self):
+        host = self.host
+        dir_name = "_dir with spaces_"
+        host.mkdir(dir_name)
+        self.make_file(dir_name + "/testfile1")
+        host.rename(dir_name + "/testfile1", dir_name + "/testfile2")
+        self.failIf(host.path.exists(dir_name + "/testfile1"))
+        self.failUnless(host.path.exists(dir_name + "/testfile2"))
+        host.remove(dir_name + "/testfile2")
+        host.rmdir(dir_name)
+        host.close()
+        
 
 if __name__ == '__main__':
     print """\
