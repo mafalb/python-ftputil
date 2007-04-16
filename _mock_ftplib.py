@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2004, Stefan Schwarzer
+# Copyright (C) 2003-2007, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -133,7 +133,7 @@ drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
 drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
 
       # = /home/dir with spaces
-      'dir with spaces': """\
+      '.': """\
 total 1
 -rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces""",
 

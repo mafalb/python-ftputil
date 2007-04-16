@@ -34,6 +34,7 @@
 import ftplib
 import operator
 import os
+import posixpath
 import random
 import stat
 import time
@@ -118,6 +119,8 @@ class FailingUploadAndDownloadFTPHost(ftputil.FTPHost):
 
 class TimeShiftFTPHost(ftputil.FTPHost):
     class _Path:
+        def split(self, path):
+            return posixpath.split(path)
         def set_mtime(self, mtime):
             self._mtime = mtime
         def getmtime(self, file_name):

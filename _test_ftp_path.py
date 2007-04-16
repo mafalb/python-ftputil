@@ -51,7 +51,7 @@ class SessionWithInaccessibleLoginDirectory(_mock_ftplib.MockSession):
         # assume that `dir` is the inaccessible login directory
         raise ftplib.error_perm("can't change into this directory")
 
-        
+
 class TestPath(unittest.TestCase):
     """Test operations in `FTPHost.path`."""
     def test_regular_isdir_isfile_islink(self):

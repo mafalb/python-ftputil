@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2006, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2002-2007, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -503,7 +503,67 @@ class FTPHost(object):
           os.path.exists, self.download)
 
     #
-    # miscellaneous utility methods resembling those in `os`
+    # helper method to descend into a directory before executing a command
+    #
+    def _robust_ftp_command(self, command, path, descend_deeply=False):
+        """
+        Run an FTP command on a path.
+
+        If the path doesn't contain whitespace, run it (the
+        overwritten `_command` method) with the instance (`self`) as
+        first and the `path` as second argument.
+
+        If the path contains whitespace, split it into a head and a
+        tail part where the tail is the last component of the path.
+        Change into the head directory, then execute the command on
+        the tail component.
+
+        The return value of the method is the return value of the
+        command.
+
+        If `descend_deeply` is true (the default is false), descend
+        deeply, i. e. change the directory to the end of the path.
+        """
+        head, tail = self.path.split(path)
+        if descend_deeply:
+            special_case = " " in path
+        else:
+            special_case = " " in head
+        if not special_case:
+            # nothing special, just apply the command
+            return command(self, path)
+        else:
+            # remember old working directory
+            old_dir = self.getcwd()
+            # bail out with an internal error rather than modifying the
+            #  current directory without hope of restoration
+            try:
+                self.chdir(old_dir)
+            except ftp_error.PermanentError:
+                # `old_dir` is an inaccessible login directory
+                raise ftp_error.InaccessibleLoginDirError(
+                      "directory '%s' is not accessible" % old_dir)
+            # because of a bug in `ftplib` (or even in FTP servers?)
+            #  the straight-forward code
+            #    ftp_error._try_with_oserror(self._session.dir, path, callback)
+            #  fails if some of the path components contain whitespace;
+            #  therefore, we change the current directory before listing
+            #  in the "last" directory
+            try:
+                if descend_deeply:
+                    # invoke the command in the deepest directory
+                    self.chdir(path)
+                    return command(self, self.curdir)
+                else:
+                    # invoke the command in the "previous-to-last" directory
+                    self.chdir(head)
+                    return command(self, tail)
+            finally:
+                # restore the old directory
+                self.chdir(old_dir)
+
+    #
+    # miscellaneous utility methods resembling functions in `os`
     #
     def getcwd(self):
         """Return the current path name."""
@@ -522,7 +582,9 @@ class FTPHost(object):
         `mode` is ignored and only "supported" for similarity with
         `os.mkdir`.
         """
-        ftp_error._try_with_oserror(self._session.mkd, path)
+        def command(self, path):
+            return ftp_error._try_with_oserror(self._session.mkd, path)
+        self._robust_ftp_command(command, path)
 
     def makedirs(self, path, mode=None):
         """
@@ -561,7 +623,9 @@ class FTPHost(object):
         if self.listdir(path):
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
-        ftp_error._try_with_oserror(self._session.rmd, path)
+        def command(self, path):
+            ftp_error._try_with_oserror(self._session.rmd, path)
+        self._robust_ftp_command(command, path)
         self.stat_cache.invalidate(path)
 
     def remove(self, path):
@@ -570,7 +634,9 @@ class FTPHost(object):
         # though `isfile` includes also links to files, `islink`
         #  is needed to include links to directories
         if self.path.isfile(path) or self.path.islink(path):
-            ftp_error._try_with_oserror(self._session.delete, path)
+            def command(self, path):
+                ftp_error._try_with_oserror(self._session.delete, path)
+            self._robust_ftp_command(command, path)
         else:
             raise ftp_error.PermanentError("remove/unlink can only delete "
                                            "files and links, not directories")
@@ -637,6 +703,18 @@ class FTPHost(object):
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
         ftp_error._try_with_oserror(self._session.rename, source, target)
+        return
+        # try to be robust regarding paths with whitespace in them;
+        #  see method `_robust_ftp_command`
+        source_contains_whitespace = " " in source
+        target_contains_whitespace = " " in target
+        if not (source_contains_whitespace or target_contains_whitespace):
+            # everything's ok, no special case
+            ftp_error._try_with_oserror(self._session.rename, source, target)
+        #TODO finish implementation
+        elif source_contains_whitespace:
+            pass
+        ftp_error._try_with_oserror(self._session.rename, source, target)
 
     #XXX one could argue to put this method into the `_Stat` class, but
     #  I refrained from that because then `_Stat` would have to know
@@ -647,40 +725,18 @@ class FTPHost(object):
         # we can't use `self.path.isdir` in this method because that
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
-        lines = []
-        def callback(line):
-            lines.append(line)
-        # see below for this decision logic
-        if " " not in path:
-            # use straight-forward approach, without changing directories
+        def command(self, path):
+            lines = []
+            def callback(line):
+                lines.append(line)
             ftp_error._try_with_oserror(self._session.dir, path, callback)
-        else:
-            # remember old working directory
-            old_dir = self.getcwd()
-            # bail out with an internal error rather than modifying the
-            #  current directory without hope of restoration
-            try:
-                self.chdir(old_dir)
-            except ftp_error.PermanentError:
-                # `old_dir` is an inaccessible login directory
-                raise ftp_error.InaccessibleLoginDirError(
-                      "directory '%s' is not accessible" % old_dir)
-            # because of a bug in `ftplib` (or even in FTP servers?)
-            #  the straight-forward code
-            #    ftp_error._try_with_oserror(self._session.dir, path, callback)
-            #  fails if some of the path components but the last contain
-            #  whitespace; therefore, I change the current directory
-            #  before listing in the "last" directory
-            try:
-                # invoke the listing in the "previous-to-last" directory
-                head, tail = self.path.split(path)
-                self.chdir(head)
-                ftp_error._try_with_oserror(self._session.dir, tail, callback)
-            finally:
-                # restore the old directory
-                self.chdir(old_dir)
+            return lines
+        lines = self._robust_ftp_command(command, path, descend_deeply=True)
         return lines
 
+    # the `listdir`, `lstat` and `stat` methods don't use
+    #  `_robust_ftp_command` because they implicitly already use
+    #  `_dir` which actually uses `_robust_ftp_command`
     def listdir(self, path):
         """
         Return a list of directories, files etc. in the directory
