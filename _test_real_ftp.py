@@ -83,6 +83,18 @@ class RealFTPTest(unittest.TestCase):
         self.host.synchronize_times()
         self.assertEqual(self.host.time_shift(), EXPECTED_TIME_SHIFT)
 
+    def test_names_with_spaces(self):
+        # test if directories and files with spaces in their names
+        #  can be used
+        host = self.host
+        self.failUnless(host.path.isdir("dir with spaces"))
+        self.assertEqual(host.listdir("dir with spaces"),
+                         ['second dir', 'some file', 'some_file'])
+        self.failUnless(host.path.isdir("dir with spaces/second dir"))
+        self.failUnless(host.path.isfile("dir with spaces/some_file"))
+        self.failUnless(host.path.isfile("dir with spaces/some file"))
+        host.close()
+
     def test_mkdir_rmdir(self):
         host = self.host
         dir_name = "_testdir_"
@@ -103,7 +115,7 @@ class RealFTPTest(unittest.TestCase):
                 host.remove(dir_name)
             except ftp_error.PermanentError, exc:
                 self.failUnless(str(exc).startswith(
-                                         "remove/unlink can only delete files"))
+                                "remove/unlink can only delete files"))
             else:
                 self.failIf(True, "we shouldn't have come here")
         finally:
@@ -348,7 +360,7 @@ class RealFTPTest(unittest.TestCase):
         self.failUnless(host.path.exists("testfile2"))
         host.remove("testfile2")
         host.close()
-        
+
     def test_rename_with_spaces_in_directory(self):
         host = self.host
         dir_name = "_dir with spaces_"
@@ -360,7 +372,7 @@ class RealFTPTest(unittest.TestCase):
         host.remove(dir_name + "/testfile2")
         host.rmdir(dir_name)
         host.close()
-        
+
 
 if __name__ == '__main__':
     print """\
@@ -369,7 +381,8 @@ Test for real FTP access.
 This test writes some files and directories on the local client and the
 remote server. Thus, you may want to skip this test by pressing [Ctrl-C].
 If the test should run, enter the login data for the remote server. You
-need write access in the login directory. This test can last a few minutes.
+need write access in the login directory. This test can last a few minutes
+because it has to wait to test the timezone calculation.
 """
     try:
         raw_input("[Return] to continue, or [Ctrl-C] to skip test. ")
