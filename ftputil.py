@@ -503,7 +503,7 @@ class FTPHost(object):
           os.path.exists, self.download)
 
     #
-    # helper method to descend into a directory before executing a command
+    # helper methods to descend into a directory before executing a command
     #
     def _check_inaccessible_login_directory(self):
         """
@@ -511,15 +511,15 @@ class FTPHost(object):
         change to the login directory. This test is only reliable if
         the current directory is the login directory.
         """
-        login_dir = self.getcwd()
+        presumable_login_dir = self.getcwd()
         # bail out with an internal error rather than modifying the
         #  current directory without hope of restoration
         try:
-            self.chdir(login_dir)
+            self.chdir(presumable_login_dir)
         except ftp_error.PermanentError:
             # `old_dir` is an inaccessible login directory
             raise ftp_error.InaccessibleLoginDirError(
-                  "directory '%s' is not accessible" % login_dir)
+                  "directory '%s' is not accessible" % presumable_login_dir)
 
     def _robust_ftp_command(self, command, path, descend_deeply=False):
         """
@@ -549,15 +549,15 @@ class FTPHost(object):
             # nothing special, just apply the command
             return command(self, path)
         else:
+            # because of a bug in `ftplib` (or even in FTP servers?)
+            #  the straightforward code
+            #    command(self, path)
+            #  fails if some of the path components contain whitespace;
+            #  changing to the directory first and then applying the
+            #  command works, though
             self._check_inaccessible_login_directory()
             # remember old working directory
             old_dir = self.getcwd()
-            # because of a bug in `ftplib` (or even in FTP servers?)
-            #  the straight-forward code
-            #    ftp_error._try_with_oserror(self._session.dir, path, callback)
-            #  fails if some of the path components contain whitespace;
-            #  therefore, we change the current directory before listing
-            #  in the "last" directory
             try:
                 if descend_deeply:
                     # invoke the command in the deepest directory
