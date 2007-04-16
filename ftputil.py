@@ -728,7 +728,7 @@ class FTPHost(object):
             finally:
                 self.chdir(old_dir)
         else:
-            # use straight-forward command
+            # use straightforward command
             ftp_error._try_with_oserror(self._session.rename, source, target)
 
     #XXX one could argue to put this method into the `_Stat` class, but
