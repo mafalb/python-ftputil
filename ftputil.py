@@ -549,13 +549,13 @@ class FTPHost(object):
             # nothing special, just apply the command
             return command(self, path)
         else:
+            self._check_inaccessible_login_directory()
             # because of a bug in `ftplib` (or even in FTP servers?)
             #  the straightforward code
             #    command(self, path)
             #  fails if some of the path components contain whitespace;
             #  changing to the directory first and then applying the
             #  command works, though
-            self._check_inaccessible_login_directory()
             # remember old working directory
             old_dir = self.getcwd()
             try:
