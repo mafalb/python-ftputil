@@ -1,19 +1,15 @@
 Planned:
 
-- write a ftputil_mirror.py script
-  a) as a usage example of ftputil
-  b) for benchmarking
-  c) as a useful tool
-- support more directory formats (see mails from Oleg Broytmann)
-- support time resolution in stat results (Oleg Broytmann)
+- see issue tracker ( http://ftputil.sschwarzer.net/trac/report/1 )
 - add `ftp_session` module containing session classes (e. g. for
   passive mode connections)
 
 Ideas for future development:
 
 - handle connection timeouts (Antonio Beamud Montero)
+- add an interface module for ftpparse (see conversation with
+  Oleg Broytmann)
 - merge with vpath project (Holger Krekel)
 - merge in WebDAV support
 - what about thread safety? (also have a look at `ftplib`)
-- map FTP error numbers to os error numbers (ENOENT etc.)?
 
