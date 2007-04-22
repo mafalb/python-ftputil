@@ -34,7 +34,7 @@
 import sys
 
 # ftputil version number
-__version__ = '2.2.1'
+__version__ = '2.2.2'
 
 _ftputil_version = __version__
 _python_version = sys.version.split()[0]
