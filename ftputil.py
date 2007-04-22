@@ -88,7 +88,8 @@ import ftp_path
 import ftp_stat
 import ftputil_version
 
-# make exceptions available in this module for backwards compatibilty
+# make exceptions available in this module for backwards compatibilty;
+#  you should access them via the `ftp_error` module
 from ftp_error import *
 
 
