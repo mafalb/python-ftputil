@@ -1103,6 +1103,15 @@ Wrong dates or times when stat'ing on a server
 
 Please see the previous tip.
 
+I tried to upload or download a file and it's corrupt
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Perhaps you used the upload or download methods without a ``mode``
+argument. For compatibility with Python's code for local file systems,
+``ftputil`` defaults to ASCII/text mode which will try to convert
+presumable line endings and thus corrupt binary files. Pass "b" as the
+``mode`` argument (see `Uploading and downloading files`_).
+
 When I use ``ftputil``, all I get is a ``ParserError`` exception
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
