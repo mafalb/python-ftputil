@@ -492,11 +492,6 @@ Creating and removing directories
   The code of ``rmtree`` is taken from Python's ``shutil`` module
   and adapted for ``ftputil``.
 
-  **Note: I find this interface rather complicated and would like to
-  simplify it without making error handling too difficult. Possible
-  changes to ``rmtree`` will depend on the discussion between the
-  versions 2.1b and 2.1.**
-
 Removing files and links
 ````````````````````````
 
