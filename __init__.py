@@ -31,7 +31,7 @@
 
 # $Id$
 
-# import all into this namespace to comply with the old interface
+# import everything into this namespace to comply with the old interface
 #  when ftputil was a single module
 from ftputil import *
 
