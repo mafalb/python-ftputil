@@ -68,6 +68,7 @@ class KeepAliveError(InternalError): pass
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
+class SyncError(PermanentError): pass
 
 #XXX Do you know better names for `_try_with_oserror` and
 #    `_try_with_ioerror`?
