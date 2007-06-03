@@ -31,4 +31,32 @@
 
 # $Id$
 
+import os
+import shutil
+import sys
+import unittest
+
+TEST_ROOT = "/home/schwa/sd/python/ftputil"
+sys.path.insert(0, os.path.dirname(TEST_ROOT))
+
+from ftputil import ftp_sync
+
+
+class TestLocalToLocal(unittest.TestCase):
+    def setUp(self):
+        target_dir = os.path.join(TEST_ROOT, "test_target")
+        shutil.rmtree(target_dir)
+        os.mkdir(target_dir)
+
+    def test_sync_empty_dir(self):
+        source = ftp_sync.LocalHost()
+        target = ftp_sync.LocalHost()
+        syncer = ftp_sync.Syncer(source, target)
+        source_dir = os.path.join(TEST_ROOT, "test_empty")
+        target_dir = os.path.join(TEST_ROOT, "test_target")
+        syncer.sync(source_dir, target_dir)
+
+
+if __name__ == '__main__':
+    unittest.main()
 
