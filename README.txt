@@ -15,32 +15,8 @@ in different timezones.
 What's new?
 -----------
 
-From version 2.1 to 2.2, the following has changed:
-
-- Results of stat calls (also indirect calls, i. e. listdir,
-  isdir/isfile/islink, exists, getmtime etc.) are now cached and
-  reused. This results in remarkable speedups for many use cases.
-
-- The current directory is also locally cached, resulting in further
-  speedups.
-
-- It's now possible to write and plug in custom parsers for directory
-  formats which ftputil doesn't support natively.
-
-- File-like objects generated via ``FTPHost.file`` now support the
-  iterator protocol (for line in some_file: ...).
-
-- The documentation has been updated accordingly.
-
-Possible incompatibilities:
-
-- This release requires at least Python 2.3. (Previous releases
-  worked with Python versions from 2.1 up.)
-
-- The method ``FTPHost.set_directory_format`` has been removed,
-  since the directory format (Unix or MS) is set automatically. (The
-  new method ``set_parser`` is a different animal since it takes
-  a parser object to parse "foreign" formats, not a string.)
+This release fixes a bug in the ``makedirs`` call (report and fix by
+Julian, whose last name I don't know ;-) ). Upgrading is recommended.
 
 Documentation
 -------------
