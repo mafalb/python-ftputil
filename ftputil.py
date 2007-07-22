@@ -412,7 +412,7 @@ class FTPHost(object):
     def __copy_file(self, source, target, mode, source_open, target_open):
         """
         Copy a file from source to target. Which of both is a local
-        or a remote file, repectively, is determined by the arguments.
+        or a remote file, respectively, is determined by the arguments.
         """
         source_mode, target_mode = self.__get_modes(mode)
         source = source_open(source, source_mode)
@@ -608,7 +608,8 @@ class FTPHost(object):
         # try to build the directory chain from the "uppermost" to
         #  the "lowermost" directory
         for index in range(1, len(directories)):
-            next_directory = self.path.join(*directories[:index+1])
+            # re-insert the separator which got lost by using `path.split`
+            next_directory = os.sep + self.path.join(*directories[:index+1])
             try:
                 self.mkdir(next_directory)
             except ftp_error.PermanentError:

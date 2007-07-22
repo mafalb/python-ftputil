@@ -126,7 +126,7 @@ class RealFTPTest(unittest.TestCase):
 
     def test_makedirs_without_existing_dirs(self):
         host = self.host
-        # no `dir1` yet
+        # no `_dir1_` yet
         self.failIf('_dir1_' in host.listdir(host.curdir))
         # vanilla case, all should go well
         host.makedirs('_dir1_/dir2/dir3/dir4')
@@ -140,6 +140,38 @@ class RealFTPTest(unittest.TestCase):
         host.rmdir('_dir1_/dir2/dir3')
         host.rmdir('_dir1_/dir2')
         host.rmdir('_dir1_')
+
+    def test_makedirs_from_not_root_directory(self):
+        # this is a testcase for issue #22, see
+        #  http://ftputil.sschwarzer.net/trac/ticket/22
+        host = self.host
+        # no `_dir1_` and `_dir2_` yet
+        self.failIf('_dir1_' in host.listdir(host.curdir))
+        self.failIf('_dir2_' in host.listdir(host.curdir))
+        # part 1: try to make directories starting from `_dir1_`
+        # make and change to non-root directory
+        host.mkdir('_dir1_')
+        host.chdir('_dir1_')
+        host.makedirs('_dir2_/_dir3_')
+        # test for expected directory hierarchy
+        self.failUnless(host.path.isdir('/_dir1_'))
+        self.failUnless(host.path.isdir('/_dir1_/_dir2_'))
+        self.failUnless(host.path.isdir('/_dir1_/_dir2_/_dir3_'))
+        self.failIf(host.path.isdir('/_dir1_/_dir1_'))
+        # remove all but the directory were in
+        host.rmdir('/_dir1_/_dir2_/_dir3_')
+        host.rmdir('/_dir1_/_dir2_')
+        # part 2: try to make directories starting from root
+        host.makedirs('/_dir2_/_dir3_')
+        # test for expected directory hierarchy
+        self.failUnless(host.path.isdir('/_dir2_'))
+        self.failUnless(host.path.isdir('/_dir2_/_dir3_'))
+        self.failIf(host.path.isdir('/_dir1_/_dir2_'))
+        # clean up
+        host.rmdir('/_dir2_/_dir3_')
+        host.rmdir('/_dir2_')
+        host.chdir(host.pardir)
+        host.rmdir('/_dir1_')
 
     def test_makedirs_of_existing_directory(self):
         host = self.host
