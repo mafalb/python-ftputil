@@ -159,7 +159,7 @@ class Syncer(object):
 
         This method handles both directory trees and single files.
         """
-        #TODO handle missing intermediate directories
+        #TODO handle making of missing intermediate directories
         source_path = self._source.path.abspath(source_path)
         target_path = self._target.path.abspath(target_path)
         if self._source.path.isfile(source_path):

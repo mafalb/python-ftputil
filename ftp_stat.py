@@ -377,6 +377,9 @@ class _Stat(object):
         # we _can't_ put this check into `FTPHost._dir`; see its docstring
         path = self._path.abspath(path)
         if not self._path.isdir(path):
+            #TODO use FTP DIR command on the file to implicitly use
+            #  the usual status code of the server for missing files
+            #  (450 vs. 550)
             raise ftp_error.PermanentError(
                   "550 %s: no such directory or wrong directory parser used" %
                   path)
@@ -448,6 +451,9 @@ class _Stat(object):
             return lstat_result_for_path
         # path was not found
         if _exception_for_missing_path:
+            #TODO use FTP DIR command on the file to implicitly use
+            #  the usual status code of the server for missing files
+            #  (450 vs. 550)
             raise ftp_error.PermanentError(
                   "550 %s: no such file or directory" % path)
         else:
