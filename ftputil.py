@@ -609,7 +609,7 @@ class FTPHost(object):
         #  the "lowermost" directory
         for index in range(1, len(directories)):
             # re-insert the separator which got lost by using `path.split`
-            next_directory = os.sep + self.path.join(*directories[:index+1])
+            next_directory = self.sep + self.path.join(*directories[:index+1])
             try:
                 self.mkdir(next_directory)
             except ftp_error.PermanentError:

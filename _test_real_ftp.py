@@ -58,7 +58,7 @@ def utc_local_time_shift():
     """
     Return the expected time shift in seconds assuming the server
     uses UTC in its listings and the client uses local time.
-    
+
     This is needed because Pure-FTPd meanwhile seems to insist that
     the displayed time for files is in UTC.
     """
@@ -75,6 +75,7 @@ def utc_local_time_shift():
 # difference between local times of server and client; if 0.0, server
 #  and client use the same timezone
 EXPECTED_TIME_SHIFT = utc_local_time_shift()
+
 
 class RealFTPTest(unittest.TestCase):
     def setUp(self):
@@ -158,7 +159,7 @@ class RealFTPTest(unittest.TestCase):
         host.rmdir('_dir1_/dir2')
         host.rmdir('_dir1_')
 
-    def test_makedirs_from_not_root_directory(self):
+    def test_makedirs_from_non_root_directory(self):
         # this is a testcase for issue #22, see
         #  http://ftputil.sschwarzer.net/trac/ticket/22
         host = self.host
@@ -189,6 +190,14 @@ class RealFTPTest(unittest.TestCase):
         host.rmdir('/_dir2_')
         host.chdir(host.pardir)
         host.rmdir('/_dir1_')
+
+    def test_makedirs_from_non_root_directory_fake_windows_os(self):
+        saved_sep = os.sep
+        os.sep = '\\'
+        try:
+            self.test_makedirs_from_non_root_directory()
+        finally:
+            os.sep = saved_sep
 
     def test_makedirs_of_existing_directory(self):
         host = self.host
