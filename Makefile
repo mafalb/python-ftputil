@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2006, Stefan Schwarzer
+# Copyright (C) 2003-2008, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -38,16 +38,18 @@ DOC_FILES=README.html ftputil.html ftputil_ru.html
 STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
+# name test files; make sure _test_real_ftp.py is the last
+TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
+		   _test_real_ftp.py
 
 .PHONY: dist extdist test docs clean register patch
 .SUFFIXES: .txt .html
 
 test:
-	for file in `ls _test_*.py`; \
+	for file in $(TEST_FILES); \
 	do \
 		python $$file ; \
 	done
-
 
 ftputil_ru.html: ftputil_ru_utf8.txt
 	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
