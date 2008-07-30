@@ -43,10 +43,6 @@ import ftputil
 from ftputil import ftp_error
 from ftputil import ftp_stat
 
-# difference between local times of server and client; if 0.0, server
-#  and client are in the same timezone
-EXPECTED_TIME_SHIFT = 0.0
-
 def get_login_data():
     """
     Return a three-element tuple consisting of server name, user id
@@ -58,6 +54,27 @@ def get_login_data():
     #return server, user, password
     return "localhost", 'ftptest', 'd605581757de5eb56d568a4419f4126e'
 
+def utc_local_time_shift():
+    """
+    Return the expected time shift in seconds assuming the server
+    uses UTC in its listings and the client uses local time.
+    
+    This is needed because Pure-FTPd meanwhile seems to insist that
+    the displayed time for files is in UTC.
+    """
+    utc_tuple = time.gmtime()
+    localtime_tuple = time.localtime()
+    # to calculate the correct times shift, we need to ignore the
+    #  DST component in the localtime tuple, i. e. set it to 0
+    localtime_tuple = localtime_tuple[:-1] + (0,)
+    time_shift_in_seconds = time.mktime(utc_tuple) - \
+                            time.mktime(localtime_tuple)
+    # to be safe, round the above value to units of 3600 s (1 h)
+    return round(time_shift_in_seconds / 3600.0) * 3600
+
+# difference between local times of server and client; if 0.0, server
+#  and client use the same timezone
+EXPECTED_TIME_SHIFT = utc_local_time_shift()
 
 class RealFTPTest(unittest.TestCase):
     def setUp(self):
@@ -301,6 +318,7 @@ class RealFTPTest(unittest.TestCase):
 
     def test_upload(self):
         host = self.host
+        host.synchronize_times()
         # make local file and upload it
         self.make_local_file()
         # wait; else small time differences between client and server
