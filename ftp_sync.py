@@ -100,7 +100,7 @@ class Syncer(object):
         """
         #TODO handle setting of target mtime according to source mtime
         #  (beware of rootdir anomalies; try to handle them as well)
-        print "Making", target_dir
+        #print "Making", target_dir
         if self._target.path.isfile(target_dir):
             raise ftp_error.SyncError("target dir '%s' is actually a file" %
                                       target_dir)
