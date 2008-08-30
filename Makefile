@@ -38,6 +38,7 @@ DOC_FILES=README.html ftputil.html ftputil_ru.html
 STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
+RST2HTML=rst2html
 # name test files; make sure _test_real_ftp.py is the last
 TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
 		   _test_real_ftp.py
@@ -52,11 +53,11 @@ test:
 	done
 
 ftputil_ru.html: ftputil_ru_utf8.txt
-	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
+	${RST2HTML} --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
 		--input-encoding=utf-8 $< $@
 
 .txt.html:
-	rst2html.py --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet $< $@
+	${RST2HTML} --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet $< $@
 
 patch:
 	@echo "Patching files"
