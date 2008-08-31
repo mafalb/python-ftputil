@@ -193,8 +193,10 @@ class Parser(object):
         Return a floating point number, like from `time.mktime`, by
         parsing the string arguments `date` and `time_`. The parameter
         `time_shift` is the difference
-        "time on server" - "time on client"
-        and is available as the `time_shift` parameter in the
+
+            "time on server" - "time on client"
+
+        and can be set as the `time_shift` parameter in the
         `parse_line` interface.
 
         Times in MS-style directory listings typically have the
