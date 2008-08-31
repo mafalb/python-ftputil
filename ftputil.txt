@@ -249,17 +249,24 @@ and are described here:
 Construction
 ~~~~~~~~~~~~
 
+Basics
+``````
+
 ``FTPHost`` instances may be generated with the following call::
 
     host = ftputil.FTPHost(host, user, password, account,
                            session_factory=ftplib.FTP)
 
 The first four parameters are strings with the same meaning as for the
-FTP class in the ``ftplib`` module. The keyword argument
-``session_factory`` may be used to generate FTP connections with other
-factories than the default ``ftplib.FTP``. For example, the M2Crypto
-distribution uses a secure FTP class which is derived from
-``ftplib.FTP``.
+FTP class in the ``ftplib`` module.
+
+Session factories
+`````````````````
+
+The keyword argument ``session_factory`` may be used to generate FTP
+connections with other factories than the default ``ftplib.FTP``. For
+example, the M2Crypto distribution uses a secure FTP class which is
+derived from ``ftplib.FTP``.
 
 In fact, all positional and keyword arguments other than
 ``session_factory`` are passed to the factory to generate a new background
@@ -294,9 +301,32 @@ wrapper class::
 
 On login, the format of the directory listings (needed for stat'ing
 files and directories) should be determined automatically. If not,
-please `file a bug`_.
+please `file a bug report`_.
 
-.. _`file a bug`: http://ftputil.sschwarzer.net/issuetrackernotes
+.. _`file a bug report`: http://ftputil.sschwarzer.net/issuetrackernotes
+
+Support for the ``with`` statement
+``````````````````````````````````
+
+If you are sure that all the users of your code use at least Python
+2.5, you can use Python's `with statement`_::
+
+    # not needed for Python 2.6 and later
+    from __future__ import with_statement
+
+    import ftputil
+
+    with ftputil.FTPHost(host, user, password) as host:
+        print host.listdir(host.curdir)
+
+After the ``with`` block, the ``FTPHost`` instance and the
+associated FTP sessions will be closed automatically.
+
+If something goes wrong during the ``FTPHost`` construction or in the
+body of the ``with`` statement, the instance is closed as well.
+Exceptions will be propagated (as with ``try ... finally``).
+
+.. _`with statement`: http://www.python.org/dev/peps/pep-0343/
 
 ``FTPHost`` attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -517,7 +547,7 @@ listing format used by the FTP server. When connecting to a host,
 ``FTPHost``'s constructor tries to guess the right format, which
 mostly succeeds. However, if you get strange results or
 ``ParserError`` exceptions by a mere ``lstat`` call, please `file a
-bug`_.
+bug report`_.
 
 If ``lstat`` or ``stat`` yield wrong modification dates or times, look
 at the methods that deal with time zone differences (`time shift`_).
@@ -800,10 +830,11 @@ Other methods
 
   sets a custom parser for FTP directories. Note that you have to pass
   in a parser *instance*, not the class.
-
-  An `extra section`_ shows how to write own parsers. Possibly you
-  are lucky and someone has already written a parser you can use.
-  Please ask on the `mailing list`_.
+  
+  An `extra section`_ shows how to write own parsers if the default
+  parsers in ``ftputil`` don't work for you. Possibly you are lucky
+  and someone has already written a parser you can use. Please ask on
+  the `mailing list`_.
 
 .. _`extra section`: `Writing directory parsers`_
 
@@ -814,8 +845,11 @@ File-like objects
 Construction
 ~~~~~~~~~~~~
 
-``FTPFile`` objects are returned by a call to ``FTPHost.file`` (or
-``FTPHost.open``).
+Basics
+``````
+
+``FTPFile`` objects are returned by a call to ``FTPHost.file`` or
+``FTPHost.open``, never use the constructor directly.
 
 - ``FTPHost.file(path, mode='r')``
 
@@ -828,6 +862,33 @@ Construction
 - ``FTPHost.open(path, mode='r')``
 
   is an alias for ``file`` (see above).
+
+Support for the ``with`` statement
+``````````````````````````````````
+
+If you are sure that all the users of your code use at least Python
+2.5, you can use Python's `with statement`_ also with the ``FTPFile``
+constructor::
+
+    # not needed for Python 2.6 and later
+    from __future__ import with_statement
+
+    import ftputil
+
+    # get an ``FTPHost`` object from somewhere
+    ...
+
+    with host.file("new_file", "w") as f:
+        f.write("This is some text.")
+
+At the end of the ``with`` block, the file will be closed
+automatically.
+
+If something goes wrong during the construction of the file or in the
+body of the ``with`` statement, the file will be closed as well.
+Exceptions will be propagated (as with ``try ... finally``).
+
+.. _`with statement`: http://www.python.org/dev/peps/pep-0343/
 
 Attributes and methods
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -856,7 +917,7 @@ supported, i. e. you can use a loop to read a file line by line::
     input_file.close()
 
 For more on file objects, see the section `File objects`_ in the
-Library Reference.
+Python Library Reference.
 
 .. _`file objects`: http://www.python.org/doc/current/lib/bltin-file-objects.html
 
