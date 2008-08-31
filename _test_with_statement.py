@@ -85,8 +85,8 @@ class TestFileContextManager(unittest.TestCase):
              as host:
             with host.file('dummy', 'r') as f:
                 self.assertEqual(f.closed, False)
-                data = f.read(4)
-                self.assertEqual(data, 'line')
+                data = f.readline()
+                self.assertEqual(data, 'line 1\n')
                 self.assertEqual(f.closed, False)
             self.assertEqual(f.closed, True)
 
@@ -100,7 +100,7 @@ class TestFileContextManager(unittest.TestCase):
                     pass
             except ftp_error.FTPIOError:
                 # the file construction didn't succeed, so `f` should
-                #  be absent from namespace
+                #  be absent from the namespace
                 self.failIf('f' in locals())
             else:
                 raise self.failureException("ftp_error.FTPIOError not raised")
