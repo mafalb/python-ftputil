@@ -220,6 +220,19 @@ class _FTPFile(object):
             self._fo.write(_python_to_crlf_linesep(line))
 
     #
+    # context manager methods
+    #
+    def __enter__(self):
+        # return `self`, so it can be accessed as the variable
+        #  component of the `with` statement.
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        # be explicit
+        return False
+
+    #
     # other attributes
     #
     def __getattr__(self, attr_name):
