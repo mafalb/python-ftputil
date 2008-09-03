@@ -8,7 +8,7 @@
 # thanks, Evan! :-)
 #
 # The original file is available at
-# http://cheeseshop.python.org/pypi/lrucache/0.2 .
+# http://pypi.python.org/pypi/lrucache/0.2 .
 
 # arch-tag: LRU cache main module
 
