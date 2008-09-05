@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2006, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2007, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without

@@ -76,6 +76,23 @@ def utc_local_time_shift():
 #  and client use the same timezone
 EXPECTED_TIME_SHIFT = utc_local_time_shift()
 
+# helper class for cleaning up directories and files made
+#  during a test
+class Cleaner(object):
+    def __init__(self, host):
+        # the test class (probably `RealFTPTest`) and the helper
+        #  class share the same `FTPHost` object
+        self._host = host
+        self._ftp_items = []
+
+    def mkdir(self, directory):
+        self._host.mkdir(directory)
+        self._ftp_items.append(('d', self._host.path.abspath(directory)))
+
+    def open(self, path, mode="r"):
+        # "r" is the default mode of `FTPHost.file`
+        f = self._host.open(path, mode)
+        self._ftp_items.append(('f', self._host.path.abspath(path)))
 
 class RealFTPTest(unittest.TestCase):
     def setUp(self):
