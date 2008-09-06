@@ -1,5 +1,7 @@
 Things to do for a new release:
 
+- do commits
+
 - update info on new version in `README.txt`
 
 - write announcement in announcements.txt
@@ -7,6 +9,8 @@ Things to do for a new release:
 - increase version number in `VERSION` (`ftputil_version.py`
   and `ftputil.txt` are handled by the `sed` invocation through
   `make dist`)
+
+- do outstanding commits
 
 - `make test && make dist`
 
