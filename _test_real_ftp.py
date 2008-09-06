@@ -358,7 +358,7 @@ class RealFTPTest(unittest.TestCase):
         fobj = file('_localfile_', 'wb')
         fobj.write("abc\x12\x34def\t")
         fobj.close()
-        
+
     def test_upload(self):
         host = self.host
         host.synchronize_times()
