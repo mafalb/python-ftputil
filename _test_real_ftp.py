@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2007, Stefan Schwarzer
+# Copyright (C) 2003-2008, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -76,32 +76,60 @@ def utc_local_time_shift():
 #  and client use the same timezone
 EXPECTED_TIME_SHIFT = utc_local_time_shift()
 
-# helper class for cleaning up directories and files made
-#  during a test
+
 class Cleaner(object):
+    """This class helps to remove directories and files which
+    might be left behind if a test fails in unexpected ways.
+    """
+
     def __init__(self, host):
         # the test class (probably `RealFTPTest`) and the helper
         #  class share the same `FTPHost` object
         self._host = host
         self._ftp_items = []
 
-    def mkdir(self, directory):
-        self._host.mkdir(directory)
-        self._ftp_items.append(('d', self._host.path.abspath(directory)))
+    def add_dir(self, path):
+        """Schedule a directory with path `path` for removal."""
+        self._ftp_items.append(('d', self._host.path.abspath(path)))
 
-    def open(self, path, mode="r"):
-        # "r" is the default mode of `FTPHost.file`
-        f = self._host.open(path, mode)
+    def add_file(self, path):
+        """Schedule a file with path `path` for removal."""
         self._ftp_items.append(('f', self._host.path.abspath(path)))
+
+    def clean(self):
+        """Remove the directories and files previously remembered.
+        The removal works in reverse order of the scheduling with
+        `add_dir` and `add_file`.
+
+        Errors due to a removal are ignored.
+        """
+        self._host.chdir("/")
+        # code should work with Python 2.3
+        self._ftp_items.reverse()
+        for type_, path in self._ftp_items:
+            try:
+                if type_ == 'd':
+                    # if something goes wrong in `rmtree` we might
+                    #  leave a mess behind
+                    self._host.rmtree(path)
+                elif type_ == 'f':
+                    # minor mess if `remove` fails
+                    self._host.remove(path)
+            except ftp_error.FTPError:
+                pass
+
 
 class RealFTPTest(unittest.TestCase):
     def setUp(self):
         self.host = ftputil.FTPHost(server, user, password)
+        self.cleaner = Cleaner(self.host)
 
     def tearDown(self):
+        self.cleaner.clean()
         self.host.close()
 
     def make_file(self, path):
+        self.cleaner.add_file(path)
         file_ = self.host.file(path, 'wb')
         file_.close()
 
@@ -128,17 +156,18 @@ class RealFTPTest(unittest.TestCase):
         self.failUnless(host.path.isdir("dir with spaces/second dir"))
         self.failUnless(host.path.isfile("dir with spaces/some_file"))
         self.failUnless(host.path.isfile("dir with spaces/some file"))
-        host.close()
 
     def test_mkdir_rmdir(self):
         host = self.host
         dir_name = "_testdir_"
         file_name = host.path.join(dir_name, "_nonempty_")
+        self.cleaner.add_dir(dir_name)
         # make dir and check if it's there
         host.mkdir(dir_name)
         files = host.listdir(host.curdir)
         self.failIf(dir_name not in files)
         # try to remove non-empty directory
+        self.cleaner.add_file(file_name)
         non_empty = host.file(file_name, "w")
         non_empty.close()
         self.assertRaises(ftp_error.PermanentError, host.rmdir, dir_name)
@@ -165,16 +194,12 @@ class RealFTPTest(unittest.TestCase):
         self.failIf('_dir1_' in host.listdir(host.curdir))
         # vanilla case, all should go well
         host.makedirs('_dir1_/dir2/dir3/dir4')
+        self.cleaner.add_dir('_dir1_')
         # check host
         self.failUnless(host.path.isdir('_dir1_'))
         self.failUnless(host.path.isdir('_dir1_/dir2'))
         self.failUnless(host.path.isdir('_dir1_/dir2/dir3'))
         self.failUnless(host.path.isdir('_dir1_/dir2/dir3/dir4'))
-        # clean up
-        host.rmdir('_dir1_/dir2/dir3/dir4')
-        host.rmdir('_dir1_/dir2/dir3')
-        host.rmdir('_dir1_/dir2')
-        host.rmdir('_dir1_')
 
     def test_makedirs_from_non_root_directory(self):
         # this is a testcase for issue #22, see
@@ -185,6 +210,7 @@ class RealFTPTest(unittest.TestCase):
         self.failIf('_dir2_' in host.listdir(host.curdir))
         # part 1: try to make directories starting from `_dir1_`
         # make and change to non-root directory
+        self.cleaner.add_dir("_dir1_")
         host.mkdir('_dir1_')
         host.chdir('_dir1_')
         host.makedirs('_dir2_/_dir3_')
@@ -193,20 +219,16 @@ class RealFTPTest(unittest.TestCase):
         self.failUnless(host.path.isdir('/_dir1_/_dir2_'))
         self.failUnless(host.path.isdir('/_dir1_/_dir2_/_dir3_'))
         self.failIf(host.path.isdir('/_dir1_/_dir1_'))
-        # remove all but the directory were in
+        # remove all but the directory we're in
         host.rmdir('/_dir1_/_dir2_/_dir3_')
         host.rmdir('/_dir1_/_dir2_')
         # part 2: try to make directories starting from root
+        self.cleaner.add_dir("/_dir2_")
         host.makedirs('/_dir2_/_dir3_')
         # test for expected directory hierarchy
         self.failUnless(host.path.isdir('/_dir2_'))
         self.failUnless(host.path.isdir('/_dir2_/_dir3_'))
         self.failIf(host.path.isdir('/_dir1_/_dir2_'))
-        # clean up
-        host.rmdir('/_dir2_/_dir3_')
-        host.rmdir('/_dir2_')
-        host.chdir(host.pardir)
-        host.rmdir('/_dir1_')
 
     def test_makedirs_from_non_root_directory_fake_windows_os(self):
         saved_sep = os.sep
@@ -223,6 +245,7 @@ class RealFTPTest(unittest.TestCase):
 
     def test_makedirs_with_file_in_the_way(self):
         host = self.host
+        self.cleaner.add_dir('_dir1_')
         host.mkdir('_dir1_')
         self.make_file('_dir1_/file1')
         # try it
@@ -230,20 +253,15 @@ class RealFTPTest(unittest.TestCase):
                           '_dir1_/file1')
         self.assertRaises(ftp_error.PermanentError, host.makedirs,
                           '_dir1_/file1/dir2')
-        # clean up
-        host.unlink('_dir1_/file1')
-        host.rmdir('_dir1_')
 
     def test_makedirs_with_existing_directory(self):
         host = self.host
+        self.cleaner.add_dir("_dir1_")
         host.mkdir('_dir1_')
         host.makedirs('_dir1_/dir2')
         # check
         self.failUnless(host.path.isdir('_dir1_'))
         self.failUnless(host.path.isdir('_dir1_/dir2'))
-        # clean up
-        host.rmdir('_dir1_/dir2')
-        host.rmdir('_dir1_')
 
     def test_makedirs_in_non_writable_directory(self):
         host = self.host
@@ -253,17 +271,17 @@ class RealFTPTest(unittest.TestCase):
 
     def test_makedirs_with_writable_directory_at_end(self):
         host = self.host
+        self.cleaner.add_dir('rootdir2/dir2')
         # preparation: `rootdir2` exists but is only writable by root;
         #  `dir2` is writable by regular ftp user
         # these both should work
         host.makedirs('rootdir2/dir2')
         host.makedirs('rootdir2/dir2/dir3')
-        # clean up
-        host.rmdir('rootdir2/dir2/dir3')
 
     def test_rmtree_without_error_handler(self):
         host = self.host
         # build a tree
+        self.cleaner.add_dir('_dir1_')
         host.makedirs('_dir1_/dir2')
         self.make_file('_dir1_/file1')
         self.make_file('_dir1_/file2')
@@ -284,6 +302,7 @@ class RealFTPTest(unittest.TestCase):
 
     def test_rmtree_with_error_handler(self):
         host = self.host
+        self.cleaner.add_dir('_dir1_')
         host.mkdir('_dir1_')
         self.make_file('_dir1_/file1')
         # prepare error "handler"
@@ -312,6 +331,7 @@ class RealFTPTest(unittest.TestCase):
         dir_name = "_testdir_"
         file_name = host.path.join(dir_name, "_nonempty_")
         # make a directory and a file in it
+        self.cleaner.add_dir(dir_name)
         host.mkdir(dir_name)
         fobj = host.file(file_name, "wb")
         fobj.write("abc\x12\x34def\t")
@@ -333,15 +353,12 @@ class RealFTPTest(unittest.TestCase):
         client_mtime = time.mktime(time.localtime())
         calculated_time_shift = server_mtime - client_mtime
         self.failIf(abs(calculated_time_shift-host.time_shift()) > 120)
-        # clean up
-        host.unlink(file_name)
-        host.rmdir(dir_name)
 
     def make_local_file(self):
-        fobj = file("_localfile_", "wb")
+        fobj = file('_localfile_', 'wb')
         fobj.write("abc\x12\x34def\t")
         fobj.close()
-
+        
     def test_upload(self):
         host = self.host
         host.synchronize_times()
@@ -350,19 +367,21 @@ class RealFTPTest(unittest.TestCase):
         # wait; else small time differences between client and server
         #  actually could trigger the update
         time.sleep(60)
-        host.upload("_localfile_", "_remotefile_", "b")
-        # retry; shouldn't be uploaded
-        uploaded = host.upload_if_newer("_localfile_", "_remotefile_", "b")
-        self.assertEqual(uploaded, False)
-        # rewrite the local file
-        self.make_local_file()
-        time.sleep(60)
-        # retry; should be uploaded
-        uploaded = host.upload_if_newer("_localfile_", "_remotefile_", "b")
-        self.assertEqual(uploaded, True)
-        # clean up
-        os.unlink("_localfile_")
-        host.unlink("_remotefile_")
+        try:
+            self.cleaner.add_file('_remotefile_')
+            host.upload('_localfile_', '_remotefile_', 'b')
+            # retry; shouldn't be uploaded
+            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            self.assertEqual(uploaded, False)
+            # rewrite the local file
+            self.make_local_file()
+            time.sleep(60)
+            # retry; should be uploaded now
+            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            self.assertEqual(uploaded, True)
+        finally:
+            # clean up
+            os.unlink('_localfile_')
 
     def test_walk_topdown(self):
         # preparation: build tree in directory `walk_test`
@@ -425,30 +444,26 @@ class RealFTPTest(unittest.TestCase):
         absolute_path = host1.path.join(host1.getcwd(), "_testfile_")
         host1.stat_cache.invalidate(absolute_path)
         self.assertRaises(ftp_error.PermanentError, host1.stat, "_testfile_")
-        # clean up
-        host1.close()
-        host2.close()
 
     def test_rename(self):
         host = self.host
+        # make sure the target of the renaming operation is removed
+        self.cleaner.add_file('_testfile2_')
         self.make_file("_testfile1_")
-        host.rename("_testfile1_", "_testfile2_")
-        self.failIf(host.path.exists("_testfile1_"))
-        self.failUnless(host.path.exists("_testfile2_"))
-        host.remove("_testfile2_")
-        host.close()
+        host.rename('_testfile1_', '_testfile2_')
+        self.failIf(host.path.exists('_testfile1_'))
+        self.failUnless(host.path.exists('_testfile2_'))
+        host.remove('_testfile2_')
 
     def test_rename_with_spaces_in_directory(self):
         host = self.host
         dir_name = "_dir with spaces_"
+        self.cleaner.add_dir(dir_name)
         host.mkdir(dir_name)
         self.make_file(dir_name + "/testfile1")
         host.rename(dir_name + "/testfile1", dir_name + "/testfile2")
         self.failIf(host.path.exists(dir_name + "/testfile1"))
         self.failUnless(host.path.exists(dir_name + "/testfile2"))
-        host.remove(dir_name + "/testfile2")
-        host.rmdir(dir_name)
-        host.close()
 
 
 if __name__ == '__main__':
