@@ -36,7 +36,6 @@ import operator
 import os
 import posixpath
 import random
-import stat
 import time
 import unittest
 
@@ -144,7 +143,7 @@ class TestOpenAndClose(unittest.TestCase):
         """Test closing of `FTPHost`."""
         host = _test_base.ftp_host_factory()
         host.close()
-        self.assertEqual(host.closed, 1)
+        self.assertEqual(host.closed, True)
         self.assertEqual(host._children, [])
 
 
@@ -167,7 +166,7 @@ class TestSetParser(unittest.TestCase):
         host.set_parser(ftp_stat.MSParser())
         files = host.listdir("/home/msformat/XPLaunch")
         self.assertEqual(files, ['WindowsXP', 'XPLaunch', 'empty',
-          'abcd.exe', 'O2KKeys.exe'])
+                                 'abcd.exe', 'O2KKeys.exe'])
         self.assertEqual(host._stat._allow_parser_switching, False)
 
 
@@ -374,6 +373,7 @@ class TestFileOperations(unittest.TestCase):
 
 class TestUploadAndDownload(unittest.TestCase):
     """Test ASCII upload and binary download as examples."""
+
     def generate_ascii_file(self, data, filename):
         """Generate an ASCII data file."""
         source_file = open(filename, 'w')
