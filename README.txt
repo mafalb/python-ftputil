@@ -15,9 +15,15 @@ in different timezones.
 What's new?
 -----------
 
-This release fixes a bug in the ``makedirs`` call (report and fix by
-Richard Holden). Though this bug was Windows-specific, upgrading is
-recommended for all ftputil users.
+ftputil 2.3 adds support for the ``with`` statement introduced by
+Python 2.5. So you can, for instance, write::
+
+    with ftputil.FTPHost(server, userid, password) as host:
+        with host.file("remote_file") as f:
+            f.write('Support the "with" statement!')
+
+and afterwards, the file and host objects will be closed automatically
+whether there's an exception or not.
 
 Documentation
 -------------
