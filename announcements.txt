@@ -4,8 +4,8 @@ http://ftputil.sschwarzer.net/download .
 Changes since version 2.2.4
 ---------------------------
 
-ftputil got support for the ``with`` statement which was introduced by
-Python 2.5. You can now construct host and remote file objects in
+ftputil has got support for the ``with`` statement which was introduced
+by Python 2.5. You can now construct host and remote file objects in
 ``with`` statements and have them closed automatically (contributed
 by Roger Demetrescu). See the documentation for examples.
 
