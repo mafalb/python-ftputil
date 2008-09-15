@@ -43,6 +43,7 @@ import ftputil
 from ftputil import ftp_error
 from ftputil import ftp_stat
 
+
 def get_login_data():
     """
     Return a three-element tuple consisting of server name, user id
@@ -128,35 +129,22 @@ class RealFTPTest(unittest.TestCase):
         self.cleaner.clean()
         self.host.close()
 
+    #
+    # helper methods
+    #
     def make_file(self, path):
         self.cleaner.add_file(path)
         file_ = self.host.file(path, 'wb')
         file_.close()
 
-    def test_open_for_reading(self):
-        # test for issue #17, http://ftputil.sschwarzer.net/trac/ticket/17
-        file1 = self.host.file("debian-keyring.tar.gz", 'rb')
-        file1.close()
-        # make sure that there are no problems if the connection is reused
-        file2 = self.host.file("debian-keyring.tar.gz", 'rb')
-        file2.close()
-        self.failUnless(file1._session is file2._session)
+    def make_local_file(self):
+        fobj = file('_localfile_', 'wb')
+        fobj.write("abc\x12\x34def\t")
+        fobj.close()
 
-    def test_time_shift(self):
-        self.host.synchronize_times()
-        self.assertEqual(self.host.time_shift(), EXPECTED_TIME_SHIFT)
-
-    def test_names_with_spaces(self):
-        # test if directories and files with spaces in their names
-        #  can be used
-        host = self.host
-        self.failUnless(host.path.isdir("dir with spaces"))
-        self.assertEqual(host.listdir("dir with spaces"),
-                         ['second dir', 'some file', 'some_file'])
-        self.failUnless(host.path.isdir("dir with spaces/second dir"))
-        self.failUnless(host.path.isfile("dir with spaces/some_file"))
-        self.failUnless(host.path.isfile("dir with spaces/some file"))
-
+    #
+    # `mkdir`, `makedirs`, `rmdir` and `rmtree`
+    #
     def test_mkdir_rmdir(self):
         host = self.host
         dir_name = "_testdir_"
@@ -326,63 +314,9 @@ class RealFTPTest(unittest.TestCase):
         self.assertEqual(log[1][0], host.rmdir)
         self.assertEqual(log[1][1], '_dir1_')
 
-    def test_stat(self):
-        host = self.host
-        dir_name = "_testdir_"
-        file_name = host.path.join(dir_name, "_nonempty_")
-        # make a directory and a file in it
-        self.cleaner.add_dir(dir_name)
-        host.mkdir(dir_name)
-        fobj = host.file(file_name, "wb")
-        fobj.write("abc\x12\x34def\t")
-        fobj.close()
-        # do some stats
-        # - dir
-        self.assertEqual(host.listdir(dir_name), ["_nonempty_"])
-        self.assertEqual(bool(host.path.isdir(dir_name)), True)
-        self.assertEqual(bool(host.path.isfile(dir_name)), False)
-        self.assertEqual(bool(host.path.islink(dir_name)), False)
-        # - file
-        self.assertEqual(bool(host.path.isdir(file_name)), False)
-        self.assertEqual(bool(host.path.isfile(file_name)), True)
-        self.assertEqual(bool(host.path.islink(file_name)), False)
-        self.assertEqual(host.path.getsize(file_name), 9)
-        # - file's modification time; allow up to two minutes difference
-        host.synchronize_times()
-        server_mtime = host.path.getmtime(file_name)
-        client_mtime = time.mktime(time.localtime())
-        calculated_time_shift = server_mtime - client_mtime
-        self.failIf(abs(calculated_time_shift-host.time_shift()) > 120)
-
-    def make_local_file(self):
-        fobj = file('_localfile_', 'wb')
-        fobj.write("abc\x12\x34def\t")
-        fobj.close()
-
-    def test_upload(self):
-        host = self.host
-        host.synchronize_times()
-        # make local file and upload it
-        self.make_local_file()
-        # wait; else small time differences between client and server
-        #  actually could trigger the update
-        time.sleep(60)
-        try:
-            self.cleaner.add_file('_remotefile_')
-            host.upload('_localfile_', '_remotefile_', 'b')
-            # retry; shouldn't be uploaded
-            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
-            self.assertEqual(uploaded, False)
-            # rewrite the local file
-            self.make_local_file()
-            time.sleep(60)
-            # retry; should be uploaded now
-            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
-            self.assertEqual(uploaded, True)
-        finally:
-            # clean up
-            os.unlink('_localfile_')
-
+    #
+    # directory tree walking
+    #
     def test_walk_topdown(self):
         # preparation: build tree in directory `walk_test`
         host = self.host
@@ -427,24 +361,9 @@ class RealFTPTest(unittest.TestCase):
         for index in range(len(actual)):
             self.assertEqual(actual[index], expected[index])
 
-    def test_concurrent_access(self):
-        self.make_file("_testfile_")
-        host1 = ftputil.FTPHost(server, user, password)
-        host2 = ftputil.FTPHost(server, user, password)
-        stat_result1 = host1.stat("_testfile_")
-        stat_result2 = host2.stat("_testfile_")
-        self.assertEqual(stat_result1, stat_result2)
-        host2.remove("_testfile_")
-        # can still get the result via `host1`
-        stat_result1 = host1.stat("_testfile_")
-        self.assertEqual(stat_result1, stat_result2)
-        # stat'ing on `host2` gives an exception
-        self.assertRaises(ftp_error.PermanentError, host2.stat, "_testfile_")
-        # stat'ing on `host1` after invalidation
-        absolute_path = host1.path.join(host1.getcwd(), "_testfile_")
-        host1.stat_cache.invalidate(absolute_path)
-        self.assertRaises(ftp_error.PermanentError, host1.stat, "_testfile_")
-
+    #
+    # renaming
+    #
     def test_rename(self):
         host = self.host
         # make sure the target of the renaming operation is removed
@@ -464,6 +383,109 @@ class RealFTPTest(unittest.TestCase):
         host.rename(dir_name + "/testfile1", dir_name + "/testfile2")
         self.failIf(host.path.exists(dir_name + "/testfile1"))
         self.failUnless(host.path.exists(dir_name + "/testfile2"))
+
+    #
+    # stat'ing
+    #
+    def test_stat(self):
+        host = self.host
+        dir_name = "_testdir_"
+        file_name = host.path.join(dir_name, "_nonempty_")
+        # make a directory and a file in it
+        self.cleaner.add_dir(dir_name)
+        host.mkdir(dir_name)
+        fobj = host.file(file_name, "wb")
+        fobj.write("abc\x12\x34def\t")
+        fobj.close()
+        # do some stats
+        # - dir
+        self.assertEqual(host.listdir(dir_name), ["_nonempty_"])
+        self.assertEqual(bool(host.path.isdir(dir_name)), True)
+        self.assertEqual(bool(host.path.isfile(dir_name)), False)
+        self.assertEqual(bool(host.path.islink(dir_name)), False)
+        # - file
+        self.assertEqual(bool(host.path.isdir(file_name)), False)
+        self.assertEqual(bool(host.path.isfile(file_name)), True)
+        self.assertEqual(bool(host.path.islink(file_name)), False)
+        self.assertEqual(host.path.getsize(file_name), 9)
+        # - file's modification time; allow up to two minutes difference
+        host.synchronize_times()
+        server_mtime = host.path.getmtime(file_name)
+        client_mtime = time.mktime(time.localtime())
+        calculated_time_shift = server_mtime - client_mtime
+        self.failIf(abs(calculated_time_shift-host.time_shift()) > 120)
+
+    def test_concurrent_access(self):
+        self.make_file("_testfile_")
+        host1 = ftputil.FTPHost(server, user, password)
+        host2 = ftputil.FTPHost(server, user, password)
+        stat_result1 = host1.stat("_testfile_")
+        stat_result2 = host2.stat("_testfile_")
+        self.assertEqual(stat_result1, stat_result2)
+        host2.remove("_testfile_")
+        # can still get the result via `host1`
+        stat_result1 = host1.stat("_testfile_")
+        self.assertEqual(stat_result1, stat_result2)
+        # stat'ing on `host2` gives an exception
+        self.assertRaises(ftp_error.PermanentError, host2.stat, "_testfile_")
+        # stat'ing on `host1` after invalidation
+        absolute_path = host1.path.join(host1.getcwd(), "_testfile_")
+        host1.stat_cache.invalidate(absolute_path)
+        self.assertRaises(ftp_error.PermanentError, host1.stat, "_testfile_")
+
+    #
+    # `upload` (including time shift test)
+    #
+    def test_time_shift(self):
+        self.host.synchronize_times()
+        self.assertEqual(self.host.time_shift(), EXPECTED_TIME_SHIFT)
+
+    def test_upload(self):
+        host = self.host
+        host.synchronize_times()
+        # make local file and upload it
+        self.make_local_file()
+        # wait; else small time differences between client and server
+        #  actually could trigger the update
+        time.sleep(60)
+        try:
+            self.cleaner.add_file('_remotefile_')
+            host.upload('_localfile_', '_remotefile_', 'b')
+            # retry; shouldn't be uploaded
+            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            self.assertEqual(uploaded, False)
+            # rewrite the local file
+            self.make_local_file()
+            time.sleep(60)
+            # retry; should be uploaded now
+            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            self.assertEqual(uploaded, True)
+        finally:
+            # clean up
+            os.unlink('_localfile_')
+
+    #
+    # other tests
+    #
+    def test_open_for_reading(self):
+        # test for issue #17, http://ftputil.sschwarzer.net/trac/ticket/17
+        file1 = self.host.file("debian-keyring.tar.gz", 'rb')
+        file1.close()
+        # make sure that there are no problems if the connection is reused
+        file2 = self.host.file("debian-keyring.tar.gz", 'rb')
+        file2.close()
+        self.failUnless(file1._session is file2._session)
+
+    def test_names_with_spaces(self):
+        # test if directories and files with spaces in their names
+        #  can be used
+        host = self.host
+        self.failUnless(host.path.isdir("dir with spaces"))
+        self.assertEqual(host.listdir("dir with spaces"),
+                         ['second dir', 'some file', 'some_file'])
+        self.failUnless(host.path.isdir("dir with spaces/second dir"))
+        self.failUnless(host.path.isfile("dir with spaces/some_file"))
+        self.failUnless(host.path.isfile("dir with spaces/some file"))
 
 
 if __name__ == '__main__':
