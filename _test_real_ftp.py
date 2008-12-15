@@ -34,9 +34,11 @@
 # Execute a test on a real FTP server (other tests use a mock server)
 
 import getpass
+import operator
 import os
 import time
 import unittest
+import stat
 import sys
 
 import ftputil
@@ -463,6 +465,58 @@ class RealFTPTest(unittest.TestCase):
         finally:
             # clean up
             os.unlink('_localfile_')
+
+    #
+    # `chmod`
+    #
+    def assert_mode(self, path, expected_mode):
+        """Return an integer containing the allowed bits in the
+        mode change command.
+
+        The `FTPHost` object to test against is `self.host`.
+        """
+        full_mode = self.host.stat(path).st_mode
+        # remove flags we can't set via `chmod`
+        # allowed flags according to Python documentation
+        #  http://docs.python.org/lib/os-file-dir.html
+        allowed_flags = [stat.S_ISUID, stat.S_ISGID, stat.S_ENFMT,
+          stat.S_ISVTX, stat.S_IREAD, stat.S_IWRITE, stat.S_IEXEC,
+          stat.S_IRWXU, stat.S_IRUSR, stat.S_IWUSR, stat.S_IXUSR,
+          stat.S_IRWXG, stat.S_IRGRP, stat.S_IWGRP, stat.S_IXGRP,
+          stat.S_IRWXO, stat.S_IROTH, stat.S_IWOTH, stat.S_IXOTH]
+        allowed_mask = reduce(operator.or_, allowed_flags)
+        mode = full_mode & allowed_mask
+        self.assertEqual(mode, expected_mode,
+                         "mode %s != %s" % (oct(mode), oct(expected_mode)))
+
+    def test_chmod_existing_directory(self):
+        host = self.host
+        host.mkdir("_test dir_")
+        self.cleaner.add_dir("_test dir_")
+        # set/get mode of a directory
+        host.chmod("_test dir_", 0757)
+        self.assert_mode("_test dir_", 0757)
+        # set/get mode in nested directory
+        host.mkdir("_test dir_/nested_dir")
+        self.cleaner.add_dir("_test dir_/nested_dir")
+        # set/get mode of a directory
+        host.chmod("_test dir_/nested_dir", 0757)
+        self.assert_mode("_test dir_/nested_dir", 0757)
+
+    def test_chmod_existing_file(self):
+        host = self.host
+        host.mkdir("_test dir_")
+        self.cleaner.add_dir("_test dir_")
+        # set/get mode on a file
+        file_name = host.path.join("_test dir_", "_testfile_")
+        self.make_file(file_name)
+        host.chmod(file_name, 0646)
+        self.assert_mode(file_name, 0646)
+
+    def test_chmod_nonexistent_path(self):
+        # set/get mode of a directory
+        self.assertRaises(ftp_error.PermanentError, self.host.chmod,
+                          "nonexistent", 0757)
 
     #
     # other tests

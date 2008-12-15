@@ -561,7 +561,7 @@ class FTPHost(object):
             old_dir = self.getcwd()
             try:
                 if descend_deeply:
-                    # invoke the command in the deepest directory
+                    # invoke the command in (not: on) the deepest directory
                     self.chdir(path)
                     return command(self, self.curdir)
                 else:
@@ -826,6 +826,22 @@ class FTPHost(object):
                     yield x
         if not topdown:
             yield top, dirs, nondirs
+
+    def chmod(self, path, mode):
+        """
+        Change the mode of a remote `path` (a string) to the integer
+        `mode`. This integer uses the same bits as the mode value
+        returned by the `stat` and `lstat` commands.
+
+        If something goes wrong, raise a `TemporaryError` or a
+        `PermanentError`, according to the status code returned by
+        the server. In particular, a non-existent path usually
+        causes a `PermanentError`.
+        """
+        def command(self, path):
+            ftp_error._try_with_oserror(self._session.voidcmd,
+                                        "SITE CHMOD %s %s" % (oct(mode), path))
+        self._robust_ftp_command(command, path)
 
     #
     # context manager methods
