@@ -68,6 +68,7 @@ class KeepAliveError(InternalError): pass
 class FTPOSError(FTPError, OSError): pass
 class TemporaryError(FTPOSError): pass
 class PermanentError(FTPOSError): pass
+class CommandNotImplementedError(PermanentError): pass
 class SyncError(PermanentError): pass
 
 #XXX Do you know better names for `_try_with_oserror` and
@@ -83,7 +84,10 @@ def _try_with_oserror(callee, *args, **kwargs):
     except ftplib.error_temp, obj:
         raise TemporaryError(obj)
     except ftplib.error_perm, obj:
-        raise PermanentError(obj)
+        if str(obj).startswith("502"):
+            raise CommandNotImplementedError(obj)
+        else:
+            raise PermanentError(obj)
     except ftplib.all_errors:
         ftp_error = sys.exc_info()[1]
         raise FTPOSError(ftp_error)

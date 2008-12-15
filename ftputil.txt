@@ -96,6 +96,7 @@ The exceptions are organized as follows::
     FTPError
         FTPOSError(FTPError, OSError)
             PermanentError(FTPOSError)
+                CommandNotImplementedError(PermanentError)
             TemporaryError(FTPOSError)
         FTPIOError(FTPError)
         InternalError(FTPError)
@@ -159,16 +160,23 @@ and are described here:
   holds the FTP server return code in the ``errno`` attribute of the
   exception object and the error text in ``strerror``.
 
+- ``PermanentError``
+
+  is raised for 5xx return codes from the FTP server. This
+  corresponds to ``ftplib.error_perm`` (though ``PermanentError`` and
+  ``ftplib.error_perm`` are *not* identical).
+
+- ``CommandNotImplementedError``
+
+  indicates that an underlying command the code tries to use is not
+  implemented. For an example, see the description of the
+  `FTPHost.chmod`_ method.
+
 - ``TemporaryError``
 
   is raised for FTP return codes from the 4xx category. This
   corresponds to ``ftplib.error_temp`` (though ``TemporaryError`` and
   ``ftplib.error_temp`` are *not* identical).
-
-- ``PermanentError``
-
-  is raised for 5xx return codes from the FTP server
-  (again, that's similar but *not* identical to ``ftplib.error_perm``).
 
 - ``FTPIOError``
 
@@ -813,6 +821,8 @@ Other methods
 
   renames the source file (or directory) on the FTP server.
 
+.. _`FTPHost.chmod`:
+
 - ``chmod(path, mode)``
 
   sets the access mode (permission flags) for the given path. The mode
@@ -824,15 +834,30 @@ Other methods
 
     host.chmod("some_directory", 0755)
 
-  (note the leading zero).
+  Note the leading zero.
   
-  Note that not all servers support the ``chmod`` command. In case of
-  an exception, how do you recognize if the path didn't exist or if
+  Not all FTP servers support the ``chmod`` command. In case of
+  an exception, how do you know if the path doesn't exist or if
   the command itself is invalid? If the FTP server complies with
   `RFC 959`_, it should return a status code 502 if the ``SITE CHMOD``
-  command isn't allowed. So both conditions give a ``PermanentError``,
-  but you can inspect the attribute ``errno`` of the exception object
-  to find out the difference.
+  command isn't allowed. ``ftputil`` maps this special error
+  response to a ``CommandNotImplementedError`` which is derived from
+  ``PermanentError``.
+  
+  So you need to code like this::
+
+    host = ftputil.FTPHost(server, user, password)
+    try:
+        host.chmod("some_file", 0644)
+    except ftp_error.CommandNotImplementedError:
+        # chmod not supported
+        ...
+    except ftp_error.PermanentError:
+        # possibly a non-existent file
+        ...
+
+  Because the ``CommandNotImplementedError`` is more specific, you
+  have to test it first.
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 

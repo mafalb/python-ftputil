@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2007, Stefan Schwarzer
+# Copyright (C) 2003-2008, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -178,6 +178,8 @@ total 1
             return 'MockSession server awaiting your commands ;-)'
         elif cmd.startswith('TYPE '):
             return
+        elif cmd.startswith('SITE CHMOD'):
+            raise ftplib.error_perm("502 command not implemented")
         else:
             raise ftplib.error_perm
 

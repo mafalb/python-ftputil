@@ -170,6 +170,19 @@ class TestSetParser(unittest.TestCase):
         self.assertEqual(host._stat._allow_parser_switching, False)
 
 
+class TestCommandNotImplementedError(unittest.TestCase):
+    def test_command_not_implemented_error(self):
+        """
+        Test if we get the anticipated exception if a command isn't
+        implemented by the server.
+        """
+        host = _test_base.ftp_host_factory()
+        self.assertRaises(ftp_error.PermanentError,
+                          host.chmod, "nonexistent", 0644)
+        self.assertRaises(ftp_error.CommandNotImplementedError,
+                          host.chmod, "nonexistent", 0644)
+
+
 class TestFileOperations(unittest.TestCase):
     """Test operations with file-like objects."""
     def test_inaccessible_dir(self):
