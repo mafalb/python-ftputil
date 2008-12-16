@@ -77,7 +77,7 @@ patch:
 
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
 
-dist: clean patch docs
+dist: clean patch test pylint docs
 	python setup.py sdist
 
 localcopy:
