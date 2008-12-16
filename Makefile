@@ -55,7 +55,7 @@ test:
 	done
 
 pylint:
-	pylint --rcfile=pylintrc ${PRODUCTION_FILES}
+	pylint --rcfile=pylintrc ${PRODUCTION_FILES} | less
 
 ftputil_ru.html: ftputil_ru_utf8.txt
 	${RST2HTML} --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
