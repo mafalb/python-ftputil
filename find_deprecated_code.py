@@ -32,6 +32,8 @@
 
 # $Id: $
 
+# pylint: disable-msg=W0622
+
 """\
 This script scans a directory tree for files which contain code which
 is deprecated in ftputil %s and above (or even much longer). The
@@ -62,7 +64,6 @@ import os
 import re
 import sys
 
-
 __doc__ = __doc__ % (ftputil_version.__version__, os.path.basename(sys.argv[0]))
 
 deprecated_features = [
@@ -81,6 +82,8 @@ def scan_file(file_name):
     fobj = open(file_name)
     try:
         for index, line in enumerate(fobj):
+            # `title` isn't used here
+            # pylint: disable-msg=W0612
             for title, regex, positions in deprecated_features:
                 if regex.search(line):
                     positions.setdefault(file_name, [])
@@ -94,6 +97,8 @@ def print_results():
     scanned.
     """
     last_title = ""
+    # `regex` isn't used here
+    # pylint: disable-msg=W0612
     for title, regex, positions in deprecated_features:
         if title != last_title:
             print
@@ -117,6 +122,8 @@ def main(start_dir):
     Scan a directory tree starting at `start_dir` and print uses
     of deprecated features, if any were found.
     """
+    # `dir_names` isn't used here
+    # pylint: disable-msg=W0612
     for dir_path, dir_names, file_names in os.walk(start_dir):
         for file_name in file_names:
             abs_name = os.path.abspath(os.path.join(dir_path, file_name))
