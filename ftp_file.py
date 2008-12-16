@@ -49,10 +49,20 @@ import ftp_error
 # Note that the "obvious" implementation of replacing "\r\n" with
 #  "\n" would fail, if "\r" (without "\n") occured at the end of the
 #  string `text`
-_crlf_to_python_linesep = lambda text: text.replace('\r', '')
+def _crlf_to_python_linesep(text):
+    """
+    Return `text` with ASCII line endings (CR/LF) converted to
+    Python's internal representation (LF).
+    """
+    return text.replace('\r', '')
 
 # converter for Python line ends into `\r\n`
-_python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
+def _python_to_crlf_linesep(text):
+    """
+    Return `text` with Python's internal line ending representation
+    (LF) converted to ASCII line endings (CR/LF).
+    """
+    return text.replace('\n', '\r\n')
 
 
 # helper class for xreadline protocol for ASCII transfers
