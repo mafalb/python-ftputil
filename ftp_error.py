@@ -131,7 +131,7 @@ def _try_with_oserror(callee, *args, **kwargs):
         raise FTPOSError(ftp_error)
 
 class FTPIOError(FTPError, IOError):
-    """Generic FTP error related to `IOError` (e. g. non-existent file)."""
+    """Generic FTP error related to `IOError`."""
     pass
 
 def _try_with_ioerror(callee, *args, **kwargs):
