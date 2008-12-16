@@ -741,11 +741,11 @@ class FTPHost(object):
                 try:
                     self.remove(full_name)
                 except ftp_error.PermanentError:
-                    onerror(self.remove, full_name, sys.exc_info())
+                    new_onerror(self.remove, full_name, sys.exc_info())
         try:
             self.rmdir(path)
         except ftp_error.FTPOSError:
-            onerror(self.rmdir, path, sys.exc_info())
+            new_onerror(self.rmdir, path, sys.exc_info())
 
     def rename(self, source, target):
         """Rename the source on the FTP host to target."""
