@@ -73,6 +73,11 @@ deprecated_features = [
 ]
 
 def scan_file(file_name):
+    """
+    Scan a file with name `file_name` for code deprecated in
+    ftputil usage and collect the offending data in the data
+    structure `deprecated_features`.
+    """
     fobj = open(file_name)
     try:
         for index, line in enumerate(fobj):
@@ -84,6 +89,10 @@ def scan_file(file_name):
         fobj.close()
 
 def print_results():
+    """
+    Print statistics of deprecated code after the directory has been
+    scanned.
+    """
     last_title = ""
     for title, regex, positions in deprecated_features:
         if title != last_title:
@@ -91,6 +100,9 @@ def print_results():
             print title, "..."
             print
             last_title = title
+        if not positions:
+            print "   no deprecated code found"
+            continue
         file_names = positions.keys()
         file_names.sort()
         for file_name in file_names:
@@ -98,8 +110,13 @@ def print_results():
             for line_number, line in positions[file_name]:
                 print "%5d: %s" % (line_number, line)
     print
+    print "If possible, check your code also by other means."
 
 def main(start_dir):
+    """
+    Scan a directory tree starting at `start_dir` and print uses
+    of deprecated features, if any were found.
+    """
     for dir_path, dir_names, file_names in os.walk(start_dir):
         for file_name in file_names:
             abs_name = os.path.abspath(os.path.join(dir_path, file_name))
@@ -115,7 +132,7 @@ if __name__ == '__main__':
             sys.exit(0)
         start_dir = sys.argv[1]
         if not os.path.isdir(start_dir):
-            print >> sys.stderr, "Directory %s not found" % start_dir
+            print >> sys.stderr, "Directory %s not found." % start_dir
             sys.exit()
     else:
         print >> sys.stderr, "Usage: %s start_dir" % sys.argv[0]
