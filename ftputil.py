@@ -225,9 +225,8 @@ class FTPHost(object):
             self.stat_cache.invalidate(effective_path)
         return host._file
 
-    def open(self, path, mode='r'):
-        # alias for `file` method
-        return self.file(path, mode)
+    # make `open` an alias
+    open = file
 
     def close(self):
         """Close host connection."""
@@ -404,10 +403,10 @@ class FTPHost(object):
         # inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
         while True:
-            buffer = source.read(length)
-            if not buffer:
+            buffer_ = source.read(length)
+            if not buffer_:
                 break
-            target.write(buffer)
+            target.write(buffer_)
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""
