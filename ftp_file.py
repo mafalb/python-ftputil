@@ -248,7 +248,9 @@ class _FTPFile(object):
 
     def close(self):
         """Close the `FTPFile`."""
-        if not self.closed:
+        if self.closed:
+            return
+        try:
             self._fo.close()
             ftp_error._try_with_ioerror(self._conn.close)
             try:
@@ -259,5 +261,10 @@ class _FTPFile(object):
                 error_code = str(exception).split()[0]
                 if error_code not in ("426", "450", "451"):
                     raise
+        finally:
+            # if something went wrong before, the file is probably
+            #  defunct and subsequent calls to `close` won't help
+            #  either, so we consider the file closed for practical
+            #  purposes
             self.closed = True
 

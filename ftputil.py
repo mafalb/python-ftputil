@@ -231,14 +231,21 @@ class FTPHost(object):
 
     def close(self):
         """Close host connection."""
-        if not self.closed:
-            # close associated children
-            for host in self._children:
-                # only children have `_file` attributes
-                host._file.close()
-                host.close()
-            # now deal with our-self
+        if self.closed:
+            return
+        # close associated children
+        for host in self._children:
+            # only children have `_file` attributes
+            host._file.close()
+            host.close()
+        # now deal with ourself
+        try:
             ftp_error._try_with_oserror(self._session.close)
+        finally:
+            # if something went wrong before, the host/session is
+            #  probably defunct and subsequent calls to `close` won't
+            #  help either, so we consider the host/session closed for
+            #  practical purposes
             self.stat_cache.clear()
             self._children = []
             self.closed = True
@@ -247,7 +254,7 @@ class FTPHost(object):
         try:
             self.close()
         except:
-            # we don't want warnings if the constructor did fail
+            # we don't want warnings if the constructor failed
             pass
 
     #
