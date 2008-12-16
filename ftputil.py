@@ -90,16 +90,17 @@ import ftputil_version
 
 # make exceptions available in this module for backwards compatibilty;
 #  you really should access them via the `ftp_error` module, not from here
-from ftp_error import InaccessibleLoginDirError, FTPError, InternalError, \
-                      TemporaryError, PermanentError, FTPOSError, \
-                      ParserError, RootDirError, FTPIOError, TimeShiftError
-
+from ftp_error import FTPError, FTPIOError, FTPOSError, \
+                      InaccessibleLoginDirError, InternalError, \
+                      ParserError, PermanentError, RootDirError, \
+                      TemporaryError, TimeShiftError
 
 # it's recommended to use the error classes via the `ftp_error` module;
 #  they're only here for backward compatibility
 __all__ = ['FTPError', 'FTPOSError', 'TemporaryError',
            'PermanentError', 'ParserError', 'FTPIOError',
            'RootDirError', 'FTPHost']
+
 __version__ = ftputil_version.__version__
 
 
