@@ -857,7 +857,7 @@ Other methods
         ...
 
   Because the ``CommandNotImplementedError`` is more specific, you
-  have to test it first.
+  have to test for it first.
 
 .. _`RFC 959`: `RFC 959 - File Transfer Protocol (FTP)`_
 
