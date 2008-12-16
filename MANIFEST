@@ -6,6 +6,7 @@ VERSION
 __init__.py
 _mock_ftplib.py
 _test_base.py
+_test_ftp_file.py
 _test_ftp_path.py
 _test_ftp_stat.py
 _test_ftp_stat_cache.py
