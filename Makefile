@@ -39,11 +39,13 @@ STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
 RST2HTML=rst2html
+PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
+				 ftp_stat.py ftputil.py ftputil_version.py __init__.py
 # name test files; make sure _test_real_ftp.py is the last
 TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
 		   _test_real_ftp.py
 
-.PHONY: dist extdist test docs clean register patch
+.PHONY: dist extdist test pylint docs clean register patch
 .SUFFIXES: .txt .html
 
 test:
@@ -51,6 +53,9 @@ test:
 	do \
 		python $$file ; \
 	done
+
+pylint:
+	pylint ${PRODUCTION_FILES}
 
 ftputil_ru.html: ftputil_ru_utf8.txt
 	${RST2HTML} --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \
