@@ -40,7 +40,8 @@ WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
 RST2HTML=rst2html
 PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
-				 ftp_stat.py ftputil.py ftputil_version.py __init__.py
+				 ftp_stat.py ftputil.py ftputil_version.py __init__.py \
+				 find_deprecated_code.py
 # name test files; make sure _test_real_ftp.py is the last
 TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
 		   _test_real_ftp.py
