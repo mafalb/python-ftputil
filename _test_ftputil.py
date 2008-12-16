@@ -160,6 +160,7 @@ class TestCommandNotImplementedError(unittest.TestCase):
         host = _test_base.ftp_host_factory()
         self.assertRaises(ftp_error.PermanentError,
                           host.chmod, "nonexistent", 0644)
+        # `CommandNotImplementedError` is a subclass of `PermanentError`
         self.assertRaises(ftp_error.CommandNotImplementedError,
                           host.chmod, "nonexistent", 0644)
 
