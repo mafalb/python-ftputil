@@ -12,6 +12,7 @@ _test_ftp_stat.py
 _test_ftp_stat_cache.py
 _test_ftputil.py
 default.css
+find_deprecated_code.py
 ftp_error.py
 ftp_file.py
 ftp_path.py
