@@ -449,7 +449,7 @@ class RealFTPTest(unittest.TestCase):
         self.make_local_file()
         # wait; else small time differences between client and server
         #  actually could trigger the update
-        time.sleep(60)
+        time.sleep(65)
         try:
             self.cleaner.add_file('_remotefile_')
             host.upload('_localfile_', '_remotefile_', 'b')
@@ -458,7 +458,7 @@ class RealFTPTest(unittest.TestCase):
             self.assertEqual(uploaded, False)
             # rewrite the local file
             self.make_local_file()
-            time.sleep(60)
+            time.sleep(65)
             # retry; should be uploaded now
             uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
             self.assertEqual(uploaded, True)
@@ -517,6 +517,23 @@ class RealFTPTest(unittest.TestCase):
         # set/get mode of a directory
         self.assertRaises(ftp_error.PermanentError, self.host.chmod,
                           "nonexistent", 0757)
+
+    def test_cache_invalidation(self):
+        host = self.host
+        host.mkdir("_test dir_")
+        self.cleaner.add_dir("_test dir_")
+        # make sure the mode is in the cache
+        unused_stat_result = host.stat("_test dir_")
+        # set/get mode of a directory
+        host.chmod("_test dir_", 0757)
+        self.assert_mode("_test dir_", 0757)
+        # set/get mode on a file
+        file_name = host.path.join("_test dir_", "_testfile_")
+        self.make_file(file_name)
+        # make sure the mode is in the cache
+        unused_stat_result = host.stat("_test dir_")
+        host.chmod(file_name, 0646)
+        self.assert_mode(file_name, 0646)
 
     #
     # other tests

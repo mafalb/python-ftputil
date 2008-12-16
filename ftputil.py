@@ -879,12 +879,14 @@ class FTPHost(object):
         the server. In particular, a non-existent path usually
         causes a `PermanentError`.
         """
+        path = self.path.abspath(path)
         def command(self, path):
             # ignore missing docstring
             # pylint: disable-msg=C0111
             ftp_error._try_with_oserror(self._session.voidcmd,
                                         "SITE CHMOD %s %s" % (oct(mode), path))
         self._robust_ftp_command(command, path)
+        self.stat_cache.invalidate(path)
 
     #
     # context manager methods
