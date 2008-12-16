@@ -37,7 +37,6 @@ ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 
 import re
 import stat
-import sys
 import time
 
 import ftp_error
@@ -49,10 +48,17 @@ class StatResult(tuple):
     Support class resembling a tuple like that returned from
     `os.(l)stat`.
     """
+
     _index_mapping = {
       'st_mode':  0, 'st_ino':   1, 'st_dev':    2, 'st_nlink':    3,
       'st_uid':   4, 'st_gid':   5, 'st_size':   6, 'st_atime':    7,
       'st_mtime': 8, 'st_ctime': 9, '_st_name': 10, '_st_target': 11}
+
+    def __init__(self, sequence):
+        super(StatResult, self).__init__(sequence)
+        # these may be overwritten in a `Parser.parse_line` method
+        self._st_name = ""
+        self._st_target = None
 
     def __getattr__(self, attr_name):
         if self._index_mapping.has_key(attr_name):
@@ -65,6 +71,11 @@ class StatResult(tuple):
 # FTP directory parsers
 #
 class Parser(object):
+    """
+    Represent a parser for directory lines. Parsers for specific
+    directory formats inherit from this class.
+    """
+
     # map month abbreviations to month numbers
     _month_numbers = {
       'jan':  1, 'feb':  2, 'mar':  3, 'apr':  4,
@@ -206,8 +217,10 @@ class Parser(object):
         If this method can not make sense of the given arguments, it
         raises an `ftp_error.ParserError`.
         """
+        # don't complain about unused `time_shift` argument
+        # pylint: disable-msg=W0613
         try:
-            month, day, year = map(int, date.split('-'))
+            month, day, year = [int(part) for part in date.split('-')]
             if year >= 70:
                 year = 1900 + year
             else:
@@ -225,6 +238,7 @@ class Parser(object):
 
 class UnixParser(Parser):
     """`Parser` class for Unix-specific directory format."""
+
     def _split_line(self, line):
         """
         Split a line in metadata, nlink, user, group, size, month,
@@ -294,6 +308,7 @@ class UnixParser(Parser):
 
 class MSParser(Parser):
     """`Parser` class for MS-specific directory format."""
+
     def parse_line(self, line, time_shift=0.0):
         """
         Return a `StatResult` instance corresponding to the given
@@ -350,6 +365,7 @@ class MSParser(Parser):
 #
 class _Stat(object):
     """Methods for stat'ing directories, links and regular files."""
+
     def __init__(self, host):
         self._host = host
         self._path = host.path
@@ -495,6 +511,8 @@ class _Stat(object):
                 return lstat_result
             # if we stat'ed a link, calculate a normalized path for
             #  the file the link points to
+            # we don't use `basename`
+            # pylint: disable-msg=W0612
             dirname, basename = self._path.split(path)
             path = self._path.join(dirname, lstat_result._st_target)
             path = self._path.normpath(path)
@@ -534,13 +552,34 @@ class _Stat(object):
                 raise
 
     def listdir(self, path):
+        """
+        Return a list of items in `path`.
+        
+        Raise a `PermanentError` if the path doesn't exist, but
+        maybe raise other exceptions depending on the state of
+        the server (e. g. timeout).
+        """
         return self.__call_with_parser_retry(self._real_listdir, path)
 
     def lstat(self, path, _exception_for_missing_path=True):
+        """
+        Return a `StatResult` without following links.
+
+        Raise a `PermanentError` if the path doesn't exist, but
+        maybe raise other exceptions depending on the state of
+        the server (e. g. timeout).
+        """
         return self.__call_with_parser_retry(self._real_lstat, path,
                                              _exception_for_missing_path)
 
     def stat(self, path, _exception_for_missing_path=True):
+        """
+        Return a `StatResult` with following links.
+
+        Raise a `PermanentError` if the path doesn't exist, but
+        maybe raise other exceptions depending on the state of
+        the server (e. g. timeout).
+        """
         return self.__call_with_parser_retry(self._real_stat, path,
                                              _exception_for_missing_path)
 

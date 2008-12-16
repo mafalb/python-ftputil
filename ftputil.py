@@ -89,8 +89,10 @@ import ftp_stat
 import ftputil_version
 
 # make exceptions available in this module for backwards compatibilty;
-#  you should access them via the `ftp_error` module
-from ftp_error import *
+#  you really should access them via the `ftp_error` module, not from here
+from ftp_error import InaccessibleLoginDirError, FTPError, InternalError, \
+                      TemporaryError, PermanentError, FTPOSError, \
+                      ParserError, RootDirError, FTPIOError, TimeShiftError
 
 
 # it's recommended to use the error classes via the `ftp_error` module;
@@ -144,6 +146,8 @@ class FTPHost(object):
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # associated `FTPHost` objects for data transfer
         self._children = []
+        # only set if this instance represents an `_FTPFile`
+        self._file = None
         # now opened
         self.closed = False
         # set curdir, pardir etc. for the remote host; RFC 959 states
@@ -234,7 +238,7 @@ class FTPHost(object):
             return
         # close associated children
         for host in self._children:
-            # only children have `_file` attributes
+            # children have a `_file` attribute which is an `_FTPFile` object
             host._file.close()
             host.close()
         # now deal with ourself
@@ -250,6 +254,8 @@ class FTPHost(object):
             self.closed = True
 
     def __del__(self):
+        # don't complain about lazy except clause
+        # pylint: disable-msg=W0702, W0704
         try:
             self.close()
         except:
@@ -598,7 +604,11 @@ class FTPHost(object):
         `mode` is ignored and only "supported" for similarity with
         `os.mkdir`.
         """
+        # ignore unused argument `mode`
+        # pylint: disable-msg=W0613
         def command(self, path):
+            # ignore missing docstring
+            # pylint: disable-msg=C0111
             return ftp_error._try_with_oserror(self._session.mkd, path)
         self._robust_ftp_command(command, path)
 
@@ -609,6 +619,8 @@ class FTPHost(object):
         of `mode` is only accepted for compatibility with
         `os.makedirs` but otherwise ignored.
         """
+        # ignore unused argument `mode`
+        # pylint: disable-msg=W0613
         path = self.path.abspath(path)
         directories = path.split(self.sep)
         # try to build the directory chain from the "uppermost" to
@@ -641,6 +653,8 @@ class FTPHost(object):
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
         def command(self, path):
+            # ignore missing docstring
+            # pylint: disable-msg=C0111
             ftp_error._try_with_oserror(self._session.rmd, path)
         self._robust_ftp_command(command, path)
         self.stat_cache.invalidate(path)
@@ -652,6 +666,8 @@ class FTPHost(object):
         #  is needed to include links to directories
         if self.path.isfile(path) or self.path.islink(path):
             def command(self, path):
+                # ignore missing docstring
+                # pylint: disable-msg=C0111
                 ftp_error._try_with_oserror(self._session.delete, path)
             self._robust_ftp_command(command, path)
         else:
@@ -660,7 +676,13 @@ class FTPHost(object):
         self.stat_cache.invalidate(path)
 
     def unlink(self, path):
-        """Remove the given file."""
+        """
+        Remove the given file given by `path`.
+
+        Raise a `PermanentError` if the path doesn't exist, raise a
+        `PermanentError`, but maybe raise other exceptions depending
+        on the state of the server (e. g. timeout).
+        """
         self.remove(path)
 
     def rmtree(self, path, ignore_errors=False, onerror=None):
@@ -675,13 +697,13 @@ class FTPHost(object):
         processing are raised. These exceptions are all of type
         `PermanentError`.
 
-        To distinguish between error situations and/or pass in a
-        callable for `onerror`. This callable must accept three
-        arguments: `func`, `path` and `exc_info`). `func` is a bound
-        method object, _for example_ `your_host_object.listdir`.
-        `path` is the path that was the recent argument of the
-        respective method (`listdir`, `remove`, `rmdir`). `exc_info`
-        is the exception info as it's got from `sys.exc_info`.
+        To distinguish between error situations, pass in a callable
+        for `onerror`. This callable must accept three arguments:
+        `func`, `path` and `exc_info`). `func` is a bound method
+        object, _for example_ `your_host_object.listdir`. `path` is
+        the path that was the recent argument of the respective method
+        (`listdir`, `remove`, `rmdir`). `exc_info` is the exception
+        info as it's got from `sys.exc_info`.
 
         Implementation note: The code is copied from `shutil.rmtree`
         in Python 2.4 and adapted to ftputil.
@@ -689,16 +711,24 @@ class FTPHost(object):
         # the following code is an adapted version of Python 2.4's
         #  `shutil.rmtree` function
         if ignore_errors:
-            def onerror(*args):
+            def new_onerror(*args):
+                """Do nothing."""
+                # ignore unused arguments
+                # pylint: disable-msg=W0613
                 pass
         elif onerror is None:
-            def onerror(*args):
+            def new_onerror(*args):
+                """Re-raise exception."""
+                # ignore unused arguments
+                # pylint: disable-msg=W0613
                 raise
+        else:
+            new_onerror = onerror
         names = []
         try:
             names = self.listdir(path)
         except ftp_error.PermanentError:
-            onerror(self.listdir, path, sys.exc_info())
+            new_onerror(self.listdir, path, sys.exc_info())
         for name in names:
             full_name = self.path.join(path, name)
             try:
@@ -706,7 +736,7 @@ class FTPHost(object):
             except ftp_error.PermanentError:
                 mode = 0
             if stat.S_ISDIR(mode):
-                self.rmtree(full_name, ignore_errors, onerror)
+                self.rmtree(full_name, ignore_errors, new_onerror)
             else:
                 try:
                     self.remove(full_name)
@@ -749,8 +779,12 @@ class FTPHost(object):
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
         def command(self, path):
+            # ignore missing docstring
+            # pylint: disable-msg=C0111
             lines = []
             def callback(line):
+                # ignore missing docstring
+                # pylint: disable-msg=C0111
                 lines.append(line)
             ftp_error._try_with_oserror(self._session.dir, path, callback)
             return lines
@@ -828,8 +862,8 @@ class FTPHost(object):
         for name in dirs:
             path = self.path.join(top, name)
             if not self.path.islink(path):
-                for x in self.walk(path, topdown, onerror):
-                    yield x
+                for item in self.walk(path, topdown, onerror):
+                    yield item
         if not topdown:
             yield top, dirs, nondirs
 
@@ -845,6 +879,8 @@ class FTPHost(object):
         causes a `PermanentError`.
         """
         def command(self, path):
+            # ignore missing docstring
+            # pylint: disable-msg=C0111
             ftp_error._try_with_oserror(self._session.voidcmd,
                                         "SITE CHMOD %s %s" % (oct(mode), path))
         self._robust_ftp_command(command, path)
@@ -858,6 +894,8 @@ class FTPHost(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # we don't need the `exc_*` arguments here
+        # pylint: disable-msg=W0613
         self.close()
         # be explicit
         return False

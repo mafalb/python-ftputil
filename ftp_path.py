@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2006, Stefan Schwarzer
+# Copyright (C) 2003-2008, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -48,6 +48,7 @@ class _Path(object):
 
     Hint: substitute `os` with the `FTPHost` object.
     """
+
     def __init__(self, host):
         self._host = host
         # delegate these to the `posixpath` module
@@ -70,6 +71,7 @@ class _Path(object):
         return self.normpath(path)
 
     def exists(self, path):
+        """Return true if the path exists."""
         try:
             lstat_result = self._host.lstat(
                            path, _exception_for_missing_path=False)
@@ -78,9 +80,24 @@ class _Path(object):
             return True
 
     def getmtime(self, path):
+        """
+        Return the timestamp for the last modification for `path`
+        as a float.
+
+        This will raise `PermanentError` if the path doesn't exist,
+        but maybe other exceptions depending on the state of the
+        server (e. g. timeout).
+        """
         return self._host.stat(path).st_mtime
 
     def getsize(self, path):
+        """
+        Return the size of the `path` item as an integer.
+
+        This will raise `PermanentError` if the path doesn't exist,
+        but maybe raise other exceptions depending on the state of the
+        server (e. g. timeout).
+        """
         return self._host.stat(path).st_size
 
     # check whether a path is a regular file/dir/link;
@@ -94,6 +111,12 @@ class _Path(object):
     # by the exception handling in `isfile`, `isdir` and `islink`.
 
     def isfile(self, path):
+        """
+        Return true if the `path` exists and corresponds to a regular
+        file (no link).
+
+        A non-existing path does _not_ cause a `PermanentError`.
+        """
         # workaround if we can't go up from the current directory
         if path == self._host.getcwd():
             return False
@@ -108,6 +131,12 @@ class _Path(object):
             return False
 
     def isdir(self, path):
+        """
+        Return true if the `path` exists and corresponds to a
+        directory (no link).
+
+        A non-existing path does _not_ cause a `PermanentError`.
+        """
         # workaround if we can't go up from the current directory
         if path == self._host.getcwd():
             return True
@@ -122,6 +151,11 @@ class _Path(object):
             return True
 
     def islink(self, path):
+        """
+        Return true if the `path` exists and is a link.
+
+        A non-existing path does _not_ cause a `PermanentError`.
+        """
         try:
             lstat_result = self._host.lstat(
                            path, _exception_for_missing_path=False)
@@ -160,9 +194,9 @@ class _Path(object):
         for name in names:
             name = self.join(top, name)
             try:
-                st = self._host.lstat(name)
+                stat_result = self._host.lstat(name)
             except OSError:
                 continue
-            if stat.S_ISDIR(st[stat.ST_MODE]):
+            if stat.S_ISDIR(stat_result[stat.ST_MODE]):
                 self.walk(name, func, arg)
 

@@ -33,6 +33,7 @@
 
 import sys
 
+
 # ftputil version number
 __version__ = '2.3'
 

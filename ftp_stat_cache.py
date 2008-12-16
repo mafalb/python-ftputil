@@ -1,4 +1,4 @@
-# Copyright (C) 2006, Stefan Schwarzer
+# Copyright (C) 2008, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@ import lrucache
 
 
 class CacheMissError(Exception):
+    """Raised if a path isn't found in the cache."""
     pass
 
 
@@ -75,6 +76,8 @@ class StatCache(object):
 
     def enable(self):
         """Enable storage of stat results."""
+        # `enable` is called by `__init__`, so it's not set outside `__init__`
+        # pylint: disable-msg=W0201
         self._enabled = True
 
     def disable(self):
@@ -128,7 +131,10 @@ class StatCache(object):
         assert path.startswith("/"), "%s must be an absolute path" % path
         try:
             del self._cache[path]
+        # don't complain about lazy except clause
+        # pylint: disable-msg=W0704
         except lrucache.CacheKeyError:
+            # ignore errors
             pass
 
     def __getitem__(self, path):
@@ -167,6 +173,7 @@ class StatCache(object):
         try:
             # implicitly do an age test which may raise `CacheMissError`;
             #  deliberately ignore the return value `stat_result`
+            # pylint: disable-msg=W0612
             stat_result = self[path]
             return True
         except CacheMissError:

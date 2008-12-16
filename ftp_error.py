@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2007, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2008, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,6 +35,9 @@ ftp_error.py - exception classes and wrappers
 
 # $Id$
 
+# "Too many ancestors"
+# pylint: disable-msg = R0901
+
 import ftplib
 import sys
 
@@ -43,9 +46,11 @@ import ftputil_version
 
 class FTPError(Exception):
     """General error class."""
+
     def __init__(self, ftp_exception):
-        self.args = (ftp_exception,)
-        self.strerror = str(ftp_exception)
+        super(FTPError, self).__init__(ftp_exception)
+        # `message` is set by the base class
+        self.strerror = self.message
         try:
             self.errno = int(self.strerror[:3])
         except (TypeError, IndexError, ValueError):
@@ -58,18 +63,51 @@ class FTPError(Exception):
 
 # internal errors are those that have more to do with the inner
 #  workings of ftputil than with errors on the server side
-class InternalError(FTPError): pass
-class RootDirError(InternalError): pass
-class InaccessibleLoginDirError(InternalError): pass
-class TimeShiftError(InternalError): pass
-class ParserError(InternalError): pass
-class KeepAliveError(InternalError): pass
+class InternalError(FTPError):
+    """Internal error."""
+    pass
 
-class FTPOSError(FTPError, OSError): pass
-class TemporaryError(FTPOSError): pass
-class PermanentError(FTPOSError): pass
-class CommandNotImplementedError(PermanentError): pass
-class SyncError(PermanentError): pass
+class RootDirError(InternalError):
+    """Raised for generic stat calls on the remote root directory."""
+    pass
+
+class InaccessibleLoginDirError(InternalError):
+    """May be raised if the login directory isn't accessible."""
+    pass
+
+class TimeShiftError(InternalError):
+    """Raised for invalid time shift values."""
+    pass
+
+class ParserError(InternalError):
+    """Raised if a line of a remote directory can't be parsed."""
+    pass
+
+# currently not used
+class KeepAliveError(InternalError):
+    """Raised if the keep-alive feature failed."""
+    pass
+
+class FTPOSError(FTPError, OSError):
+    """Generic FTP error related to `OSError`."""
+    pass
+
+class TemporaryError(FTPOSError):
+    """Raised for temporary FTP errors (4xx)."""
+    pass
+
+class PermanentError(FTPOSError):
+    """Raised for permanent FTP errors (5xx)."""
+    pass
+
+class CommandNotImplementedError(PermanentError):
+    """Raised if the server doesn't implement a certain feature (502)."""
+    pass
+
+# currently not used
+class SyncError(PermanentError):
+    """Raised for problems specific to syncing directories."""
+    pass
 
 #XXX Do you know better names for `_try_with_oserror` and
 #    `_try_with_ioerror`?
@@ -92,7 +130,9 @@ def _try_with_oserror(callee, *args, **kwargs):
         ftp_error = sys.exc_info()[1]
         raise FTPOSError(ftp_error)
 
-class FTPIOError(FTPError, IOError): pass
+class FTPIOError(FTPError, IOError):
+    """Generic FTP error related to `IOError` (e. g. non-existent file)."""
+    pass
 
 def _try_with_ioerror(callee, *args, **kwargs):
     """

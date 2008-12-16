@@ -57,6 +57,7 @@ _python_to_crlf_linesep = lambda text: text.replace('\n', '\r\n')
 #XXX maybe we can use the `xreadlines` module instead of this?
 class _XReadlines(object):
     """Represents `xreadline` objects for ASCII transfers."""
+
     def __init__(self, ftp_file):
         self._ftp_file = ftp_file
         self._next_index = 0
@@ -80,12 +81,18 @@ class _FTPFile(object):
     socket are closed appropriately if the `close` operation is
     requested.
     """
+
     def __init__(self, host):
         """Construct the file(-like) object."""
         self._host = host
         self._session = host._session
         # the file is closed yet
         self.closed = True
+        # overwritten later in `_open`
+        self._bin_mode = None
+        self._conn = None
+        self._read_mode = None
+        self._fo = None
 
     def _open(self, path, mode):
         """Open the remote file with given path name and mode."""
@@ -228,6 +235,8 @@ class _FTPFile(object):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        # we don't need the `exc_*` arguments here
+        # pylint: disable-msg=W0613
         self.close()
         # be explicit
         return False
