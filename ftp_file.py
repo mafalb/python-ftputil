@@ -202,7 +202,7 @@ class _FTPFile(object):
         separator conversion support.
         """
         warnings.warn(("FTPFile.xreadlines is deprecated and will be removed "
-          "in ftputil 2.5 or later"), DeprecationWarning, stacklevel=2)
+          "in ftputil 2.5"), DeprecationWarning, stacklevel=2)
         if self._bin_mode:
             return self._fo.xreadlines()
         return _XReadlines(self)
