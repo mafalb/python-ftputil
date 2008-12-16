@@ -38,8 +38,8 @@ import unittest
 import _test_base
 import ftp_error
 
-from _test_ftputil import FailOnLoginSession, ReadMockSession, \
-                          InaccessibleDirSession
+from _test_ftputil import FailOnLoginSession
+from _test_ftp_file import InaccessibleDirSession, ReadMockSession
 
 
 # exception raised by client code, i. e. code using ftputil
