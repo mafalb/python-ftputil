@@ -531,7 +531,7 @@ class RealFTPTest(unittest.TestCase):
         file_name = host.path.join("_test dir_", "_testfile_")
         self.make_file(file_name)
         # make sure the mode is in the cache
-        unused_stat_result = host.stat("_test dir_")
+        unused_stat_result = host.stat(file_name)
         host.chmod(file_name, 0646)
         self.assert_mode(file_name, 0646)
 
