@@ -608,8 +608,7 @@ class FTPHost(object):
         # ignore unused argument `mode`
         # pylint: disable-msg=W0613
         def command(self, path):
-            # ignore missing docstring
-            # pylint: disable-msg=C0111
+            """Callback function."""
             return ftp_error._try_with_oserror(self._session.mkd, path)
         self._robust_ftp_command(command, path)
 
@@ -654,8 +653,7 @@ class FTPHost(object):
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
         #XXX how will `rmd` work with links?
         def command(self, path):
-            # ignore missing docstring
-            # pylint: disable-msg=C0111
+            """Callback function."""
             ftp_error._try_with_oserror(self._session.rmd, path)
         self._robust_ftp_command(command, path)
         self.stat_cache.invalidate(path)
@@ -667,8 +665,7 @@ class FTPHost(object):
         #  is needed to include links to directories
         if self.path.isfile(path) or self.path.islink(path):
             def command(self, path):
-                # ignore missing docstring
-                # pylint: disable-msg=C0111
+                """Callback function."""
                 ftp_error._try_with_oserror(self._session.delete, path)
             self._robust_ftp_command(command, path)
         else:
@@ -780,12 +777,10 @@ class FTPHost(object):
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
         def command(self, path):
-            # ignore missing docstring
-            # pylint: disable-msg=C0111
+            """Callback function."""
             lines = []
             def callback(line):
-                # ignore missing docstring
-                # pylint: disable-msg=C0111
+                """Callback function."""
                 lines.append(line)
             ftp_error._try_with_oserror(self._session.dir, path, callback)
             return lines
@@ -881,8 +876,7 @@ class FTPHost(object):
         """
         path = self.path.abspath(path)
         def command(self, path):
-            # ignore missing docstring
-            # pylint: disable-msg=C0111
+            """Callback function."""
             ftp_error._try_with_oserror(self._session.voidcmd,
                                         "SITE CHMOD %s %s" % (oct(mode), path))
         self._robust_ftp_command(command, path)
