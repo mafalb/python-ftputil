@@ -127,7 +127,9 @@ class StatCache(object):
         If no stat result for `path` is in the cache, do _not_
         raise an exception.
         """
-        #XXX to be 100 % sure, this should be `host.sep`
+        #XXX to be 100 % sure, this should be `host.sep`, but I don't
+        #  want to introduce a reference to the `FTPHost` object for
+        #  only that purpose
         assert path.startswith("/"), "%s must be an absolute path" % path
         try:
             del self._cache[path]
