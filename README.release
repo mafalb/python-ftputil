@@ -12,7 +12,7 @@ Things to do for a new release:
 
 - do outstanding commits
 
-- `make test && make dist`
+- make dist (now includes tests)
 
 - tag release
 
@@ -20,11 +20,14 @@ Things to do for a new release:
 
 - add new version to Download page on the website
 
+- post announcement to ftputil mailing list
+
+
+Only for non-alpha/beta releases:
+
 - update documentation on the website
 
 - register new version with PyPI
-
-- post announcement to ftputil mailing list
 
 - send announcement to comp.lang.python.announce
 
