@@ -13,8 +13,8 @@ deprecated ``xreadlines`` method of FTP file objects is used.
 
 The `xreadlines` method will be removed in ftputil *2.5* as well as
 the direct access of exception classes via the ftputil module (e. g.
-`ftputil.PermanentError`). However the latter use causes no warning
-because that would be rather difficult to implement.
+`ftputil.PermanentError`). However, the deprecated access causes no
+warning because that would be rather difficult to implement.
 
 What is ftputil?
 ----------------
