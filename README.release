@@ -10,7 +10,7 @@ Things to do for a new release:
   and `ftputil.txt` are handled by the `sed` invocation through
   `make dist`)
 
-- do outstanding commits
+- do outstanding commits due to patching
 
 - make dist (now includes tests)
 
