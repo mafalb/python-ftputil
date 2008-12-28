@@ -2,7 +2,7 @@
 =============================================
 
 :Version:   2.4b
-:Date:      2008-12-16
+:Date:      2008-12-26
 :Summary:   high-level FTP client library for Python
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem, pure Python
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
@@ -89,7 +89,8 @@ Exception hierarchy
 
 The exceptions are in the namespace of the ``ftp_error`` module, e. g.
 ``ftp_error.TemporaryError``. Getting the exception classes from the
-"package module" ``ftputil`` is deprecated.
+"package module" ``ftputil`` is deprecated and will no longer be
+supported in ``ftputil`` version 2.5.
 
 The exceptions are organized as follows::
 
@@ -961,6 +962,9 @@ supported, i. e. you can use a loop to read a file line by line::
         # do something with the line, e. g.
         print line.strip().replace("ftplib", "ftputil")
     input_file.close()
+
+This feature obsoletes the ``xreadlines`` method. It's deprecated and
+will be removed in ``ftputil`` version 2.5.
 
 For more on file objects, see the section `File objects`_ in the
 Python Library Reference.
