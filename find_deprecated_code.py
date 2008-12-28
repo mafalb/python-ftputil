@@ -36,7 +36,7 @@
 
 """\
 This script scans a directory tree for files which contain code which
-is deprecated in ftputil %s and above (or even much longer). The
+is deprecated in ftputil %s and above (and even much longer). The
 script uses simple heuristics, so it may miss occurences of deprecated
 usage or print some inappropriate lines of your files.
 
