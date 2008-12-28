@@ -78,6 +78,11 @@ patch:
 
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
 
+manifestdiff: MANIFEST
+	ls -1 | grep -v .pyc > tmp_ls.out
+	-diff -u MANIFEST tmp_ls.out
+	rm tmp_ls.out
+
 dist: clean patch test pylint docs
 	python setup.py sdist
 
