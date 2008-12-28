@@ -15,15 +15,17 @@ in different timezones.
 What's new?
 -----------
 
-ftputil 2.3 adds support for the ``with`` statement introduced by
-Python 2.5. So you can, for instance, write::
+ftputil 2.4b adds a ``chmod`` method to the ``FTPHost`` class, similar
+to ``os.chmod``.
 
-    with ftputil.FTPHost(server, userid, password) as host:
-        with host.file("remote_file") as f:
-            f.write('Support the "with" statement!')
+Using the ``xreadlines`` method of FTP file objects causes a warning
+through Python's warnings framework.
 
-and afterwards, the file and host objects will be closed automatically
-whether there's an exception or not.
+Both the ``xreadlines`` method and the long-deprecated direct access
+of exceptions via the ``ftputil`` module (as in
+``ftputil.PermanentError``) will be removed in ftputil *2.5*. Starting
+with that version, exception classes will only be accessible via the
+``ftp_error`` module.
 
 Documentation
 -------------
