@@ -963,8 +963,8 @@ supported, i. e. you can use a loop to read a file line by line::
         print line.strip().replace("ftplib", "ftputil")
     input_file.close()
 
-This feature obsoletes the ``xreadlines`` method. It's deprecated and
-will be removed in ``ftputil`` version 2.5.
+This feature obsoletes the ``xreadlines`` method which is deprecated
+and will be removed in ``ftputil`` version 2.5.
 
 For more on file objects, see the section `File objects`_ in the
 Python Library Reference.
