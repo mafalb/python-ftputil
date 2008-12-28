@@ -2,7 +2,7 @@
 =============================================
 
 :Version:   2.4b
-:Date:      2008-12-26
+:Date:      2008-12-28
 :Summary:   high-level FTP client library for Python
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem, pure Python
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
