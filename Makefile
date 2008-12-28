@@ -35,6 +35,7 @@
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
 DOC_FILES=README.html ftputil.html ftputil_ru.html
+TMP_LS_FILE=tmp_ls.out
 STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
@@ -79,9 +80,9 @@ patch:
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
 
 manifestdiff: MANIFEST
-	ls -1 | grep -v .pyc > tmp_ls.out
-	-diff -u MANIFEST tmp_ls.out
-	rm tmp_ls.out
+	@ls -1 | grep -v .pyc | grep -v ${TMP_LS_FILE} > ${TMP_LS_FILE}
+	-diff -u MANIFEST ${TMP_LS_FILE}
+	@rm ${TMP_LS_FILE}
 
 dist: clean patch test pylint docs
 	python setup.py sdist
