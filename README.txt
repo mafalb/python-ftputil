@@ -27,6 +27,10 @@ of exceptions via the ``ftputil`` module (as in
 with that version, exception classes will only be accessible via the
 ``ftp_error`` module.
 
+The distribution contains a small tool find_deprecated_code.py to scan
+a directory for the deprecated uses. Invoke the program with the
+``--help`` option to see a description.
+
 Documentation
 -------------
 

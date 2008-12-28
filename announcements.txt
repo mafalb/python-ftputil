@@ -16,6 +16,10 @@ the direct access of exception classes via the ftputil module (e. g.
 `ftputil.PermanentError`). However, the deprecated access causes no
 warning because that would be rather difficult to implement.
 
+The distribution contains a small tool find_deprecated_code.py to scan
+a directory tree for the deprecated uses. Invoke the program with the
+``--help`` option to see a description.
+
 What is ftputil?
 ----------------
 
