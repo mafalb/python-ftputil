@@ -21,6 +21,9 @@ to ``os.chmod``.
 Using the ``xreadlines`` method of FTP file objects causes a warning
 through Python's warnings framework.
 
+Incompatibility notice
+----------------------
+
 Both the ``xreadlines`` method and the long-deprecated direct access
 of exceptions via the ``ftputil`` module (as in
 ``ftputil.PermanentError``) will be removed in ftputil *2.5*. Starting
