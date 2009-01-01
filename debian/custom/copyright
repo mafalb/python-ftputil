@@ -3,7 +3,7 @@ Thu, 01 Jan 2009 17:19:16 +0100.
 
 It was downloaded from <url://example.com>
 
-Upstream Author(s):
+Upstream Authors:
 
     Stefan Schwarzer <sschwarzer@sschwarzer.net>
     Evan Prodromou <evan@bad.dynu.ca>
@@ -39,6 +39,3 @@ found in `/usr/share/common-licenses/BSD'.
 The Debian packaging is (C) 2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 and is licensed under the GPL, see `/usr/share/common-licenses/GPL'.
 
-
-# Please also look if there are files or directories which have a
-# different copyright/license attached and list them here.
