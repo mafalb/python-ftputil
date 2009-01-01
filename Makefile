@@ -49,7 +49,7 @@ PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
 		   _test_real_ftp.py
 
-.PHONY: dist extdist test pylint docs clean register patch
+.PHONY: dist extdist test pylint docs clean register patch debdistclean debdist
 .SUFFIXES: .txt .html
 
 test:
@@ -90,14 +90,24 @@ manifestdiff: MANIFEST
 dist: clean patch test pylint docs
 	python setup.py sdist
 
-# after testing this target, add dependency on target "dist"
-# debdist: dist
-debdist:
+debdistclean:
+	rm -rf ${DEBIAN_DIR}/ftputil-${VERSION}
+
+debdist: debdistclean
 	cp dist/ftputil-${VERSION}.tar.gz \
 	   ${DEBIAN_DIR}/ftputil-${VERSION}.orig.tar.gz
 	tar -x -C ${DEBIAN_DIR} -zf ${DEBIAN_DIR}/ftputil-${VERSION}.orig.tar.gz
-	( cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
-	  echo "\n" | dh_make --copyright bsd --single --cdbs )
+	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
+	  echo "\n" | dh_make --copyright bsd --single --cdbs && \
+	  cd debian && \
+	  rm *.ex *.EX dirs README.Debian
+	# copy custom files (control, rules, copyright, changelog, maybe others)
+	cp ${DEBIAN_DIR}/custom/* ${DEBIAN_DIR}/ftputil-${VERSION}/debian
+	cd ${DEBIAN_DIR}/ftputil-${VERSION} && dpkg-buildpackage -us -uc
+	# put the Debian package beneath the .tar.gz files
+	cp ${DEBIAN_DIR}/python-ftputil_${VERSION}-?_all.deb dist
+	# final check (better than nothing)
+	lintian ${DEBIAN_DIR}/python-ftputil_${VERSION}-?_all.deb
 
 localcopy:
 	@echo "Copying archive and documentation to local webspace"
