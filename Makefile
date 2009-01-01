@@ -91,7 +91,7 @@ dist: clean patch test pylint docs
 	python setup.py sdist
 
 debdistclean:
-	rm -rf ${DEBIAN_DIR}/ftputil-${VERSION}
+	cd ${DEBIAN_DIR} && rm -rf `ls -1 | grep -v "^custom$$"`
 
 debdist: debdistclean
 	cp dist/ftputil-${VERSION}.tar.gz \
@@ -103,7 +103,8 @@ debdist: debdistclean
 	  rm *.ex *.EX dirs README.Debian
 	# copy custom files (control, rules, copyright, changelog, maybe others)
 	cp ${DEBIAN_DIR}/custom/* ${DEBIAN_DIR}/ftputil-${VERSION}/debian
-	cd ${DEBIAN_DIR}/ftputil-${VERSION} && dpkg-buildpackage -us -uc
+	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
+	  dpkg-buildpackage -us -uc
 	# put the Debian package beneath the .tar.gz files
 	cp ${DEBIAN_DIR}/python-ftputil_${VERSION}-?_all.deb dist
 	# final check (better than nothing)
