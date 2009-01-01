@@ -1,6 +1,6 @@
 ftputil (2.4b-1) unstable; urgency=low
 
-  * Initial release (Closes: #nnnn)  <nnnn is the bug number of your ITP>
+  * Initial release
 
  -- Stefan Schwarzer <sschwarzer@sschwarzer.net>  Thu, 01 Jan 2009 18:20:37 +0100
 
