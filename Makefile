@@ -34,6 +34,8 @@
 
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
+VERSION=$(shell cat VERSION)
+DEBIAN_DIR=${PROJECT_DIR}/debian
 DOC_FILES=README.html ftputil.html ftputil_ru.html
 TMP_LS_FILE=tmp_ls.out
 STYLESHEET_PATH=default.css
@@ -51,6 +53,7 @@ TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
 .SUFFIXES: .txt .html
 
 test:
+	echo ${VERSION}
 	for file in $(TEST_FILES); \
 	do \
 		python $$file ; \
@@ -70,11 +73,11 @@ patch:
 	@echo "Patching files"
 	${SED} "s/^__version__ = '.*'/__version__ = \'`cat VERSION`\'/" \
 		ftputil_version.py
-	${SED} "s/^:Version:   .*/:Version:   `cat VERSION`/" ftputil.txt
+	${SED} "s/^:Version:   .*/:Version:   ${VERSION}/" ftputil.txt
 	${SED} "s/^:Date:      .*/:Date:      `date +"%Y-%m-%d"`/" ftputil.txt
 	#TODO add rules for Russian translation
-	${SED} "s/^Version: .*/Version: `cat VERSION`/" PKG-INFO
-	${SED} "s/(\/wiki\/Download\/ftputil-).*(\.tar\.gz)/\1`cat VERSION`\2/" \
+	${SED} "s/^Version: .*/Version: ${VERSION}/" PKG-INFO
+	${SED} "s/(\/wiki\/Download\/ftputil-).*(\.tar\.gz)/\1${VERSION}\2/" \
 		PKG-INFO
 
 docs: ${DOC_FILES} README.txt ftputil.txt ftputil_ru_utf8.txt
@@ -87,9 +90,18 @@ manifestdiff: MANIFEST
 dist: clean patch test pylint docs
 	python setup.py sdist
 
+# after testing this target, add dependency on target "dist"
+# debdist: dist
+debdist:
+	cp dist/ftputil-${VERSION}.tar.gz \
+	   ${DEBIAN_DIR}/ftputil-${VERSION}.orig.tar.gz
+	tar -x -C ${DEBIAN_DIR} -zf ${DEBIAN_DIR}/ftputil-${VERSION}.orig.tar.gz
+	( cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
+	  echo "\n" | dh_make --copyright bsd --single --cdbs )
+
 localcopy:
 	@echo "Copying archive and documentation to local webspace"
-	cp -p dist/ftputil-`cat VERSION`.tar.gz ${WWW_DIR}/download
+	cp -p dist/ftputil-${VERSION}.tar.gz ${WWW_DIR}/download
 	cp -p ftputil.html ${WWW_DIR}/python
 	touch ${WWW_DIR}/python/python_software.tmpl
 
@@ -97,7 +109,7 @@ register:
 	@echo "Registering new version with PyPI"
 	python setup.py register
 
-extdist: test dist localcopy register
+extdist: test dist debdist localcopy register
 
 clean:
 	rm -f ${DOC_FILES}
