@@ -37,16 +37,30 @@
 setup.py - installation script for Python distutils
 """
 
+import os
 import sys
 
 from distutils import core
 from distutils import sysconfig
+from distutils.command import install_lib as install_lib_module
 
 
 _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
 _data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
+
+
+# avoid byte-compiling `_test_with_statement.py` for Python < 2.5; see
+#  http://mail.python.org/pipermail/distutils-sig/2002-June/002894.html
+class FtputilInstallLib(install_lib_module.install_lib):
+    def byte_compile(self, files):
+        if sys.version_info < (2, 5):
+            files = [f for f in files
+                       if os.path.basename(f) != "_test_with_statement.py"]
+        # `super` doesn't work with classic classes
+        return install_lib_module.install_lib.byte_compile(self, files)
+
 
 core.setup(
   # installation data
@@ -56,6 +70,8 @@ core.setup(
   package_dir={_package: ""},
   data_files=[(_data_target, ["ftputil.txt", "ftputil.html",
                               "README.txt", "README.html"])],
+  cmdclass={'install_lib': FtputilInstallLib},
+
   # metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",

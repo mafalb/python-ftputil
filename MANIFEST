@@ -25,4 +25,5 @@ _test_ftp_stat_cache.py
 _test_ftp_stat.py
 _test_ftputil.py
 _test_real_ftp.py
+_test_with_statement.py
 VERSION
