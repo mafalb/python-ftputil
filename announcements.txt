@@ -20,9 +20,9 @@ Upgrading is recommended.
 Incompatibility notice
 ----------------------
 
-The `xreadlines` method will be removed in ftputil *2.5* as well as
+The ``xreadlines`` method will be removed in ftputil *2.5* as well as
 the direct access of exception classes via the ftputil module (e. g.
-`ftputil.PermanentError`). However, the deprecated access causes no
+``ftputil.PermanentError``). However, the deprecated access causes no
 warning because that would be rather difficult to implement.
 
 The distribution contains a small tool find_deprecated_code.py to scan
