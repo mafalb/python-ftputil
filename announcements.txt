@@ -1,4 +1,4 @@
-ftputil 2.4b is now available from
+ftputil 2.4 is now available from
 http://ftputil.sschwarzer.net/download .
 
 Changes since version 2.3
@@ -8,8 +8,14 @@ The ``FTPHost`` class got a new method ``chmod``, similar to
 ``os.chmod``, to act on remote files. Thanks go to Tom Parker for
 the review.
 
-A warning is issued through Python's warning framework if the
-deprecated ``xreadlines`` method of FTP file objects is used.
+There's a new exception ``CommandNotImplementedError``, derived from
+``PermanentError``, to denote commands not implemented by the FTP
+server or disabled by its administrator.
+
+Using the ``xreadlines`` method of FTP file objects causes a warning
+through Python's warnings framework.
+
+Upgrading is recommended.
 
 Incompatibility notice
 ----------------------

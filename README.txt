@@ -15,11 +15,17 @@ in different timezones.
 What's new?
 -----------
 
-ftputil 2.4b adds a ``chmod`` method to the ``FTPHost`` class, similar
+ftputil 2.4 adds a ``chmod`` method to the ``FTPHost`` class, similar
 to ``os.chmod``.
+
+There's a new exception ``CommandNotImplementedError``, derived from
+``PermanentError``, to denote commands not implemented by the FTP
+server or disabled by its administrator.
 
 Using the ``xreadlines`` method of FTP file objects causes a warning
 through Python's warnings framework.
+
+Upgrading is recommended.
 
 Incompatibility notice
 ----------------------
@@ -30,8 +36,8 @@ of exceptions via the ``ftputil`` module (as in
 with that version, exception classes will only be accessible via the
 ``ftp_error`` module.
 
-The distribution contains a small tool find_deprecated_code.py to scan
-a directory for the deprecated uses. Invoke the program with the
+The distribution contains a small tool ``find_deprecated_code.py`` to
+scan a directory for the deprecated uses. Invoke the program with the
 ``--help`` option to see a description.
 
 Documentation
