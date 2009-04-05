@@ -55,7 +55,10 @@ class StatResult(tuple):
       'st_mtime': 8, 'st_ctime': 9, '_st_name': 10, '_st_target': 11}
 
     def __init__(self, sequence):
-        super(StatResult, self).__init__(sequence)
+        # Don't call `__init__` via `super`. Construction from a
+        #  sequence is implicitly handled by `tuple.__new__`, not
+        #  `tuple.__init__`. As a by-product, this avoids a
+        #  `DeprecationWarning` in Python 2.6+
         # these may be overwritten in a `Parser.parse_line` method
         self._st_name = ""
         self._st_target = None
