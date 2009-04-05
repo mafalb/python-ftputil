@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2008, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2002-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -663,7 +663,10 @@ class FTPHost(object):
         path = self.path.abspath(path)
         # though `isfile` includes also links to files, `islink`
         #  is needed to include links to directories
-        if self.path.isfile(path) or self.path.islink(path):
+        # if the path doesn't exist, let the removal command trigger
+        #  an exception with a more appropriate error message
+        if self.path.isfile(path) or self.path.islink(path) or \
+           not self.path.exists(path):
             def command(self, path):
                 """Callback function."""
                 ftp_error._try_with_oserror(self._session.delete, path)

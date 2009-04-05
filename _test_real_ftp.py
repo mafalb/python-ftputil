@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008, Stefan Schwarzer
+# Copyright (C) 2003-2009, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -465,6 +465,21 @@ class RealFTPTest(unittest.TestCase):
         finally:
             # clean up
             os.unlink('_localfile_')
+
+    #
+    # remove/unlink
+    #
+    def test_remove_non_existent_item(self):
+        host = self.host
+        self.assertRaises(ftp_error.PermanentError, host.remove, "nonexistent")
+    
+    def test_remove_existent_file(self):
+        self.cleaner.add_file('_testfile_')
+        self.make_file('_testfile_')
+        host = self.host
+        self.failUnless(host.path.isfile('_testfile_'))
+        host.remove('_testfile_')
+        self.failIf(host.path.exists('_testfile_'))
 
     #
     # `chmod`
