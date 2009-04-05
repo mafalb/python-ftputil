@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ ftp_error.py - exception classes and wrappers
 
 import ftplib
 import sys
+import warnings
 
 import ftputil_version
 
@@ -47,10 +48,20 @@ import ftputil_version
 class FTPError(Exception):
     """General error class."""
 
-    def __init__(self, ftp_exception):
-        super(FTPError, self).__init__(ftp_exception)
-        # `message` is set by the base class
-        self.strerror = self.message
+    def __init__(self, *args):
+        # contrary to what `ftplib`'s documentation says, `all_errors`
+        #  does _not_ contain the subclasses, so I explicitly add them
+        if args and args[0].__class__ in ftplib.all_errors + \
+                                         tuple(ftplib.Error.__subclasses__()):
+            warnings.warn(("Passing exception objects into the FTPError "
+              "constructor is deprecated and will be disabled in ftputil 2.6"),
+              DeprecationWarning, stacklevel=2)
+        super(FTPError, self).__init__(*args)
+        # don't use `args[0]` because `args` may be empty
+        if args:
+            self.strerror = self.args[0]
+        else:
+            self.strerror = ""
         try:
             self.errno = int(self.strerror[:3])
         except (TypeError, IndexError, ValueError):
@@ -109,6 +120,7 @@ class SyncError(PermanentError):
     """Raised for problems specific to syncing directories."""
     pass
 
+
 #XXX Do you know better names for `_try_with_oserror` and
 #    `_try_with_ioerror`?
 def _try_with_oserror(callee, *args, **kwargs):
@@ -117,22 +129,26 @@ def _try_with_oserror(callee, *args, **kwargs):
     exceptions from `ftplib.all_errors` to `FTPOSError` and its
     derived classes.
     """
+    # use `*exc.args` instead of `str(args)` because args might be
+    #  a unicode string with non-ascii characters
     try:
         return callee(*args, **kwargs)
-    except ftplib.error_temp, obj:
-        raise TemporaryError(obj)
-    except ftplib.error_perm, obj:
-        if str(obj).startswith("502"):
-            raise CommandNotImplementedError(obj)
+    except ftplib.error_temp, exc:
+        raise TemporaryError(*exc.args)
+    except ftplib.error_perm, exc:
+        # if `exc.args` is present, assume it's a byte or unicode string
+        if exc.args and exc.args[0].startswith("502"):
+            raise CommandNotImplementedError(*exc.args)
         else:
-            raise PermanentError(obj)
+            raise PermanentError(*exc.args)
     except ftplib.all_errors:
-        ftp_error = sys.exc_info()[1]
-        raise FTPOSError(ftp_error)
+        exc = sys.exc_info()[1]
+        raise FTPOSError(*exc.args)
 
 class FTPIOError(FTPError, IOError):
     """Generic FTP error related to `IOError`."""
     pass
+
 
 def _try_with_ioerror(callee, *args, **kwargs):
     """
@@ -142,6 +158,8 @@ def _try_with_ioerror(callee, *args, **kwargs):
     try:
         return callee(*args, **kwargs)
     except ftplib.all_errors:
-        ftp_error = sys.exc_info()[1]
-        raise FTPIOError(ftp_error)
+        exc = sys.exc_info()[1]
+        # use `*exc.args` instead of `str(args)` because args might be
+        #  a unicode string with non-ascii characters
+        raise FTPIOError(*exc.args)
 

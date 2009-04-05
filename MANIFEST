@@ -19,6 +19,7 @@ README.html
 README.txt
 setup.py
 _test_base.py
+_test_ftp_error.py
 _test_ftp_file.py
 _test_ftp_path.py
 _test_ftp_stat_cache.py
