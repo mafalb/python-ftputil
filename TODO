@@ -1,15 +1,12 @@
 Planned:
 
-- see issue tracker ( http://ftputil.sschwarzer.net/trac/report/1 )
+- get ftputil included into Debian repositories
 - add `ftp_session` module containing session classes (e. g. for
   passive mode connections)
 
 Ideas for future development:
 
-- handle connection timeouts (Antonio Beamud Montero)
 - add an interface module for ftpparse (see conversation with
-  Oleg Broytmann)
-- merge with vpath project (Holger Krekel)
-- merge in WebDAV support
-- what about thread safety? (also have a look at `ftplib`)
+  Oleg Broytmann) -> perhaps license issues
+- WebDAV support?
 
