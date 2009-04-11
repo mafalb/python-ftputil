@@ -36,17 +36,20 @@ import shutil
 import sys
 import unittest
 
-TEST_ROOT = "/home/schwa/sd/python/ftputil"
+# assume the test subdirectories are or will be in the current directory
+TEST_ROOT = os.getcwd()
 sys.path.insert(0, os.path.dirname(TEST_ROOT))
 
-from ftputil import ftp_sync
+import ftp_sync
 
 
 class TestLocalToLocal(unittest.TestCase):
     def setUp(self):
-        target_dir = os.path.join(TEST_ROOT, "test_target")
-        shutil.rmtree(target_dir)
-        os.mkdir(target_dir)
+        if not os.path.exists("test_empty"):
+            os.mkdir("test_empty")
+        if os.path.exists("test_target"):
+            shutil.rmtree("test_target")
+        os.mkdir("test_target")
 
     def test_sync_empty_dir(self):
         source = ftp_sync.LocalHost()
