@@ -49,6 +49,10 @@ class FTPError(Exception):
     """General error class."""
 
     def __init__(self, *args):
+        # `ftplib.Error` doesn't have a `__subclasses__` _method_ but a
+        #  static method, so my use of `ftplib.Error.__subclasses__` in
+        #  my opinion is valid
+        # pylint: disable-msg = e1101
         # contrary to what `ftplib`'s documentation says, `all_errors`
         #  does _not_ contain the subclasses, so I explicitly add them
         if args and args[0].__class__ in ftplib.all_errors + \
