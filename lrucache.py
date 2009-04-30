@@ -38,7 +38,6 @@ discarded. [1]_
 
 """
 
-from __future__ import generators
 import time
 from ftputil_heapq import heappush, heappop, heapify
 
@@ -201,22 +200,9 @@ class LRUCache(object):
 
 if __name__ == "__main__":
     cache = LRUCache(25)
-    print cache
-    for i in range(50):
+    for i in range(30):
         cache[i] = str(i)
-    print cache
-    if 46 in cache:
-        del cache[46]
-    print cache
+    if 26 in cache:
+        del cache[26]
     # traceback occurs in this assignment
     cache.size = 10
-    print cache
-    cache[46] = '46'
-    print cache
-    print len(cache)
-    for c in cache:
-        print c
-    print cache
-    print cache.mtime(46)
-    for c in cache:
-        print c
