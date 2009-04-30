@@ -227,6 +227,7 @@ class FTPHost(object):
                   "or has insufficient access rights" % effective_dir)
         host._file._open(effective_file, mode)
         if 'w' in mode:
+            # invalidate cache entry because size and timestamps will change
             self.stat_cache.invalidate(effective_path)
         return host._file
 
