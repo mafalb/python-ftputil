@@ -40,7 +40,7 @@ discarded. [1]_
 
 from __future__ import generators
 import time
-from heapq import heappush, heappop, heapify
+from ftputil_heapq import heappush, heappop, heapify
 
 __version__ = "0.2"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
@@ -111,9 +111,10 @@ class LRUCache(object):
             return cmp(self.atime, other.atime)
 
         def __repr__(self):
-            return "<%s %s => %s (%s)>" % \
-                   (self.__class__, self.key, self.obj, \
-                    time.asctime(time.localtime(self.atime)))
+            return "Node %s => %s" % (self.key, self.obj)
+#             return "<%s %s => %s (%s)>" % \
+#                    (self.__class__, self.key, self.obj, \
+#                     time.asctime(time.localtime(self.atime)))
 
     def __init__(self, size=DEFAULT_SIZE):
         # Check arguments
@@ -207,6 +208,7 @@ if __name__ == "__main__":
     if 46 in cache:
         del cache[46]
     print cache
+    # traceback occurs in this assignment
     cache.size = 10
     print cache
     cache[46] = '46'
