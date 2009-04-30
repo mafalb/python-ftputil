@@ -680,7 +680,7 @@ directory entries fetched with ``listdir``. This is done by the
 
     host.stat_cache.resize(2000)
 
-where the argument is the maximal number of ``lstat`` results to store
+where the argument is the maximum number of ``lstat`` results to store
 (the default is 1000). Note that each path on the server, e. g.
 "/home/schwa/some_dir", corresponds to a single cache entry. (Methods
 like ``exists`` or ``getmtime`` all derive their results from a
