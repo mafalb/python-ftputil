@@ -38,8 +38,9 @@ discarded. [1]_
 
 """
 
+from __future__ import generators
 import time
-from ftputil_heapq import heappush, heappop, heapify
+from heapq import heappush, heappop, heapify
 
 __version__ = "0.2"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
@@ -109,6 +110,10 @@ class LRUCache(object):
         def __cmp__(self, other):
             return cmp(self.atime, other.atime)
 
+        def __repr__(self):
+            return "<%s %s => %s (%s)>" % \
+                   (self.__class__, self.key, self.obj, \
+                    time.asctime(time.localtime(self.atime)))
 
     def __init__(self, size=DEFAULT_SIZE):
         # Check arguments
@@ -120,6 +125,9 @@ class LRUCache(object):
         self.__heap = []
         self.__dict = {}
         self.size = size
+        """Maximum size of the cache.
+        If more than 'size' elements are added to the cache,
+        the least-recently-used ones will be discarded."""
 
     def __len__(self):
         return len(self.__heap)
@@ -162,6 +170,13 @@ class LRUCache(object):
             heapify(self.__heap)
             return node.obj
 
+    def __iter__(self):
+        copy = self.__heap[:]
+        while len(copy) > 0:
+            node = heappop(copy)
+            yield node.key
+        raise StopIteration
+
     def __setattr__(self, name, value):
         object.__setattr__(self, name, value)
         # automagically shrink heap on resize
@@ -169,6 +184,9 @@ class LRUCache(object):
             while len(self.__heap) > value:
                 lru = heappop(self.__heap)
                 del self.__dict[lru.key]
+
+    def __repr__(self):
+        return "<%s (%d elements)>" % (str(self.__class__), len(self.__heap))
 
     def mtime(self, key):
         """Return the last modification time for the cache record with key.
@@ -181,10 +199,22 @@ class LRUCache(object):
             return node.mtime
 
 if __name__ == "__main__":
-    cache = LRUCache(15)
-    for i in range(20):
+    cache = LRUCache(25)
+    print cache
+    for i in range(50):
         cache[i] = str(i)
-    if 16 in cache:
-        del cache[16]
-    # traceback occurs in this assignment
-    cache.size = 5
+    print cache
+    if 46 in cache:
+        del cache[46]
+    print cache
+    cache.size = 10
+    print cache
+    cache[46] = '46'
+    print cache
+    print len(cache)
+    for c in cache:
+        print c
+    print cache
+    print cache.mtime(46)
+    for c in cache:
+        print c
