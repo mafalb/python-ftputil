@@ -42,7 +42,7 @@ from __future__ import generators
 import time
 from heapq import heappush, heappop, heapify
 
-__version__ = "0.2"
+__version__ = "0.2.1"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
 __docformat__ = 'reStructuredText en'
 
@@ -100,15 +100,16 @@ class LRUCache(object):
     class __Node(object):
         """Record of a cached value. Not for public consumption."""
 
-        def __init__(self, key, obj, timestamp):
+        def __init__(self, key, obj, timestamp, sort_key):
             object.__init__(self)
             self.key = key
             self.obj = obj
             self.atime = timestamp
             self.mtime = self.atime
+            self._sort_key = sort_key
 
         def __cmp__(self, other):
-            return cmp(self.atime, other.atime)
+            return cmp(self._sort_key, other._sort_key)
 
         def __repr__(self):
             return "<%s %s => %s (%s)>" % \
@@ -124,10 +125,16 @@ class LRUCache(object):
         object.__init__(self)
         self.__heap = []
         self.__dict = {}
-        self.size = size
         """Maximum size of the cache.
         If more than 'size' elements are added to the cache,
         the least-recently-used ones will be discarded."""
+        self.size = size
+        self.__counter = 0
+
+    def _sort_key(self):
+        """Return a new integer value upon every call."""
+        self.__counter += 1
+        return self.__counter
 
     def __len__(self):
         return len(self.__heap)
@@ -138,16 +145,18 @@ class LRUCache(object):
     def __setitem__(self, key, obj):
         if self.__dict.has_key(key):
             node = self.__dict[key]
+            # update node object in-place
             node.obj = obj
             node.atime = time.time()
             node.mtime = node.atime
+            node._sort_key = self._sort_key()
             heapify(self.__heap)
         else:
             # size may have been reset, so we loop
             while len(self.__heap) >= self.size:
                 lru = heappop(self.__heap)
                 del self.__dict[lru.key]
-            node = self.__Node(key, obj, time.time())
+            node = self.__Node(key, obj, time.time(), self._sort_key())
             self.__dict[key] = node
             heappush(self.__heap, node)
 
@@ -156,7 +165,9 @@ class LRUCache(object):
             raise CacheKeyError(key)
         else:
             node = self.__dict[key]
+            # update node object in-place
             node.atime = time.time()
+            node._sort_key = self._sort_key()
             heapify(self.__heap)
             return node.obj
 
