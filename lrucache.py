@@ -42,7 +42,9 @@ from __future__ import generators
 import time
 from heapq import heappush, heappop, heapify
 
-__version__ = "0.2.1"
+# the suffix after the hyphen denotes modifications by the
+#  ftputil project with respect to the original version
+__version__ = "0.2-1"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
 __docformat__ = 'reStructuredText en'
 
