@@ -47,8 +47,8 @@ PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 				 find_deprecated_code.py
 # name test files; make sure _test_real_ftp.py is the last
 TEST_FILES=$(shell ls _test_*.py | \
-		     sed -e "s/_test_real_ftp.py//") \
-		   _test_real_ftp.py
+             sed -e "s/_test_real_ftp.py//") \
+           _test_real_ftp.py
 
 .PHONY: dist extdist test pylint docs clean register patch debdistclean debdist
 .SUFFIXES: .txt .html
