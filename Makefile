@@ -46,14 +46,16 @@ PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 				 ftp_stat.py ftputil.py ftputil_version.py __init__.py \
 				 find_deprecated_code.py
 # name test files; make sure _test_real_ftp.py is the last
-TEST_FILES=$(shell ls _test_*.py | sed -e "s/_test_real_ftp.py//") \
+TEST_FILES=$(shell ls _test_*.py | \
+		     sed -e "s/_test_real_ftp.py//") \
 		   _test_real_ftp.py
 
 .PHONY: dist extdist test pylint docs clean register patch debdistclean debdist
 .SUFFIXES: .txt .html
 
 test:
-	echo ${VERSION}
+	@echo "Tests for ftputil ${VERSION}\n"
+	python2.4 _test_python2_4.py
 	for file in $(TEST_FILES); \
 	do \
 		python $$file ; \

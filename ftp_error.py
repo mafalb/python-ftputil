@@ -55,12 +55,17 @@ class FTPError(Exception):
         # pylint: disable-msg = e1101
         # contrary to what `ftplib`'s documentation says, `all_errors`
         #  does _not_ contain the subclasses, so I explicitly add them
-        if args and args[0].__class__ in ftplib.all_errors + \
-                                         tuple(ftplib.Error.__subclasses__()):
+        if args and (args[0].__class__ in ftplib.all_errors or
+                     issubclass(args[0].__class__, ftplib.Error)):
             warnings.warn(("Passing exception objects into the FTPError "
               "constructor is deprecated and will be disabled in ftputil 2.6"),
               DeprecationWarning, stacklevel=2)
-        super(FTPError, self).__init__(*args)
+        try:
+            # works only for new style-classes (Python 2.5+)
+            super(FTPError, self).__init__(*args)
+        except TypeError:
+            # fallback to old approach
+            Exception.__init__(self, *args)
         # don't use `args[0]` because `args` may be empty
         if args:
             self.strerror = self.args[0]
