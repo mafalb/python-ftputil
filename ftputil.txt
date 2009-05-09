@@ -428,12 +428,22 @@ Uploading and downloading files
   return value is a true value, else a false value.
 
   If it seems that a file is downloaded unnecessarily, read the
-  subsection on `time shift`_ settings.
+  subsection on `time zone correction`_.
 
 .. _`time shift`:
+.. _`time zone correction`:
 
 Time zone correction
 ````````````````````
+
+If the client (where ``ftputil`` runs) and the server have a different
+understanding of local time, this has to be taken into account for
+``upload_if_newer`` and ``download_if_newer`` to work correctly.
+
+Note that even if the client and the server are in the same time zone
+(or even on the same computer), the time shift value (see below) may
+be different from zero. For example, my computer is set to use local
+time whereas the server insists on using UTC time.
 
 .. _`set_time_shift`:
 
@@ -556,7 +566,8 @@ succeeds in most cases. However, if you get strange results or
 `file a bug report`_.
 
 If ``lstat`` or ``stat`` yield wrong modification dates or times, look
-at the methods that deal with time zone differences (`time shift`_).
+at the methods that deal with time zone differences (`time zone
+correction`_).
 
 .. _`FTPHost.lstat`:
 
@@ -843,7 +854,7 @@ Other methods
     host.chmod("some_directory", 0755)
 
   *Note the leading zero.*
-  
+
   Not all FTP servers support the ``chmod`` command. In case of
   an exception, how do you know if the path doesn't exist or if
   the command itself is invalid? If the FTP server complies with
@@ -851,7 +862,7 @@ Other methods
   command isn't allowed. ``ftputil`` maps this special error
   response to a ``CommandNotImplementedError`` which is derived from
   ``PermanentError``.
-  
+
   So you need to code like this::
 
     host = ftputil.FTPHost(server, user, password)
@@ -1209,8 +1220,8 @@ Conditional upload/download to/from a server in a different time zone
 You may find that ``ftputil`` uploads or downloads files
 unnecessarily, or not when it should. This can happen when the FTP
 server is in a different time zone than the client on which
-``ftputil`` runs. Please see the section on setting the
-`time shift`_. It may even be sufficient to call `synchronize_times`_.
+``ftputil`` runs. Please see the section on `time zone correction`_.
+It may even be sufficient to call `synchronize_times`_.
 
 Wrong dates or times when stat'ing on a server
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
