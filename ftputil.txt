@@ -642,6 +642,9 @@ with the same semantics as for ``os.path``:
     splitext(path)
     walk(path, func, arg)
 
+Like Python's counterparts under `os.path`_, ``ftputil``'s ``is...``
+methods return ``False`` if they can't find the given path.
+
 Local caching of file system information
 ````````````````````````````````````````
 
@@ -1232,6 +1235,17 @@ The FTP server you connect to uses a directory format that
 help.
 
 .. _`plug in an own parser`: `Writing directory parsers`_
+
+``isdir``, ``isfile`` or ``islink`` incorrectly return ``False``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Like Python's counterparts under `os.path`_, ``ftputil``'s methods
+return ``False`` if they can't find the given path.
+
+Probably you used ``listdir`` on a directory and called ``is...()`` on
+the returned names. But if the argument for ``listdir`` wasn't the
+current directory, the paths won't be found and so all ``is...()``
+variants will return ``False``.
 
 I don't find an answer to my problem in this document
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
