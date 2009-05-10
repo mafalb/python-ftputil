@@ -288,7 +288,7 @@ class TestTimeShift(unittest.TestCase):
         host = _test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
         # use private bound method
         rounded_time_shift = host._FTPHost__rounded_time_shift
-        # original value, expected result
+        # pairs consisting of original value and expected result
         test_data = [
           (0, 0), (0.1, 0), (-0.1, 0), (1500, 0), (-1500, 0),
           (1800, 3600), (-1800, -3600), (2000, 3600), (-2000, -3600),
