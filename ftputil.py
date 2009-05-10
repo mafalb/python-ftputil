@@ -370,7 +370,9 @@ class FTPHost(object):
         """
         Synchronize the local times of FTP client and server. This
         is necessary to let `upload_if_newer` and `download_if_newer`
-        work correctly.
+        work correctly. If `synchronize_times` isn't applicable
+        (see below), the time shift can still be set explicitly with
+        `set_time_shift`.
 
         This implementation of `synchronize_times` requires _all_ of
         the following:
@@ -379,7 +381,7 @@ class FTPHost(object):
         - The client has write access to the directory that is
           current when `synchronize_times` is called.
 
-        The usual usage pattern of `synchronize_times` is to call it
+        The common usage pattern of `synchronize_times` is to call it
         directly after the connection is established. (As can be
         concluded from the points above, this requires write access
         to the login directory.)
