@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2006, Stefan Schwarzer
+# Copyright (C) 2003-2009, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -151,7 +151,9 @@ class TestParsers(unittest.TestCase):
         lines = [
           "07-27-01  11:16AM       <DIR>          Test",
           "10-23-95  03:25PM       <DIR>          WindowsXP",
-          "07-17-00  02:08PM             12266720 test.exe"
+          "07-17-00  02:08PM             12266720 test.exe",
+          "07-17-09  12:08AM             12266720 test.exe",
+          "07-17-09  12:08PM             12266720 test.exe"
           ]
         expected_stat_results = [
           [16640, None, None, None, None, None, None, None,
@@ -159,7 +161,11 @@ class TestParsers(unittest.TestCase):
           [16640, None, None, None, None, None, None, None,
            (1995, 10, 23, 15, 25, 0), None],
           [33024, None, None, None, None, None, 12266720, None,
-           (2000, 7, 17, 14, 8, 0), None]
+           (2000, 7, 17, 14, 8, 0), None],
+          [33024, None, None, None, None, None, 12266720, None,
+           (2009, 7, 17, 0, 8, 0), None],
+          [33024, None, None, None, None, None, 12266720, None,
+           (2009, 7, 17, 12, 8, 0), None]
           ]
         self._test_valid_lines(ftp_stat.MSParser, lines, expected_stat_results)
 
