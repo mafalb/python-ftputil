@@ -399,10 +399,8 @@ class _Stat(object):
         """
         # we _can't_ put this check into `FTPHost._dir`; see its docstring
         path = self._path.abspath(path)
+        # `listdir` should only be allowed for directories and links to them
         if not self._path.isdir(path):
-            #TODO use FTP DIR command on the file to implicitly use
-            #  the usual status code of the server for missing files
-            #  (450 vs. 550)
             raise ftp_error.PermanentError(
                   "550 %s: no such directory or wrong directory parser used" %
                   path)
