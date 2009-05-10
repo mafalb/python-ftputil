@@ -15,17 +15,20 @@ in different timezones.
 What's new?
 -----------
 
-ftputil 2.4 adds a ``chmod`` method to the ``FTPHost`` class, similar
-to ``os.chmod``.
+Several bugs were fixed:
 
-There's a new exception ``CommandNotImplementedError``, derived from
-``PermanentError``, to denote commands not implemented by the FTP
-server or disabled by its administrator.
+- On Windows, some accesses to the stat cache caused it to become
+  inconsistent, which could also trigger exceptions (report and patch
+  by Peter Stirling).
 
-Using the ``xreadlines`` method of FTP file objects causes a warning
-through Python's warnings framework.
+- In ftputil 2.4, the use of ``super`` in the exception base class
+  caused ftputil to fail on Python <2.5 (reported by Nicola Murino).
+  ftputil is supposed to run with Python 2.3+.
 
-Upgrading is recommended.
+- The conversion of 12-hour clock times to 24-hour clock in the MS
+  format parser was wrong for 12 AM and 12 PM.
+
+Upgrading is strongly recommended.
 
 Incompatibility notice
 ----------------------

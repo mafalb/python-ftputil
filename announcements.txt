@@ -1,3 +1,47 @@
+ftputil 2.4.1 is now available from
+http://ftputil.sschwarzer.net/download .
+
+Changes since version 2.4
+-------------------------
+
+Several bugs were fixed:
+
+- On Windows, some accesses to the stat cache caused it to become
+  inconsistent, which could also trigger exceptions (report and patch
+  by Peter Stirling).
+
+- In ftputil 2.4, the use of ``super`` in the exception base class
+  caused ftputil to fail on Python <2.5 (reported by Nicola Murino).
+  ftputil is supposed to run with Python 2.3+.
+
+- The conversion of 12-hour clock times to 24-hour clock in the MS
+  format parser was wrong for 12 AM and 12 PM.
+
+Upgrading is strongly recommended.
+
+What is ftputil?
+----------------
+
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
+
+Read the documentation at
+http://ftputil.sschwarzer.net/documentation .
+
+License
+-------
+
+ftputil is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
+Stefan
+
+----------------------------------------------------------------------
 ftputil 2.4 is now available from
 http://ftputil.sschwarzer.net/download .
 
