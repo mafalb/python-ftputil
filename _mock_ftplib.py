@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008, Stefan Schwarzer
+# Copyright (C) 2003-2009, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -58,8 +58,8 @@ class MockFile(StringIO.StringIO):
     Mock class for the file objects _contained in_ `_FTPFile` objects
     (not `_FTPFile` objects themselves!).
 
-    Unless `StringIO.StringIO` instances, `MockFile` objects can be
-    queried for their contents after they have been closed.
+    Contrary to `StringIO.StringIO` instances, `MockFile` objects can
+    be queried for their contents after they have been closed.
     """
     def __init__(self, path, content=''):
         global mock_files
