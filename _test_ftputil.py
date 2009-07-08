@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2008, Stefan Schwarzer
+# Copyright (C) 2002-2009, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -78,6 +78,33 @@ def binary_data():
 class FailOnLoginSession(_mock_ftplib.MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
+
+class RecursiveListingForDotAsPathSession(_mock_ftplib.MockSession):
+    dir_contents = {
+      ".": """\
+lrwxrwxrwx   1 staff          7 Aug 13  2003 bin -> usr/bin
+
+dev:
+total 10
+
+etc:
+total 10
+
+pub:
+total 4
+-rw-r--r--   1 staff         74 Sep 25  2000 .message
+----------   1 staff          0 Aug 16  2003 .notar
+drwxr-xr-x  12 ftp          512 Nov 23  2008 freeware
+
+usr:
+total 4""",
+      "": """\
+total 10
+lrwxrwxrwx   1 staff          7 Aug 13  2003 bin -> usr/bin
+d--x--x--x   2 staff        512 Sep 24  2000 dev
+d--x--x--x   3 staff        512 Sep 25  2000 etc
+dr-xr-xr-x   3 staff        512 Oct  3  2000 pub
+d--x--x--x   5 staff        512 Oct  3  2000 usr"""}
 
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
@@ -163,6 +190,30 @@ class TestCommandNotImplementedError(unittest.TestCase):
         # `CommandNotImplementedError` is a subclass of `PermanentError`
         self.assertRaises(ftp_error.CommandNotImplementedError,
                           host.chmod, "nonexistent", 0644)
+
+
+class TestRecursiveListingForDotAsPath(unittest.TestCase):
+    """Return a recursive directory listing when the path to list
+    is a dot. This is used to test for issue #33, see
+    http://ftputil.sschwarzer.net/trac/ticket/33 .
+    """
+    def test_recursive_listing(self):
+        host = _test_base.ftp_host_factory(
+                 session_factory=RecursiveListingForDotAsPathSession)
+        lines = host._dir(host.curdir)
+        self.failUnless(lines[0].startswith("lrwxrwxrwx   1 staff"))
+        self.assertEqual(lines[1], "")
+        self.assertEqual(lines[2], "dev:")
+        self.assertEqual(lines[3], "total 10")
+        host.close()
+
+    def test_plain_listing(self):
+        host = _test_base.ftp_host_factory(
+                 session_factory=RecursiveListingForDotAsPathSession)
+        lines = host._dir("")
+        self.assertEqual(lines[0], "total 10")
+        self.failUnless(lines[1].startswith("lrwxrwxrwx   1 staff"))
+        self.failUnless(lines[2].startswith("d--x--x--x   2 staff"))
 
 
 class TestUploadAndDownload(unittest.TestCase):
