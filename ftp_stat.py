@@ -557,7 +557,7 @@ class _Stat(object):
     def listdir(self, path):
         """
         Return a list of items in `path`.
-        
+
         Raise a `PermanentError` if the path doesn't exist, but
         maybe raise other exceptions depending on the state of
         the server (e. g. timeout).

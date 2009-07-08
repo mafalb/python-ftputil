@@ -98,6 +98,7 @@ drwxr-xr-x  12 ftp          512 Nov 23  2008 freeware
 
 usr:
 total 4""",
+
       "": """\
 total 10
 lrwxrwxrwx   1 staff          7 Aug 13  2003 bin -> usr/bin
@@ -105,6 +106,9 @@ d--x--x--x   2 staff        512 Sep 24  2000 dev
 d--x--x--x   3 staff        512 Sep 25  2000 etc
 dr-xr-xr-x   3 staff        512 Oct  3  2000 pub
 d--x--x--x   5 staff        512 Oct  3  2000 usr"""}
+
+    def _transform_path(self, path):
+        return path
 
 class BinaryDownloadMockSession(_mock_ftplib.MockSession):
     mock_file_content = binary_data()
@@ -132,6 +136,10 @@ class TimeShiftFTPHost(ftputil.FTPHost):
             self._mtime = mtime
         def getmtime(self, file_name):
             return self._mtime
+        def join(self, *args):
+            return posixpath.join(*args)
+        def normpath(self, path):
+            return posixpath.normpath(path)
         def abspath(self, path):
             return "/home/sschwarzer/_ftputil_sync_"
         # needed for `isdir` in `FTPHost.remove`
@@ -201,10 +209,9 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
         host = _test_base.ftp_host_factory(
                  session_factory=RecursiveListingForDotAsPathSession)
         lines = host._dir(host.curdir)
-        self.failUnless(lines[0].startswith("lrwxrwxrwx   1 staff"))
-        self.assertEqual(lines[1], "")
-        self.assertEqual(lines[2], "dev:")
-        self.assertEqual(lines[3], "total 10")
+        self.assertEqual(lines[0], "total 10")
+        self.failUnless(lines[1].startswith("lrwxrwxrwx   1 staff"))
+        self.failUnless(lines[2].startswith("d--x--x--x   2 staff"))
         host.close()
 
     def test_plain_listing(self):
@@ -214,6 +221,14 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
         self.assertEqual(lines[0], "total 10")
         self.failUnless(lines[1].startswith("lrwxrwxrwx   1 staff"))
         self.failUnless(lines[2].startswith("d--x--x--x   2 staff"))
+        host.close()
+
+    def test_empty_string_instead_of_dot_workaround(self):
+        host = _test_base.ftp_host_factory(
+                 session_factory=RecursiveListingForDotAsPathSession)
+        files = host.listdir(host.curdir)
+        self.assertEqual(files, ['bin', 'dev', 'etc', 'pub', 'usr'])
+        host.close()
 
 
 class TestUploadAndDownload(unittest.TestCase):

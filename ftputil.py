@@ -540,53 +540,40 @@ class FTPHost(object):
 
     def _robust_ftp_command(self, command, path, descend_deeply=False):
         """
-        Run an FTP command on a path.
-
-        If the path doesn't contain whitespace, run it (the
-        overwritten `_command` method) with the instance (`self`) as
-        first and the `path` as second argument.
-
-        If the path contains whitespace, split it into a head and a
-        tail part where the tail is the last component of the path.
-        Change into the head directory, then execute the command on
-        the tail component.
-
-        The return value of the method is the return value of the
-        command.
+        Run an FTP command on a path. The return value of the method
+        is the return value of the command.
 
         If `descend_deeply` is true (the default is false), descend
         deeply, i. e. change the directory to the end of the path.
         """
-        head, tail = self.path.split(path)
-        if descend_deeply:
-            special_case = " " in path
-        else:
-            special_case = " " in head
-        if not special_case:
-            # nothing special, just apply the command
-            return command(self, path)
-        else:
-            self._check_inaccessible_login_directory()
-            # because of a bug in `ftplib` (or even in FTP servers?)
-            #  the straightforward code
-            #    command(self, path)
-            #  fails if some of the path components contain whitespace;
-            #  changing to the directory first and then applying the
-            #  command works, though
-            # remember old working directory
-            old_dir = self.getcwd()
-            try:
-                if descend_deeply:
-                    # invoke the command in (not: on) the deepest directory
-                    self.chdir(path)
-                    return command(self, self.curdir)
-                else:
-                    # invoke the command in the "next-to-last" directory
-                    self.chdir(head)
-                    return command(self, tail)
-            finally:
-                # restore the old directory
-                self.chdir(old_dir)
+        # if we can't change to the yet-current directory, the code
+        #  below won't work (see below), so in this case rather raise
+        #  an exception than give wrong results
+        self._check_inaccessible_login_directory()
+        # Some FTP servers don't behave as expected if the directory
+        #  portion of the path contains whitespace, some even yield
+        #  strange results if the command isn't executed in the
+        #  current directory. Therefore, change to the directory
+        #  which contains the item to run the command on and invoke
+        #  the command just there.
+        # remember old working directory
+        old_dir = self.getcwd()
+        try:
+            if descend_deeply:
+                # invoke the command in (not: on) the deepest directory
+                self.chdir(path)
+                # workaround for some servers that give recursive
+                #  listings when called with a dot as path; see issue #33,
+                #  http://ftputil.sschwarzer.net/trac/ticket/33
+                return command(self, "")
+            else:
+                # invoke the command in the "next to last" directory
+                head, tail = self.path.split(path)
+                self.chdir(head)
+                return command(self, tail)
+        finally:
+            # restore the old directory
+            self.chdir(old_dir)
 
     #
     # miscellaneous utility methods resembling functions in `os`
@@ -782,7 +769,7 @@ class FTPHost(object):
         # we can't use `self.path.isdir` in this method because that
         #  would cause a call of `(l)stat` and thus a call to `_dir`,
         #  so we would end up with an infinite recursion
-        def command(self, path):
+        def _FTPHost_dir_command(self, path):
             """Callback function."""
             lines = []
             def callback(line):
@@ -790,7 +777,8 @@ class FTPHost(object):
                 lines.append(line)
             ftp_error._try_with_oserror(self._session.dir, path, callback)
             return lines
-        lines = self._robust_ftp_command(command, path, descend_deeply=True)
+        lines = self._robust_ftp_command(_FTPHost_dir_command, path,
+                                         descend_deeply=True)
         return lines
 
     # the `listdir`, `lstat` and `stat` methods don't use

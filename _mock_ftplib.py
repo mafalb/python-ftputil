@@ -40,6 +40,7 @@ run the unit tests.
 """
 
 import ftplib
+import posixpath
 import StringIO
 
 DEBUG = 0
@@ -132,8 +133,7 @@ drwxr-sr-x   2 45854    200           512 May 25  2000 publications
 drwxr-sr-x   2 45854    200           512 Jan 20 16:12 python
 drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
 
-      # = /home/dir with spaces
-      '.': """\
+      '/home/dir with spaces': """\
 total 1
 -rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces""",
 
@@ -166,11 +166,6 @@ total 1
         #  each has a corresponding `voidresp`
         self._transfercmds = 0
 
-    def _remove_trailing_slash(self, path):
-        if path != '/' and path.endswith('/'):
-            path = path[:-1]
-        return path
-
     def voidcmd(self, cmd):
         if DEBUG:
             print cmd
@@ -186,15 +181,24 @@ total 1
     def pwd(self):
         return self.current_dir
 
+    def _remove_trailing_slash(self, path):
+        if path != '/' and path.endswith('/'):
+            path = path[:-1]
+        return path
+
+    def _transform_path(self, path):
+        return posixpath.normpath(posixpath.join(self.pwd(), path))
+
     def cwd(self, path):
-        path = self._remove_trailing_slash(path)
-        self.current_dir = path
+        self.current_dir = self._transform_path(path)
 
     def dir(self, path, callback=None):
-        "Provide a callback function with each line of a directory listing."
+        """Provide a callback function for processing each line of
+        a directory listing. Return nothing.
+        """
         if DEBUG:
             print 'dir: %s' % path
-        path = self._remove_trailing_slash(path)
+        path = self._transform_path(path)
         if not self.dir_contents.has_key(path):
             raise ftplib.error_perm
         dir_lines = self.dir_contents[path].split('\n')
