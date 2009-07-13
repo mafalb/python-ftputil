@@ -108,7 +108,7 @@ class TestPublicServers(unittest.TestCase):
     An important aspect is to test different "spellings" of
     the same directory. For example, to list the root directory
     which is usually set after login, use "" (nothing), ".",
-    "/", "/.", "./.", "././", "..", "../.", "../..".
+    "/", "/.", "./.", "././", "..", "../.", "../.." etc.
 
     The command line client "ftp" has to be in the path.
     """
@@ -129,6 +129,7 @@ class TestPublicServers(unittest.TestCase):
                ("ftp.debian.org", "debian"),
                ("ftp.sunfreeware.com", "pub"),
                ("ftp.chello.nl", "pub"),
+               ("ftp.heanet.ie", "pub"),
                # DOS/Microsoft format
                ("ftp.microsoft.com", "deskapps")]
 
