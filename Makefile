@@ -45,10 +45,11 @@ RST2HTML=rst2html
 PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 				 ftp_stat.py ftputil.py ftputil_version.py __init__.py \
 				 find_deprecated_code.py
-# name test files; make sure _test_real_ftp.py is the last
+# name test files; make sure the long-running tests come last
 TEST_FILES=$(shell ls _test_*.py | \
-             sed -e "s/_test_real_ftp.py//") \
-           _test_real_ftp.py
+             sed -e "s/_test_real_ftp.py//" | \
+             sed -e "s/_test_public_servers.py//" ) \
+           _test_real_ftp.py _test_public_servers.py
 
 .PHONY: dist extdist test pylint docs clean register patch debdistclean debdist
 .SUFFIXES: .txt .html
