@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2008, Stefan Schwarzer
+# Copyright (C) 2006-2009, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,7 @@ import time
 import lrucache
 
 
+#TODO move this to `ftp_error.py`!
 class CacheMissError(Exception):
     """Raised if a path isn't found in the cache."""
     pass
