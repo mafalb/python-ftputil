@@ -44,7 +44,7 @@ from heapq import heappush, heappop, heapify
 
 # the suffix after the hyphen denotes modifications by the
 #  ftputil project with respect to the original version
-__version__ = "0.2-1"
+__version__ = "0.2-2"
 __all__ = ['CacheKeyError', 'LRUCache', 'DEFAULT_SIZE']
 __docformat__ = 'reStructuredText en'
 
@@ -120,10 +120,8 @@ class LRUCache(object):
 
     def __init__(self, size=DEFAULT_SIZE):
         # Check arguments
-        if size <= 0:
-            raise ValueError, size
-        elif type(size) is not type(0):
-            raise TypeError, size
+        if size < 0:
+            raise ValueError("cache size (%d) mustn't be negative" % size)
         object.__init__(self)
         self.__heap = []
         self.__dict = {}
@@ -135,7 +133,7 @@ class LRUCache(object):
 
     def _sort_key(self):
         """Return a new integer value upon every call.
-        
+
         Cache nodes need a monotonically increasing time indicator.
         time.time() and time.clock() don't guarantee this in a
         platform-independent way.
@@ -150,6 +148,9 @@ class LRUCache(object):
         return self.__dict.has_key(key)
 
     def __setitem__(self, key, obj):
+        if self.size == 0:
+            # can't store anything
+            return
         if self.__dict.has_key(key):
             node = self.__dict[key]
             # update node object in-place
@@ -159,8 +160,11 @@ class LRUCache(object):
             node._sort_key = self._sort_key()
             heapify(self.__heap)
         else:
-            # size may have been reset, so we loop
-            while len(self.__heap) >= self.size:
+            # size of the heap can be at most the value of
+            #  self.size because __setattr__ decreases the cache
+            #  size if the new size value is smaller; so we don't
+            #  need a loop _here_
+            if len(self.__heap) == self.size:
                 lru = heappop(self.__heap)
                 del self.__dict[lru.key]
             node = self.__Node(key, obj, time.time(), self._sort_key())
@@ -199,6 +203,8 @@ class LRUCache(object):
         object.__setattr__(self, name, value)
         # automagically shrink heap on resize
         if name == 'size':
+            if value < 0:
+                raise ValueError("cache size (%d) mustn't be negative" % size)
             while len(self.__heap) > value:
                 lru = heappop(self.__heap)
                 del self.__dict[lru.key]
