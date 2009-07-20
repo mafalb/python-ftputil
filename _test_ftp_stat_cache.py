@@ -35,6 +35,7 @@ import time
 import unittest
 
 import ftp_stat_cache
+import _test_base
 
 
 class TestStatCache(unittest.TestCase):
@@ -114,6 +115,13 @@ class TestStatCache(unittest.TestCase):
         self.assertEqual(len(self.cache), 1)
         # don't raise a `CacheMissError` for missing paths
         self.cache.invalidate("/path2")
+
+    def test_cache_size_zero(self):
+        host = _test_base.ftp_host_factory()
+        host.stat_cache.resize(0)
+        # if bug #38 is present, this raises an `IndexError`
+        items = host.listdir(host.curdir)
+        self.assertEqual(items[:3], ['chemeng', 'download', 'image'])
 
 
 if __name__ == '__main__':
