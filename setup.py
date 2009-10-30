@@ -48,7 +48,6 @@ from distutils.command import install_lib as install_lib_module
 _name = "ftputil"
 _package = "ftputil"
 _version = open("VERSION").read().strip()
-_data_target = "%s/%s" % (sysconfig.get_python_lib(), _package)
 
 
 # avoid byte-compiling `_test_with_statement.py` for Python < 2.5; see
@@ -68,8 +67,8 @@ core.setup(
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
-  data_files=[(_data_target, ["ftputil.txt", "ftputil.html",
-                              "README.txt", "README.html"])],
+  data_files=[("doc", ["ftputil.txt", "ftputil.html",
+                       "README.txt", "README.html"])],
   cmdclass={'install_lib': FtputilInstallLib},
 
   # metadata
