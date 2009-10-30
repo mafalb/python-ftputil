@@ -36,6 +36,7 @@ import shutil
 import sys
 import unittest
 
+
 # assume the test subdirectories are or will be in the current directory
 TEST_ROOT = os.getcwd()
 sys.path.insert(0, os.path.dirname(TEST_ROOT))
@@ -56,6 +57,14 @@ class TestLocalToLocal(unittest.TestCase):
         target = ftp_sync.LocalHost()
         syncer = ftp_sync.Syncer(source, target)
         source_dir = os.path.join(TEST_ROOT, "test_empty")
+        target_dir = os.path.join(TEST_ROOT, "test_target")
+        syncer.sync(source_dir, target_dir)
+
+    def test_source_with_and_target_without_slash(self):
+        source = ftp_sync.LocalHost()
+        target = ftp_sync.LocalHost()
+        syncer = ftp_sync.Syncer(source, target)
+        source_dir = os.path.join(TEST_ROOT, "test_source/")
         target_dir = os.path.join(TEST_ROOT, "test_target")
         syncer.sync(source_dir, target_dir)
 
