@@ -115,7 +115,7 @@ class Syncer(object):
         #TODO handle conditional copy
         #TODO handle setting of target mtime according to source mtime
         #  (beware of rootdir anomalies; try to handle them as well)
-        print "Syncing", source_file, "->", target_file
+        #print "Syncing", source_file, "->", target_file
         source = self._source.open(source_file, "rb")
         try:
             target = self._target.open(target_file, "wb")
