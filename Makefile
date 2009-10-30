@@ -59,6 +59,7 @@ test:
 	python2.4 _test_python2_4.py
 	for file in $(TEST_FILES); \
 	do \
+		echo $$file ; \
 		python $$file ; \
 	done
 
