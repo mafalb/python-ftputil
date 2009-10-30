@@ -443,8 +443,6 @@ class _Stat(object):
         # if the path is in the cache, return the lstat result
         if path in self._lstat_cache:
             return self._lstat_cache[path]
-        # get output from FTP's `DIR` command
-        lines = []
         # Note: (l)stat works by going one directory up and parsing
         #  the output of an FTP `DIR` command. Unfortunately, it is
         #  not possible to do this for the root directory `/`.
@@ -452,11 +450,19 @@ class _Stat(object):
             raise ftp_error.RootDirError(
                   "can't stat remote root directory")
         dirname, basename = self._path.split(path)
-        lstat_result_for_path = None
+
+        # If even the directory doesn't exist and we don't want the
+        #  exception, treat it the same as if the path wasn't found in
+        #  the directory's contents (compare below). The use of `isdir`
+        #  here causes a recursion but that should be ok because that
+        #  will at the latest stop when we've got to the root directory.
+#         if not self._path.isdir(dirname) and not _exception_for_missing_path:
+#             return None
         # loop through all lines of the directory listing; we
         #  probably won't need all lines for the particular path but
         #  we want to collect as many stat results in the cache as
         #  possible
+        lstat_result_for_path = None
         lines = self._host_dir(dirname)
         for line in lines:
             if self._parser.ignores_line(line):
@@ -468,9 +474,9 @@ class _Stat(object):
             # needed to work without cache or with disabled cache
             if stat_result._st_name == basename:
                 lstat_result_for_path = stat_result
-        if lstat_result_for_path:
+        if lstat_result_for_path is not None:
             return lstat_result_for_path
-        # path was not found
+        # path was not found during the loop
         if _exception_for_missing_path:
             #TODO use FTP DIR command on the file to implicitly use
             #  the usual status code of the server for missing files
@@ -518,7 +524,7 @@ class _Stat(object):
             # pylint: disable-msg=W0612
             dirname, basename = self._path.split(path)
             path = self._path.join(dirname, lstat_result._st_target)
-            path = self._path.normpath(path)
+            path = self._path.abspath(self._path.normpath(path))
             # check for cyclic structure
             if path in visited_paths:
                 # we had this path already
