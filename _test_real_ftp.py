@@ -418,6 +418,9 @@ class RealFTPTest(unittest.TestCase):
         self.failIf(abs(calculated_time_shift-host.time_shift()) > 120)
 
     def test_special_broken_link(self):
+        # test for ticket #39
+        # this test currently fails; I guess I'll postpone it until
+        #  at least ftputil 2.5
         host = self.host
         broken_link_name = os.path.join("dir_with_broken_link", "nonexistent")
         self.assertEqual(host.lstat(broken_link_name)._st_target,
