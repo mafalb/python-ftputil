@@ -90,7 +90,7 @@ and downloads, and handles FTP clients and servers in different timezones.""",
     "http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/%s-%s.tar.gz?format=raw" %
     (_name, _version),
   classifiers=[
-    "Development Status :: 6 - Mature",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Other Environment",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: BSD License",
