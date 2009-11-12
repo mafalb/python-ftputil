@@ -25,7 +25,7 @@ Changes since version 2.4.1
   Distutils. For example, on my system (Ubuntu 9.04) the documentation
   files are put into ``/usr/local/doc``.
 
-Upgrading is strongly recommended.
+Upgrading is recommended.
 
 What is ftputil?
 ----------------
