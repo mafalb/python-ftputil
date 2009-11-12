@@ -1,3 +1,55 @@
+ftputil 2.4.2 is now available from
+http://ftputil.sschwarzer.net/download .
+
+Changes since version 2.4.1
+---------------------------
+
+- Some FTP servers seem to have problems using *any* directory
+  argument which contains slashes. The new default for FTP commands
+  now is to change into the directory before actually invoking the
+  command on a relative path (report and fix suggestion by Nicola
+  Murino).
+
+- Calling the method ``FTPHost.stat_cache.resize`` with an argument 0
+  caused an exception. This has been fixed; a zero cache size now
+  of course doesn't cache anything but doesn't lead to a traceback
+  either.
+
+- The installation script ``setup.py`` didn't work with the ``--home``
+  option because it still tried to install the documentation in a
+  system directory (report by Albrecht Mühlenschulte).
+
+  As a side effect, when using the *global* installation, the
+  documentation is no longer installed in the ftputil package
+  directory but in a subdirectory ``doc`` of a directory determined by
+  Distutils. For example, on my system (Ubuntu 9.04) the documentation
+  files are put into ``/usr/local/doc``.
+
+Upgrading is strongly recommended.
+
+What is ftputil?
+----------------
+
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
+
+Read the documentation at
+http://ftputil.sschwarzer.net/documentation .
+
+License
+-------
+
+ftputil is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
+Stefan
+
+----------------------------------------------------------------------
 ftputil 2.4.1 is now available from
 http://ftputil.sschwarzer.net/download .
 
