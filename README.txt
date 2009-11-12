@@ -15,23 +15,36 @@ in different timezones.
 What's new?
 -----------
 
-Several bugs were fixed:
+Since version 2.4.1 the following changed:
 
-- On Windows, some accesses to the stat cache caused it to become
-  inconsistent, which could also trigger exceptions (report and patch
-  by Peter Stirling).
+- Some FTP servers seem to have problems using *any* directory
+  argument which contains slashes. The new default for FTP commands
+  now is to change into the directory before actually invoking the
+  command on a relative path (report and fix suggestion by Nicola
+  Murino).
 
-- In ftputil 2.4, the use of ``super`` in the exception base class
-  caused ftputil to fail on Python <2.5 (reported by Nicola Murino).
-  ftputil is supposed to run with Python 2.3+.
+- Calling the method ``FTPHost.stat_cache.resize`` with an argument 0
+  caused an exception. This has been fixed; a zero cache size now
+  of course doesn't cache anything but doesn't lead to a traceback
+  either.
 
-- The conversion of 12-hour clock times to 24-hour clock in the MS
-  format parser was wrong for 12 AM and 12 PM.
+- The installation script ``setup.py`` didn't work with the ``--home``
+  option because it still tried to install the documentation in a
+  system directory (report by Albrecht Mühlenschulte).
 
-Upgrading is strongly recommended.
+  As a side effect, when using the *global* installation, the
+  documentation is no longer installed in the ftputil package
+  directory but in a subdirectory ``doc`` of a directory determined by
+  Distutils. For example, on my system (Ubuntu 9.04) the documentation
+  files are put into ``/usr/local/doc``.
 
 Incompatibility notice
 ----------------------
+
+When doing a system-wide installation, the documentation files are now
+placed in another location than before (see last paragraph of the
+previous section). This doesn't change anything regarding the use of
+the library, though.
 
 Both the ``xreadlines`` method and the long-deprecated direct access
 of exceptions via the ``ftputil`` module (as in
@@ -112,5 +125,5 @@ Stefan Schwarzer <sschwarzer@sschwarzer.net>
 
 Evan Prodromou <evan@bad.dynu.ca> (lrucache module)
 
-Please provide feedback! It's surely appreciated. :-)
+Please provide feedback! It's certainly appreciated. :-)
 
