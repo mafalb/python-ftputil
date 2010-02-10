@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -35,8 +35,6 @@ ftp_file.py - support for file-like objects on FTP servers
 
 # $Id$
 
-import warnings
-
 import ftp_error
 
 
@@ -63,28 +61,6 @@ def _python_to_crlf_linesep(text):
     (LF) converted to ASCII line endings (CR/LF).
     """
     return text.replace('\n', '\r\n')
-
-
-# helper class for xreadline protocol for ASCII transfers
-#XXX maybe we can use the `xreadlines` module instead of this?
-class _XReadlines(object):
-    """Represents `xreadline` objects for ASCII transfers."""
-
-    def __init__(self, ftp_file):
-        self._ftp_file = ftp_file
-        self._next_index = 0
-
-    def __getitem__(self, index):
-        """Return next line with specified index."""
-        if index != self._next_index:
-            raise RuntimeError( "_XReadline access index "
-                  "out of order (expected %s but got %s)" %
-                  (self._next_index, index) )
-        line = self._ftp_file.readline()
-        if not line:
-            raise IndexError("_XReadline object out of data")
-        self._next_index += 1
-        return line
 
 
 class _FTPFile(object):
@@ -195,17 +171,6 @@ class _FTPFile(object):
         for index, line in enumerate(lines):
             lines[index] = _crlf_to_python_linesep(line)
         return lines
-
-    def xreadlines(self):
-        """
-        Return an appropriate `xreadlines` object with built-in line
-        separator conversion support.
-        """
-        warnings.warn(("FTPFile.xreadlines is deprecated and will be removed "
-          "in ftputil 2.5"), DeprecationWarning, stacklevel=2)
-        if self._bin_mode:
-            return self._fo.xreadlines()
-        return _XReadlines(self)
 
     def __iter__(self):
         """Return a file iterator."""

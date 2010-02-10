@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2008, Stefan Schwarzer
+# Copyright (C) 2002-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -214,27 +214,6 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(data, ['e 1\n', 'another line\n',
                                 'yet another line'])
         input_.close()
-
-    def test_ascii_xreadlines(self):
-        """Read ASCII text with `xreadlines`."""
-        host = _test_base.ftp_host_factory(session_factory=ReadMockSession)
-        # open file, skip some bytes
-        input_ = host.file('dummy', 'r')
-        data = input_.read(3)
-        xrl_obj = input_.xreadlines()
-        self.failUnless(xrl_obj.__class__ is ftp_file._XReadlines)
-        self.failUnless(xrl_obj._ftp_file.__class__ is ftp_file._FTPFile)
-        data = xrl_obj[0]
-        self.assertEqual(data, 'e 1\n')
-        # try to skip an index
-        self.assertRaises(RuntimeError, operator.__getitem__, xrl_obj, 2)
-        # continue reading
-        data = xrl_obj[1]
-        self.assertEqual(data, 'another line\n')
-        data = xrl_obj[2]
-        self.assertEqual(data, 'yet another line')
-        # try to read beyond EOF
-        self.assertRaises(IndexError, operator.__getitem__, xrl_obj, 3)
 
     def test_binary_iterator(self):
         """Test the iterator interface of `FTPFile` objects."""
