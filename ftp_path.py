@@ -33,8 +33,6 @@
 ftp_path.py - simulate `os.path` for FTP servers
 """
 
-# $Id$
-
 import posixpath
 import stat
 

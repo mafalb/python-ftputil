@@ -33,8 +33,6 @@
 ftp_error.py - exception classes and wrappers
 """
 
-# $Id$
-
 # "Too many ancestors"
 # pylint: disable-msg = R0901
 

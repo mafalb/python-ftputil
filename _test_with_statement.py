@@ -29,8 +29,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id: _test_with_statement.py 689 2007-04-16 01:07:10Z schwa $
-
 from __future__ import with_statement
 
 import unittest

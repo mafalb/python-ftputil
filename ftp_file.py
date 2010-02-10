@@ -33,8 +33,6 @@
 ftp_file.py - support for file-like objects on FTP servers
 """
 
-# $Id$
-
 import ftp_error
 
 

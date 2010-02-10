@@ -29,8 +29,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id$
-
 """
 This module implements a mock version of the standard library's
 `ftplib.py` module. Some code is taken from there.

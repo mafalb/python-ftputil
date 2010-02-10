@@ -33,8 +33,6 @@
 ftp_stat.py - stat result, parsers, and FTP stat'ing for `ftputil`
 """
 
-# $Id$
-
 import re
 import stat
 import time
