@@ -36,12 +36,11 @@ import shutil
 import sys
 import unittest
 
+import ftp_sync
+
 
 # assume the test subdirectories are or will be in the current directory
 TEST_ROOT = os.getcwd()
-sys.path.insert(0, os.path.dirname(TEST_ROOT))
-
-import ftp_sync
 
 
 class TestLocalToLocal(unittest.TestCase):
