@@ -32,13 +32,11 @@
 # $Id: $
 
 import ftplib
-import operator
 import unittest
 
 import _mock_ftplib
 import _test_base
 import ftp_error
-import ftp_file
 
 
 #
