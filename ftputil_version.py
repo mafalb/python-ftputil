@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2008, Stefan Schwarzer
+# Copyright (C) 2006-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -34,7 +34,7 @@
 import sys
 
 
-# ftputil version number
+# ftputil version number; substituted by `make patch`
 __version__ = '2.4.2'
 
 _ftputil_version = __version__
