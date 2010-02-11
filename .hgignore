@@ -2,5 +2,10 @@ syntax: glob
 
 *.pyc
 *.pyo
+
+ftputil.html
+ftputil_ru.html
+README.html
+
 tags
 private/**
