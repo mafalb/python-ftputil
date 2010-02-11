@@ -92,6 +92,7 @@ __all__ = ['FTPHost']
 __version__ = ftputil_version.__version__
 
 
+#TODO turn into three classes (one base class and two derived classes)
 class _TransferredFile(object):
     """
     Represent a file on the local or remote side which is to
@@ -109,9 +110,14 @@ class _TransferredFile(object):
         self.mode = mode
 
     def exists(self):
+        """
+        Return `True` if the path representing this file exists.
+        Otherwise return `False`.
+        """
         return self._path.exists(self.name)
 
     def mtime(self):
+        """Return the timestamp for the last modification in seconds."""
         mtime_ = self._path.getmtime(self.name)
         if not self._is_local:
             # convert to client time zone; see definition of time
@@ -119,7 +125,18 @@ class _TransferredFile(object):
             mtime_ -= self._host.time_shift()
         return mtime_
 
+    def mtime_precision(self):
+        """Return the precision of the last modification time in seconds."""
+        if self._is_local:
+            # assume modification timestamps for local filesystems are
+            #  at least precise up to a second
+            return 1.0
+        else:
+            # I think using `stat` instead of `lstat` makes more sense here
+            return self.stat(self.name)._st_mtime_precision
+
     def fobj(self):
+        """Return a file object for the name/path in the constructor."""
         if self._is_local:
             return open(self.name, self.mode)
         else:
