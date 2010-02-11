@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2009, Stefan Schwarzer
+# Copyright (C) 2003-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -138,10 +138,13 @@ class RealFTPTest(unittest.TestCase):
     def make_file(self, path):
         self.cleaner.add_file(path)
         file_ = self.host.file(path, 'wb')
+        # write something; otherwise the FTP server might not update
+        #  the time of last modification if the file existed before
+        file_.write("\n")
         file_.close()
 
     def make_local_file(self):
-        fobj = file('_localfile_', 'wb')
+        fobj = file('_local_file_', 'wb')
         fobj.write("abc\x12\x34def\t")
         fobj.close()
 
@@ -458,26 +461,53 @@ class RealFTPTest(unittest.TestCase):
     def test_upload(self):
         host = self.host
         host.synchronize_times()
+        local_file = '_local_file_'
+        remote_file = '_remote_file_'
         # make local file and upload it
         self.make_local_file()
         # wait; else small time differences between client and server
         #  actually could trigger the update
         time.sleep(65)
         try:
-            self.cleaner.add_file('_remotefile_')
-            host.upload('_localfile_', '_remotefile_', 'b')
+            self.cleaner.add_file(remote_file)
+            host.upload(local_file, remote_file, 'b')
             # retry; shouldn't be uploaded
-            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            uploaded = host.upload_if_newer(local_file, remote_file, 'b')
             self.assertEqual(uploaded, False)
             # rewrite the local file
             self.make_local_file()
-            time.sleep(65)
             # retry; should be uploaded now
-            uploaded = host.upload_if_newer('_localfile_', '_remotefile_', 'b')
+            uploaded = host.upload_if_newer(local_file, remote_file, 'b')
             self.assertEqual(uploaded, True)
         finally:
             # clean up
-            os.unlink('_localfile_')
+            os.unlink(local_file)
+
+    def test_download(self):
+        host = self.host
+        host.synchronize_times()
+        local_file = '_local_file_'
+        remote_file = '_remote_file_'
+        # make a remote file
+        self.make_file(remote_file)
+        # file should be downloaded as it's not present yet
+        downloaded = host.download_if_newer(remote_file, local_file, 'b')
+        self.assertEqual(downloaded, True)
+        try:
+            # local file is present and newer, so shouldn't download
+            downloaded = host.download_if_newer(remote_file, local_file, 'b')
+            self.assertEqual(downloaded, False)
+            # wait; else small time differences between client and server
+            #  actually could trigger the update
+            time.sleep(65)
+            # re-make the remote file
+            self.make_file(remote_file)
+            # local file is present but older, so should download
+            downloaded = host.download_if_newer(remote_file, local_file, 'b')
+            self.assertEqual(downloaded, True)
+        finally:
+            # clean up
+            os.unlink(local_file)
 
     #
     # remove/unlink
@@ -485,7 +515,7 @@ class RealFTPTest(unittest.TestCase):
     def test_remove_non_existent_item(self):
         host = self.host
         self.assertRaises(ftp_error.PermanentError, host.remove, "nonexistent")
-    
+
     def test_remove_existent_file(self):
         self.cleaner.add_file('_testfile_')
         self.make_file('_testfile_')
