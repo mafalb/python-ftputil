@@ -92,6 +92,40 @@ __all__ = ['FTPHost']
 __version__ = ftputil_version.__version__
 
 
+class _TransferredFile(object):
+    """
+    Represent a file on the local or remote side which is to
+    be transferred or is already transferred.
+    """
+
+    def __init__(self, host, name, mode):
+        self._host = host
+        self._is_local = (host is None)
+        if self._is_local:
+            self._path = os.path
+        else:
+            self._path = host.path
+        self.name = self._path.abspath(name)
+        self.mode = mode
+
+    def exists(self):
+        return self._path.exists(self.name)
+
+    def mtime(self):
+        mtime_ = self._path.getmtime(self.name)
+        if not self._is_local:
+            # convert to client time zone; see definition of time
+            #  shift in docstring of `FTPHost.set_time_shift`
+            mtime_ -= self._host.time_shift()
+        return mtime_
+
+    def fobj(self):
+        if self._is_local:
+            return open(self.name, self.mode)
+        else:
+            return self._host.file(self.name, self.mode)
+
+
 #####################################################################
 # `FTPHost` class with several methods similar to those of `os`
 
@@ -394,7 +428,8 @@ class FTPHost(object):
         self.set_time_shift(self.__rounded_time_shift(time_shift))
 
     #
-    # operations based on file-like objects (rather high-level)
+    # operations based on file-like objects (rather high-level),
+    #  like upload and download
     #
     def copyfileobj(self, source, target, length=64*1024):
         "Copy data from file-like object source to file-like object target."
@@ -408,78 +443,69 @@ class FTPHost(object):
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""
+        #XXX use dictionary?
+        # invalid mode values are handled when a file object is made
         if mode == 'b':
             return 'rb', 'wb'
         else:
             return 'r', 'w'
 
-    def __copy_file(self, source, target, mode, source_open, target_open):
+    def __copy_file(self, source_file, target_file, conditional):
         """
-        Copy a file from source to target. Which of both is a local
-        or a remote file, respectively, is determined by the arguments.
+        Copy a file from `source_file` to `target_file`.
+        
+        Both of these are `_TransferredFile` objects. Which of them is
+        a local or a remote file, respectively, is determined by the
+        arguments. If `conditional` is true, the file is only copied
+        if the target doesn't exist or is older than the source. If
+        `conditional` is false, the file is copied unconditionally.
+        """
+        if conditional:
+            # evaluate condition: the target file either doesn't exist or is
+            #  older than the source file; use >= in the comparison, that is
+            #  if in doubt (due to imprecise timestamps) transfer
+            #FIXME we probably need a more complex comparison, depending
+            #  on the precision of the timestamp on the server!
+            condition = not target_file.exists() or \
+                        source_file.mtime() > target_file.mtime()
+            if not condition:
+                # we didn't transfer
+                return False
+        source_fobj = source_file.fobj()
+        try:
+            target_fobj = target_file.fobj()
+            try:
+                self.copyfileobj(source_fobj, target_fobj)
+            finally:
+                target_fobj.close()
+        finally:
+            source_fobj.close()
+        # transfer accomplished
+        return True
+
+    def _upload(self, source, target, mode, conditional):
+        """
+        Upload from `source` to `target` which are `_TransferredFile`
+        objects. The string `mode` may be "" or "b". If `conditional`
+        is true, check if file should be copied at all. See the
+        docstring of `__copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source = source_open(source, source_mode)
-        try:
-            target = target_open(target, target_mode)
-            try:
-                self.copyfileobj(source, target)
-            finally:
-                target.close()
-        finally:
-            source.close()
-
-    def upload(self, source, target, mode=''):
-        """
-        Upload a file from the local source (name) to the remote
-        target (name). The argument mode is an empty string or 'a' for
-        text copies, or 'b' for binary copies.
-        """
-        self.__copy_file(source, target, mode, open, self.file)
+        source_file = _TransferredFile(None, source, source_mode)
+        target_file = _TransferredFile(self, target, target_mode)
         # the path in the stat cache is implicitly invalidated when
         #  the file is opened on the remote host
+        return self.__copy_file(source_file, target_file, conditional)
 
-    def download(self, source, target, mode=''):
+    def upload(self, source, target, mode=''):
+        #FIXME should we support mode "a" at all? We don't support
+        #  appending!
         """
-        Download a file from the remote source (name) to the local
-        target (name). The argument mode is an empty string or 'a' for
+        Upload a file from the local source (name) to the remote
+        target (name). The argument `mode` is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        self.__copy_file(source, target, mode, self.file, open)
-
-    #XXX the use of the `copy_method` seems less-than-ideal
-    #  factoring; can we handle it in another way?
-
-    def __copy_file_if_newer(self, source, target, mode,
-      source_mtime, target_mtime, target_exists, copy_method):
-        """
-        Copy a source file only if it's newer than the target. The
-        direction of the copy operation is determined by the
-        arguments. See methods `upload_if_newer` and
-        `download_if_newer` for examples.
-
-        If the copy was necessary, return `True`, else return `False`.
-        """
-        source_timestamp = source_mtime(source)
-        if target_exists(target):
-            target_timestamp = target_mtime(target)
-        else:
-            # every timestamp is newer than this one
-            target_timestamp = 0.0
-        if source_timestamp > target_timestamp:
-            copy_method(source, target, mode)
-            return True
-        else:
-            return False
-
-    def __shifted_local_mtime(self, file_name):
-        """
-        Return last modification of a local file, corrected with
-        respect to the time shift between client and server.
-        """
-        local_mtime = os.path.getmtime(file_name)
-        # transform to server time
-        return local_mtime + self.time_shift()
+        self._upload(source, target, mode, conditional=False)
 
     def upload_if_newer(self, source, target, mode=''):
         """
@@ -490,9 +516,29 @@ class FTPHost(object):
         If an upload was necessary, return `True`, else return
         `False`.
         """
-        return self.__copy_file_if_newer(source, target, mode,
-          self.__shifted_local_mtime, self.path.getmtime,
-          self.path.exists, self.upload)
+        return self._upload(source, target, mode, conditional=True)
+
+    def _download(self, source, target, mode, conditional):
+        """
+        Download from `source` to `target` which are `_TransferredFile`
+        objects. The string `mode` may be "" or "b". If `conditional`
+        is true, check if file should be copied at all. See the
+        docstring of `__copy_file` for more.
+        """
+        source_mode, target_mode = self.__get_modes(mode)
+        source_file = _TransferredFile(None, source, source_mode)
+        target_file = _TransferredFile(self, target, target_mode)
+        return self.__copy_file(source_file, target_file, conditional)
+
+    def download(self, source, target, mode=''):
+        #FIXME should we support mode "a" at all? We don't support
+        #  appending!
+        """
+        Download a file from the remote source (name) to the local
+        target (name). The argument mode is an empty string or 'a' for
+        text copies, or 'b' for binary copies.
+        """
+        self._download(source, target, mode, conditional=False)
 
     def download_if_newer(self, source, target, mode=''):
         """
@@ -503,9 +549,7 @@ class FTPHost(object):
         If a download was necessary, return `True`, else return
         `False`.
         """
-        return self.__copy_file_if_newer(source, target, mode,
-          self.path.getmtime, self.__shifted_local_mtime,
-          os.path.exists, self.download)
+        return self._download(source, target, mode, conditional=True)
 
     #
     # helper methods to descend into a directory before executing a command
