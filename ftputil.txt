@@ -970,7 +970,6 @@ The methods
     readlines()
     write(data)
     writelines(string_sequence)
-    xreadlines()
 
 and the attribute ``closed`` have the same semantics as for file
 objects of a local disk file system. The iterator protocol is
@@ -983,9 +982,6 @@ line::
         # do something with the line, e. g.
         print line.strip().replace("ftplib", "ftputil")
     input_file.close()
-
-This feature obsoletes the ``xreadlines`` method which is deprecated
-and will be removed in ``ftputil`` version 2.5.
 
 For more on file objects, see the section `File objects`_ in the
 Python Library Reference.
