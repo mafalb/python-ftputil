@@ -1133,7 +1133,7 @@ subscribe or read the archives.
 Though you can *technically* post without subscribing first I can't
 recommend that: The mails from non-subscribers have to be approved by
 me and because the arriving mails contain *lots* of spam, I rarely go
-through this bunch of mails.
+through these mails.
 
 I found a bug! What now?
 ~~~~~~~~~~~~~~~~~~~~~~~~
