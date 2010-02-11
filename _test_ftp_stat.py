@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2009, Stefan Schwarzer
+# Copyright (C) 2003-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -279,14 +279,20 @@ class TestLstatAndStat(unittest.TestCase):
         except ftp_error.RootDirError, exc_obj:
             self.failIf(isinstance(exc_obj, ftp_error.FTPOSError))
 
-    def test_lstat_one_file(self):
-        """Test `lstat` for a file."""
+    def test_lstat_one_unix_file(self):
+        """Test `lstat` for a file described in Unix-style format."""
         stat_result = self.stat.lstat('/home/sschwarzer/index.html')
         self.assertEqual(oct(stat_result.st_mode), '0100644')
         self.assertEqual(stat_result.st_size, 4604)
+        self.assertEqual(stat_result._st_mtime_precision, 60)
 
-    def test_lstat_one_dir(self):
-        """Test `lstat` for a directory."""
+    def test_lstat_one_ms_file(self):
+        """Test `lstat` for a file described in DOS-style format."""
+        stat_result = self.stat.lstat('/home/msformat/abcd.exe')
+        self.assertEqual(stat_result._st_mtime_precision, 60)
+
+    def test_lstat_one_unix_dir(self):
+        """Test `lstat` for a directory described in Unix-style format."""
         stat_result = self.stat.lstat('/home/sschwarzer/scios2')
         self.assertEqual(oct(stat_result.st_mode), '042755')
         self.assertEqual(stat_result.st_ino, None)
@@ -299,9 +305,15 @@ class TestLstatAndStat(unittest.TestCase):
         self.failUnless(stat_result.st_mtime ==
                         stat_tuple_to_seconds((1999, 9, 20, 0, 0, 0)))
         self.assertEqual(stat_result.st_ctime, None)
+        self.assertEqual(stat_result._st_mtime_precision, 24*60*60)
         self.failUnless(stat_result ==
           (17901, None, None, 6, '45854', '200', 512, None,
            stat_tuple_to_seconds((1999, 9, 20, 0, 0, 0)), None))
+
+    def test_lstat_one_ms_dir(self):
+        """Test `lstat` for a directory described in DOS-style format."""
+        stat_result = self.stat.lstat('/home/msformat/WindowsXP')
+        self.assertEqual(stat_result._st_mtime_precision, 60)
 
     def test_lstat_via_stat_module(self):
         """Test `lstat` indirectly via `stat` module."""

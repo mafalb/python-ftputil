@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2008, Stefan Schwarzer
+# Copyright (C) 2002-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -147,13 +147,21 @@ class Parser(object):
         return st_mode
 
     def parse_unix_time(self, month_abbreviation, day, year_or_time,
-                        time_shift):
+                        time_shift, with_precision=False):
         """
         Return a floating point number, like from `time.mktime`, by
         parsing the string arguments `month_abbreviation`, `day` and
         `year_or_time`. The parameter `time_shift` is the difference
         "time on server" - "time on client" and is available as the
         `time_shift` parameter in the `parse_line` interface.
+
+        If `with_precision` is true (default: false), return a
+        two-element tuple consisting of the floating point number as
+        described in the previous paragraph and the precision of the
+        time in seconds. This takes into account that, for example, a
+        time string like "May 26  2005" has only a precision of one
+        day. This information is important for the `upload_if_newer`
+        and `download_if_newer` methods in the `FTPHost` class.
 
         Times in Unix-style directory listings typically have one of
         these formats:
@@ -175,6 +183,8 @@ class Parser(object):
             year, hour, minute = int(year_or_time), 0, 0
             st_mtime = time.mktime( (year, month, day,
                                      hour, minute, 0, 0, 0, -1) )
+            # precise up to a day
+            st_mtime_precision = 24 * 60 * 60
         else:
             # `year_or_time` is a time hh:mm
             hour, minute = year_or_time.split(':')
@@ -183,6 +193,8 @@ class Parser(object):
             year = time.localtime()[0]
             st_mtime = time.mktime( (year, month, day,
                                      hour, minute, 0, 0, 0, -1) )
+            # precise up to a minute
+            st_mtime_precision = 60
             # rhs of comparison: transform client time to server time
             #  (as on the lhs), so both can be compared with respect
             #  to the set time shift (see the definition of the time
@@ -198,7 +210,10 @@ class Parser(object):
                 # if it's in the future, use previous year
                 st_mtime = time.mktime( (year-1, month, day,
                                          hour, minute, 0, 0, 0, -1) )
-        return st_mtime
+        if with_precision:
+            return (st_mtime, st_mtime_precision)
+        else:
+            return st_mtime
 
     def parse_ms_time(self, date, time_, time_shift):
         """
@@ -220,6 +235,12 @@ class Parser(object):
         """
         # don't complain about unused `time_shift` argument
         # pylint: disable-msg=W0613
+        # For the time being, I don't add a `with_precision`
+        #  parameter as in the Unix parser because the precision for
+        #  the DOS format is always a minute and can be set in
+        #  `MSParser.parse_line`. Should you find yourself needing
+        #  support for `with_precision` for a derived class, please
+        #  write a mail (see ftputil.txt/html).
         try:
             month, day, year = [int(part) for part in date.split('-')]
             if year >= 70:
@@ -293,7 +314,9 @@ class UnixParser(Parser):
         st_size = int(size)
         st_atime = None
         # st_mtime
-        st_mtime = self.parse_unix_time(month, day, year_or_time, time_shift)
+        st_mtime, st_mtime_precision = \
+          self.parse_unix_time(month, day, year_or_time, time_shift,
+                               with_precision=True)
         # st_ctime
         st_ctime = None
         # st_name
@@ -304,6 +327,7 @@ class UnixParser(Parser):
         stat_result = StatResult(
                       (st_mode, st_ino, st_dev, st_nlink, st_uid,
                        st_gid, st_size, st_atime, st_mtime, st_ctime) )
+        stat_result._st_mtime_precision = st_mtime_precision
         stat_result._st_name = st_name
         stat_result._st_target = st_target
         return stat_result
@@ -361,6 +385,8 @@ class MSParser(Parser):
         # _st_name and _st_target
         stat_result._st_name = name
         stat_result._st_target = None
+        # mtime precision in seconds
+        stat_result._st_mtime_precision = 60
         return stat_result
 
 #
