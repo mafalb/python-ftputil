@@ -499,7 +499,7 @@ class FTPHost(object):
 
     def upload(self, source, target, mode=''):
         #FIXME should we support mode "a" at all? We don't support
-        #  appending!
+        #  appending on remote files!
         """
         Upload a file from the local source (name) to the remote
         target (name). The argument `mode` is an empty string or 'a' for
@@ -526,8 +526,8 @@ class FTPHost(object):
         docstring of `__copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source_file = _TransferredFile(None, source, source_mode)
-        target_file = _TransferredFile(self, target, target_mode)
+        source_file = _TransferredFile(self, source, source_mode)
+        target_file = _TransferredFile(None, target, target_mode)
         return self.__copy_file(source_file, target_file, conditional)
 
     def download(self, source, target, mode=''):
