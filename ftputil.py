@@ -92,20 +92,47 @@ __all__ = ['FTPHost']
 __version__ = ftputil_version.__version__
 
 
-#TODO turn into three classes (one base class and two derived classes)
-class _TransferredFile(object):
+class _LocalFile(object):
     """
-    Represent a file on the local or remote side which is to
-    be transferred or is already transferred.
+    Represent a file on the local side which is to be transferred or
+    is already transferred.
     """
 
-    def __init__(self, host, name, mode):
-        self._host = host
-        self._is_local = (host is None)
-        if self._is_local:
-            self._path = os.path
-        else:
-            self._path = host.path
+    def __init__(self, name, mode):
+        self.name = os.path.abspath(name)
+        self.mode = mode
+
+    def exists(self):
+        """
+        Return `True` if the path representing this file exists.
+        Otherwise return `False`.
+        """
+        return os.path.exists(self.name)
+
+    def mtime(self):
+        """Return the timestamp for the last modification in seconds."""
+        return os.path.getmtime(self.name)
+
+    def mtime_precision(self):
+        """Return the precision of the last modification time in seconds."""
+        # assume modification timestamps for local filesystems are
+        #  at least precise up to a second
+        return 1.0
+
+    def fobj(self):
+        """Return a file object for the name/path in the constructor."""
+        return open(self.name, self.mode)
+
+
+class _RemoteFile(object):
+    """
+    Represent a file on the remote side which is to be transferred or
+    is already transferred.
+    """
+
+    def __init__(self, ftp_host, name, mode):
+        self._host = ftp_host
+        self._path = ftp_host.path
         self.name = self._path.abspath(name)
         self.mode = mode
 
@@ -118,29 +145,18 @@ class _TransferredFile(object):
 
     def mtime(self):
         """Return the timestamp for the last modification in seconds."""
-        mtime_ = self._path.getmtime(self.name)
-        if not self._is_local:
-            # convert to client time zone; see definition of time
-            #  shift in docstring of `FTPHost.set_time_shift`
-            mtime_ -= self._host.time_shift()
-        return mtime_
+        # convert to client time zone; see definition of time
+        #  shift in docstring of `FTPHost.set_time_shift`
+        return self._path.getmtime(self.name) - self._host.time_shift()
 
     def mtime_precision(self):
         """Return the precision of the last modification time in seconds."""
-        if self._is_local:
-            # assume modification timestamps for local filesystems are
-            #  at least precise up to a second
-            return 1.0
-        else:
-            # I think using `stat` instead of `lstat` makes more sense here
-            return self.stat(self.name)._st_mtime_precision
+        # I think using `stat` instead of `lstat` makes more sense here
+        return self._host.stat(self.name)._st_mtime_precision
 
     def fobj(self):
         """Return a file object for the name/path in the constructor."""
-        if self._is_local:
-            return open(self.name, self.mode)
-        else:
-            return self._host.file(self.name, self.mode)
+        return self._host.file(self.name, self.mode)
 
 
 #####################################################################
@@ -460,6 +476,7 @@ class FTPHost(object):
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""
+        #XXX Should we allow mode "a" at all? We don't support appending!
         #XXX use dictionary?
         # invalid mode values are handled when a file object is made
         if mode == 'b':
@@ -471,11 +488,12 @@ class FTPHost(object):
         """
         Copy a file from `source_file` to `target_file`.
         
-        Both of these are `_TransferredFile` objects. Which of them is
-        a local or a remote file, respectively, is determined by the
-        arguments. If `conditional` is true, the file is only copied
-        if the target doesn't exist or is older than the source. If
-        `conditional` is false, the file is copied unconditionally.
+        These are `_LocalFile` or `_RemoteFile` objects. Which of them
+        is a local or a remote file, respectively, is determined by
+        the arguments. If `conditional` is true, the file is only
+        copied if the target doesn't exist or is older than the
+        source. If `conditional` is false, the file is copied
+        unconditionally.
         """
         if conditional:
             # evaluate condition: the target file either doesn't exist or is
@@ -508,15 +526,14 @@ class FTPHost(object):
         docstring of `__copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source_file = _TransferredFile(None, source, source_mode)
-        target_file = _TransferredFile(self, target, target_mode)
+        source_file = _LocalFile(source, source_mode)
+        # passing `self` (the `FTPHost` instance) here is correct
+        target_file = _RemoteFile(self, target, target_mode)
         # the path in the stat cache is implicitly invalidated when
         #  the file is opened on the remote host
         return self.__copy_file(source_file, target_file, conditional)
 
     def upload(self, source, target, mode=''):
-        #FIXME should we support mode "a" at all? We don't support
-        #  appending on remote files!
         """
         Upload a file from the local source (name) to the remote
         target (name). The argument `mode` is an empty string or 'a' for
@@ -543,13 +560,12 @@ class FTPHost(object):
         docstring of `__copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source_file = _TransferredFile(self, source, source_mode)
-        target_file = _TransferredFile(None, target, target_mode)
+        # passing `self` (the `FTPHost` instance) here is correct
+        source_file = _RemoteFile(self, source, source_mode)
+        target_file = _LocalFile(target, target_mode)
         return self.__copy_file(source_file, target_file, conditional)
 
     def download(self, source, target, mode=''):
-        #FIXME should we support mode "a" at all? We don't support
-        #  appending!
         """
         Download a file from the remote source (name) to the local
         target (name). The argument mode is an empty string or 'a' for

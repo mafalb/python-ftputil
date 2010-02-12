@@ -463,7 +463,7 @@ class RealFTPTest(unittest.TestCase):
         host.synchronize_times()
         local_file = '_local_file_'
         remote_file = '_remote_file_'
-        # make local file and upload it
+        # make local file to upload
         self.make_local_file()
         # wait; else small time differences between client and server
         #  actually could trigger the update
