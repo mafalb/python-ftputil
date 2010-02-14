@@ -245,6 +245,9 @@ class FTPHost(object):
         child (`FTPHost` object) from the pool of children or `None`
         if there aren't any.
         """
+        #FIXME don't reuse child sessions that have timed out
+        #  (maybe this should go into `_make_session` or `file`)
+        #  write a unit test prior to attempting a fix
         for host in self._children:
             if host._file.closed:
                 return host
