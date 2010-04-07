@@ -616,6 +616,13 @@ class RealFTPTest(unittest.TestCase):
         self.failUnless(host.path.isfile("dir with spaces/some_file"))
         self.failUnless(host.path.isfile("dir with spaces/some file"))
 
+    def test_synchronize_times_without_write_access(self):
+        """Test failing synchronization because of non-writable directory."""
+        host = self.host
+        # this isn't writable by the ftp account the tests are run under
+        host.chdir("rootdir1")
+        self.assertRaises(ftp_error.TimeShiftError, host.synchronize_times)
+
 
 if __name__ == '__main__':
     print """\

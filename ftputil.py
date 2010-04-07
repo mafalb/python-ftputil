@@ -450,12 +450,25 @@ class FTPHost(object):
         # open a dummy file for writing in the current directory
         #  on the FTP host, then close it
         try:
+            # may raise `FTPIOError` if directory isn't writable
             file_ = self.file(helper_file_name, 'w')
             file_.close()
+        except ftp_error.FTPIOError:
+            raise ftp_error.TimeShiftError("couldn't write helper file")
+        # if everything worked up to here it should be possible to stat
+        #  and then remove the just-written file
+        try:
             server_time = self.path.getmtime(helper_file_name)
-        finally:
-            # remove the just written file
             self.unlink(helper_file_name)
+        except ftp_error.FTPOSError:
+            # If we got a `TimeShiftError` exception above, we should't
+            #  come here: if we did not get a `TimeShiftError` above,
+            #  deletion should be possible. The only reason for an exception
+            #  here I can think of is a race condition by removing write
+            #  permission from the directory or helper file after it has been
+            #  written to.
+            raise ftp_error.TimeShiftError(
+                  "could write helper file but not unlink it")
         # calculate the difference between server and client
         time_shift = server_time - time.time()
         # do some sanity checks
