@@ -454,7 +454,9 @@ class FTPHost(object):
             file_ = self.file(helper_file_name, 'w')
             file_.close()
         except ftp_error.FTPIOError:
-            raise ftp_error.TimeShiftError("couldn't write helper file")
+            raise ftp_error.TimeShiftError(
+                  '''couldn't write helper file in directory "%s"''' %
+                  self.getcwd())
         # if everything worked up to here it should be possible to stat
         #  and then remove the just-written file
         try:
