@@ -42,6 +42,12 @@ from distutils import core
 from distutils import sysconfig
 from distutils.command import install_lib as install_lib_module
 
+# allows to use setuptools-specific commands, e. g. "develop"
+try:
+    import setuptools
+except ImportError:
+    pass
+
 
 _name = "ftputil"
 _package = "ftputil"
