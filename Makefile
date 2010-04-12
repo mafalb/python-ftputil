@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2008, Stefan Schwarzer
+# Copyright (C) 2003-2010, Stefan Schwarzer
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -29,9 +29,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# $Id$
-
-
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
 VERSION=$(shell cat VERSION)
@@ -41,6 +38,7 @@ TMP_LS_FILE=tmp_ls.out
 STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
+#TODO some platforms call that script rst2html.py - allow both
 RST2HTML=rst2html
 PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 				 ftp_stat.py ftputil.py ftputil_version.py __init__.py \
@@ -55,8 +53,12 @@ TEST_FILES=$(shell ls _test_*.py | \
 .SUFFIXES: .txt .html
 
 test:
-	@echo "Tests for ftputil ${VERSION}\n"
-	python2.4 _test_python2_4.py
+	@echo "=== Running tests for ftputil ${VERSION} ===\n"
+	if which python2.4; then \
+		python2.4 _test_python2_4.py; \
+	else \
+		echo "Tests specific for Python 2.4 have been skipped."; \
+	fi
 	for file in $(TEST_FILES); \
 	do \
 		echo $$file ; \
