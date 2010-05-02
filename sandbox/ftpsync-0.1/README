@@ -22,35 +22,35 @@ Known options: --exclude=<pattern>,
                --delete,
                --delete-excluded,
                --dry-run,
-	       --verbose, --quiet, --debug,
-               --trace=<log file>,
-	       --cache-expire=<seconds>,
-               --cache-size=<entries>
+               --verbose, --quiet, --debug,
+                   --trace=<log file>,
+               --cache-expire=<seconds>,
+                   --cache-size=<entries>
 
 Most options are equivalent to rsync(1)'s respective options.
 
 Features:
-	* include/exclude logic like rsync(1).
-  	  (Note: there is a script called rsync.py in the Python package index.
+    * include/exclude logic like rsync(1).
+      (Note: there is a script called rsync.py in the Python package index.
       I have tested it and found it did not mimic rsync's logic correctly).
-	* Caching of FTP directory contents (simple FTPHost._dir() caching,
-	  but speed up can be quite big)
-	* Deals with case-insensitive FTP server
+    * Caching of FTP directory contents (simple FTPHost._dir() caching,
+      but speed up can be quite big)
+    * Deals with case-insensitive FTP server
 
 TODO:
     * download script
-	* proper packaging
-	* ...
+    * proper packaging
+    * ...
 
 Files in this directory:
 
-      ftpsync.py:	    main script
+    * ftpsync.py:       main script
 
-      caching_ftp.py:	CachingFTPHost object, derived from ftputil
-      casepath.py:	    case-insensitive 'path' and 'stat' objects, derived from ftputil
+    * caching_ftp.py:   CachingFTPHost object, derived from ftputil
+    * casepath.py:      case-insensitive 'path' and 'stat' objects, derived from ftputil
 
-      sync.py:		    abstract synchronizing logic
-      rsyncmatch.py:	rsync-style globbing and include/exclude patterns
-      casestr.py:	    case-insensitive string class
-      simplecache.py:	a very simplistic cache implementation
-      loggingclass.py:	a small commodity layer above 'logging'
+    * sync.py:          abstract synchronizing logic
+    * rsyncmatch.py:    rsync-style globbing and include/exclude patterns
+    * casestr.py:       case-insensitive string class
+    * simplecache.py:   a very simplistic cache implementation
+    * loggingclass.py:  a small commodity layer above 'logging'
