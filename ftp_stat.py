@@ -109,7 +109,9 @@ class Parser(object):
         if mode_string[6] == 's':
             st_mode = st_mode | stat.S_ISGID
         file_type_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
-                             'c': stat.S_IFCHR, '-': stat.S_IFREG}
+                             'c': stat.S_IFCHR, '-': stat.S_IFREG,
+                             's': stat.S_IFSOCK,
+                            }
         file_type = mode_string[0]
         if file_type in file_type_to_mode:
             st_mode = st_mode | file_type_to_mode[file_type]
