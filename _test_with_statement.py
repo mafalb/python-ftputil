@@ -22,6 +22,7 @@ class ClientCodeException(Exception):
 # test cases
 #
 class TestHostContextManager(unittest.TestCase):
+
     def test_normal_operation(self):
         with _test_base.ftp_host_factory() as host:
             self.assertEqual(host.closed, False)
@@ -51,6 +52,7 @@ class TestHostContextManager(unittest.TestCase):
 
 
 class TestFileContextManager(unittest.TestCase):
+
     def test_normal_operation(self):
         with _test_base.ftp_host_factory(session_factory=ReadMockSession) \
              as host:
