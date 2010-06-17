@@ -59,12 +59,19 @@ class MockSocket(object):
             print 'File content: *%s*' % mock_file_content
         self.file_path = path
         self.mock_file_content = mock_file_content
+        self._timeout = 60
 
     def makefile(self, mode):
         return MockFile(self.file_path, self.mock_file_content)
 
     def close(self):
         pass
+
+    def gettimeout(self):
+        return self._timeout
+
+    def settimeout(self, timeout):
+        self._timeout = timeout
 
 
 class MockSession(object):
@@ -135,6 +142,8 @@ total 1
         # count successful `transfercmd` invocations to ensure that
         #  each has a corresponding `voidresp`
         self._transfercmds = 0
+        # dummy, only for getting/setting timeout in `_FTPFile.close`
+        self.sock = MockSocket("", "")
 
     def voidcmd(self, cmd):
         if DEBUG:

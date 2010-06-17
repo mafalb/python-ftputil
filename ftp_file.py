@@ -41,6 +41,9 @@ class _FTPFile(object):
     requested.
     """
 
+    # set timeout in seconds when closing file connections, see ticket #51
+    _close_timeout = 5
+
     def __init__(self, host):
         """Construct the file(-like) object."""
         self._host = host
@@ -209,9 +212,16 @@ class _FTPFile(object):
         """Close the `FTPFile`."""
         if self.closed:
             return
+        # timeout value to restore, see below
+        #  statement works only before the try/finally statement,
+        #  otherwise Python raises an `UnboundLocalError`
+        old_timeout = self._session.sock.gettimeout()
         try:
             self._fo.close()
             ftp_error._try_with_ioerror(self._conn.close)
+            # set a timeout to prevent waiting until server timeout
+            #  if we have a server blocking here like in ticket #51
+            self._session.sock.settimeout(self._close_timeout)
             try:
                 ftp_error._try_with_ioerror(self._session.voidresp)
             except ftp_error.FTPIOError, exception:
@@ -219,10 +229,15 @@ class _FTPFile(object):
                 #  http://ftputil.sschwarzer.net/trac/ticket/51 and
                 #  http://ftputil.sschwarzer.net/trac/ticket/17,
                 #  respectively
-                error_code = str(exception)[:3]
-                if error_code not in ("150", "426", "450", "451"):
+                exception = str(exception)
+                error_code = exception[:3]
+                if exception.splitlines()[0] != "timed out" and \
+                  error_code not in ("150", "426", "450", "451"):
                     raise
         finally:
+            # restore timeout for socket of `_FTPFile`'s `ftplib.FTP`
+            #  object in case the connection is reused later
+            self._session.sock.settimeout(old_timeout)
             # if something went wrong before, the file is probably
             #  defunct and subsequent calls to `close` won't help
             #  either, so we consider the file closed for practical
