@@ -215,10 +215,12 @@ class _FTPFile(object):
             try:
                 ftp_error._try_with_ioerror(self._session.voidresp)
             except ftp_error.FTPIOError, exception:
-                # ignore some errors, see ticket #17 at
-                #  http://ftputil.sschwarzer.net/trac/ticket/17
+                # ignore some errors, see tickets #51 and #17 at
+                #  http://ftputil.sschwarzer.net/trac/ticket/51 and
+                #  http://ftputil.sschwarzer.net/trac/ticket/17,
+                #  respectively
                 error_code = str(exception).split()[0]
-                if error_code not in ("426", "450", "451"):
+                if error_code not in ("150", "426", "450", "451"):
                     raise
         finally:
             # if something went wrong before, the file is probably

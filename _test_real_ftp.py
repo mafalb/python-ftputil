@@ -569,7 +569,18 @@ class RealFTPTest(unittest.TestCase):
     # other tests
     #
     def test_open_for_reading(self):
-        # test for issue #17, http://ftputil.sschwarzer.net/trac/ticket/17
+        # test for issues #17 and #51,
+        #  http://ftputil.sschwarzer.net/trac/ticket/17 and
+        #  http://ftputil.sschwarzer.net/trac/ticket/51
+        file1 = self.host.file("debian-keyring.tar.gz", 'rb')
+        time.sleep(1)
+        # depending on the FTP server, this might return a status code
+        #  unexpected by `ftplib`, or block the socket connection until
+        #  a server-side timeout
+        file1.close()
+
+    def test_subsequent_reading(self):
+        # opening a file for reading
         file1 = self.host.file("debian-keyring.tar.gz", 'rb')
         file1.close()
         # make sure that there are no problems if the connection is reused
@@ -614,4 +625,6 @@ because it has to wait to test the timezone calculation.
     # get login data only once, not for each test
     server, user, password = get_login_data()
     unittest.main()
+    import __main__
+    #unittest.main(__main__, "RealFTPTest.test_open_for_reading")
 
