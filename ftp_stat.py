@@ -97,10 +97,11 @@ class Parser(object):
         If the mode string can't be parsed, raise an
         `ftp_error.ParserError`.
         """
-        st_mode = 0
         if len(mode_string) != 10:
             raise ftp_error.ParserError("invalid mode string '%s'" %
                                         mode_string)
+        st_mode = 0
+        #TODO add support for "S" and sticky bit ("t", "T")
         for bit in mode_string[1:10]:
             bit = (bit != '-')
             st_mode = (st_mode << 1) + bit
@@ -108,9 +109,13 @@ class Parser(object):
             st_mode = st_mode | stat.S_ISUID
         if mode_string[6] == 's':
             st_mode = st_mode | stat.S_ISGID
-        file_type_to_mode = {'d': stat.S_IFDIR, 'l': stat.S_IFLNK,
-                             'c': stat.S_IFCHR, '-': stat.S_IFREG,
-                             's': stat.S_IFSOCK,
+        file_type_to_mode = {'b': stat.S_IFBLK, 'c': stat.S_IFCHR,
+                             'd': stat.S_IFDIR, 'l': stat.S_IFLNK,
+                             'p': stat.S_IFIFO, 's': stat.S_IFSOCK,
+                             '-': stat.S_IFREG,
+                             # ignore types which `ls` can't make sense of
+                             #  (assuming the FTP server behaves like `ls`)
+                             '?': 0,
                             }
         file_type = mode_string[0]
         if file_type in file_type_to_mode:
