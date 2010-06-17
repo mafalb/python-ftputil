@@ -219,7 +219,7 @@ class _FTPFile(object):
                 #  http://ftputil.sschwarzer.net/trac/ticket/51 and
                 #  http://ftputil.sschwarzer.net/trac/ticket/17,
                 #  respectively
-                error_code = str(exception).split()[0]
+                error_code = str(exception)[:3]
                 if error_code not in ("150", "426", "450", "451"):
                     raise
         finally:
