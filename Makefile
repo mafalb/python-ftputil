@@ -78,7 +78,7 @@ debdist: debdistclean
 	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
 	  echo "\n" | dh_make --copyright bsd --single --cdbs && \
 	  cd debian && \
-	  rm *.ex *.EX dirs README.Debian
+	  rm *.ex *.EX README.Debian
 	# copy custom files (control, rules, copyright, changelog, maybe others)
 	cp ${DEBIAN_DIR}/custom/* ${DEBIAN_DIR}/ftputil-${VERSION}/debian
 	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
