@@ -84,9 +84,9 @@ debdist: debdistclean
 	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
 	  dpkg-buildpackage -us -uc
 	# put the Debian package beneath the .tar.gz files
-	cp ${DEBIAN_DIR}/python-ftputil_${VERSION}-?_all.deb dist
+	cp ${DEBIAN_DIR}/python-ftputil_${VERSION}_all.deb dist
 	# final check (better than nothing)
-	lintian ${DEBIAN_DIR}/python-ftputil_${VERSION}-?_all.deb
+	lintian ${DEBIAN_DIR}/python-ftputil_${VERSION}_all.deb
 
 localcopy:
 	@echo "Copying archive and documentation to local webspace"
