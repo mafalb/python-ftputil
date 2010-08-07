@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# Copyright (C) 2003-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # See the file LICENSE for licensing terms.
 
 """
@@ -42,8 +42,8 @@ core.setup(
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
-  data_files=[("doc", ["ftputil.txt", "ftputil.html",
-                       "README.txt", "README.html"])],
+  data_files=[("share/doc/ftputil", ["ftputil.txt", "ftputil.html",
+                                     "README.txt", "README.html"])],
   cmdclass={'install_lib': FtputilInstallLib},
 
   # metadata
