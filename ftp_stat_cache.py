@@ -10,7 +10,7 @@ import time
 import lrucache
 
 
-#TODO move this to `ftp_error.py`!
+#TODO Move this to `ftp_error.py`!
 class CacheMissError(Exception):
     """Raised if a path isn't found in the cache."""
     pass
@@ -35,13 +35,13 @@ class StatCache(object):
     Note that the `__len__` method does no age tests and thus may
     include some or many already expired entries.
     """
-    # default number of cache entries
+    # Default number of cache entries
     _DEFAULT_CACHE_SIZE = 1000
 
     def __init__(self):
-        # can be reset with method `resize`
+        # Can be reset with method `resize`
         self._cache = lrucache.LRUCache(self._DEFAULT_CACHE_SIZE)
-        # never expire
+        # Never expire
         self.max_age = None
         self.enable()
 
@@ -84,7 +84,7 @@ class StatCache(object):
         """Clear (invalidate) all cache entries."""
         old_size = self._cache.size
         try:
-            # implicitly clear the cache by setting the size to zero
+            # Implicitly clear the cache by setting the size to zero
             self.resize(0)
         finally:
             self.resize(old_size)
@@ -98,16 +98,16 @@ class StatCache(object):
         If no stat result for `path` is in the cache, do _not_
         raise an exception.
         """
-        #XXX to be 100 % sure, this should be `host.sep`, but I don't
+        #XXX To be 100 % sure, this should be `host.sep`, but I don't
         #  want to introduce a reference to the `FTPHost` object for
-        #  only that purpose
+        #  only that purpose.
         assert path.startswith("/"), "%s must be an absolute path" % path
         try:
             del self._cache[path]
-        # don't complain about lazy except clause
+        # Don't complain about lazy except clause
         # pylint: disable-msg=W0704
         except lrucache.CacheKeyError:
-            # ignore errors
+            # Ignore errors
             pass
 
     def __getitem__(self, path):
@@ -117,13 +117,13 @@ class StatCache(object):
         """
         if not self._enabled:
             raise CacheMissError("cache is disabled")
-        # possibly raise a `CacheMissError` in `_age`
+        # Possibly raise a `CacheMissError` in `_age`
         if (self.max_age is not None) and (self._age(path) > self.max_age):
             self.invalidate(path)
             raise CacheMissError("entry for path %s has expired" % path)
         else:
             #XXX I don't know if this may raise a `CacheMissError` in
-            #  case of race conditions; I'll prefer robust code
+            #  case of race conditions. I prefer robust code.
             try:
                 return self._cache[path]
             except lrucache.CacheKeyError:
@@ -144,8 +144,8 @@ class StatCache(object):
         for `path` is in the cache, else return a false value.
         """
         try:
-            # implicitly do an age test which may raise `CacheMissError`;
-            #  deliberately ignore the return value `stat_result`
+            # Implicitly do an age test which may raise `CacheMissError`.
+            #  Deliberately ignore the return value `stat_result`.
             # pylint: disable-msg=W0612
             stat_result = self[path]
             return True
@@ -153,7 +153,7 @@ class StatCache(object):
             return False
 
     #
-    # the following methods are only intended for debugging!
+    # The following methods are only intended for debugging!
     #
     def __len__(self):
         """

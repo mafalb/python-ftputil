@@ -24,14 +24,14 @@ if "install" in sys.argv[1:] and \
     sys.exit(1)
 
 core.setup(
-  # installation data
+  # Installation data
   name=_name,
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
   data_files=[("share/doc/ftputil", ["ftputil.txt", "ftputil.html",
                                      "README.txt", "README.html"])],
-  # metadata
+  # Metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
   url="http://ftputil.sschwarzer.net/",

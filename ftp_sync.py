@@ -22,7 +22,7 @@ import ftp_error
 __all__ = ['FTPHost', 'LocalHost', 'Syncer']
 
 
-# used for copying file objects; value is 64 KB
+# Used for copying file objects; value is 64 KB.
 CHUNK_SIZE = 64*1024
 
 
@@ -32,7 +32,7 @@ class LocalHost(object):
         Return a Python file object for file name `path`, opened in
         mode `mode`.
         """
-        # this is the built-in `open` function, not `os.open`!
+        # This is the built-in `open` function, not `os.open`!
         return open(path, mode)
 
     def time_shift(self):
@@ -68,8 +68,8 @@ class Syncer(object):
         exists, don't do anything. If the directory is present but
         it's actually a file, raise a `SyncError`.
         """
-        #TODO handle setting of target mtime according to source mtime
-        #  (beware of rootdir anomalies; try to handle them as well)
+        #TODO Handle setting of target mtime according to source mtime
+        #  (beware of rootdir anomalies; try to handle them as well).
         #print "Making", target_dir
         if self._target.path.isfile(target_dir):
             raise ftp_error.SyncError("target dir '%s' is actually a file" %
@@ -78,13 +78,13 @@ class Syncer(object):
             self._target.mkdir(target_dir)
 
     def _sync_file(self, source_file, target_file):
-        #XXX this duplicates code from `FTPHost._copyfileobj`; maybe
+        #XXX This duplicates code from `FTPHost._copyfileobj`. Maybe
         #  implement the upload and download methods in terms of
         #  `_sync_file`, or maybe not?
-        #TODO handle `IOError`s
-        #TODO handle conditional copy
-        #TODO handle setting of target mtime according to source mtime
-        #  (beware of rootdir anomalies; try to handle them as well)
+        #TODO Handle `IOError`s
+        #TODO Handle conditional copy
+        #TODO Handle setting of target mtime according to source mtime
+        #  (beware of rootdir anomalies; try to handle them as well).
         #print "Syncing", source_file, "->", target_file
         source = self._source.open(source_file, "rb")
         try:
@@ -129,7 +129,7 @@ class Syncer(object):
 
         This method handles both directory trees and single files.
         """
-        #TODO handle making of missing intermediate directories
+        #TODO Handle making of missing intermediate directories
         source_path = self._source.path.abspath(source_path)
         target_path = self._target.path.abspath(target_path)
         if self._source.path.isfile(source_path):

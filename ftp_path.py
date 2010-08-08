@@ -21,7 +21,7 @@ class _Path(object):
 
     def __init__(self, host):
         self._host = host
-        # delegate these to the `posixpath` module
+        # Delegate these to the `posixpath` module
         pp = posixpath
         self.dirname      = pp.dirname
         self.basename     = pp.basename
@@ -70,8 +70,8 @@ class _Path(object):
         """
         return self._host.stat(path).st_size
 
-    # check whether a path is a regular file/dir/link;
-    #  for the first two cases follow links (like in `os.path`)
+    # Check whether a path is a regular file/dir/link. For the first
+    #  two cases follow links (like in `os.path`).
     #
     # Implementation note: The previous implementations simply called
     # `stat` or `lstat` and returned `False` if they ended with
@@ -87,7 +87,7 @@ class _Path(object):
 
         A non-existing path does _not_ cause a `PermanentError`.
         """
-        # workaround if we can't go up from the current directory
+        # Workaround if we can't go up from the current directory
         if path == self._host.getcwd():
             return False
         try:
@@ -107,7 +107,7 @@ class _Path(object):
 
         A non-existing path does _not_ cause a `PermanentError`.
         """
-        # workaround if we can't go up from the current directory
+        # Workaround if we can't go up from the current directory
         if path == self._host.getcwd():
             return True
         try:
@@ -155,7 +155,7 @@ class _Path(object):
         to accumulate statistics.  Passing None for arg is common.
         """
         # This code (and the above documentation) is taken from
-        #  posixpath.py, with slight modifications
+        #  posixpath.py, with slight modifications.
         try:
             names = self._host.listdir(top)
         except OSError:

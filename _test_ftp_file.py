@@ -10,7 +10,7 @@ import ftp_error
 
 
 #
-# several customized `MockSession` classes
+# Several customized `MockSession` classes
 #
 class ReadMockSession(_mock_ftplib.MockSession):
     mock_file_content = 'line 1\r\nanother line\r\nyet another line'
@@ -46,29 +46,29 @@ class TestFileOperations(unittest.TestCase):
         self.assertEqual(len(host._children), 0)
         path1 = 'path1'
         path2 = 'path2'
-        # open one file and inspect cache
+        # Open one file and inspect cache
         file1 = host.file(path1, 'w')
         child1 = host._children[0]
         self.assertEqual(len(host._children), 1)
         self.failIf(child1._file.closed)
-        # open another file
+        # Open another file
         file2 = host.file(path2, 'w')
         child2 = host._children[1]
         self.assertEqual(len(host._children), 2)
         self.failIf(child2._file.closed)
-        # close first file
+        # Close first file
         file1.close()
         self.assertEqual(len(host._children), 2)
         self.failUnless(child1._file.closed)
         self.failIf(child2._file.closed)
-        # re-open first child's file
+        # Re-open first child's file
         file1 = host.file(path1, 'w')
         child1_1 = file1._host
-        # check if it's reused
+        # Check if it's reused
         self.failUnless(child1 is child1_1)
         self.failIf(child1._file.closed)
         self.failIf(child2._file.closed)
-        # close second file
+        # Close second file
         file2.close()
         self.failUnless(child2._file.closed)
 
@@ -111,7 +111,7 @@ class TestFileOperations(unittest.TestCase):
         child_data = _mock_ftplib.content_of('dummy')
         expected_data = ' \r\nline 2\r\nline 3'
         self.assertEqual(child_data, expected_data)
-        # ensure that the original data was not modified
+        # Ensure that the original data was not modified
         self.assertEqual(data, backup_data)
 
     def test_ascii_read(self):
@@ -129,8 +129,8 @@ class TestFileOperations(unittest.TestCase):
         data = input_.read()
         self.assertEqual(data, '')
         input_.close()
-        # try it again with a more "problematic" string which
-        #  makes several reads in the `read` method necessary
+        # Try it again with a more "problematic" string which
+        #  makes several reads in the `read` method necessary.
         host = _test_base.ftp_host_factory(session_factory=AsciiReadMockSession)
         expected_data = AsciiReadMockSession.mock_file_content.\
                         replace('\r\n', '\n')

@@ -9,7 +9,7 @@ import unittest
 import ftp_sync
 
 
-# assume the test subdirectories are or will be in the current directory
+# Assume the test subdirectories are or will be in the current directory
 TEST_ROOT = os.getcwd()
 
 

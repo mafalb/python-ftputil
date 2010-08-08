@@ -15,7 +15,7 @@ class Python24(unittest.TestCase):
         except TypeError:
             self.fail("can't use super in classic class")
         except ftp_error.FTPOSError:
-            # everything's fine
+            # Everything's fine
             pass
 
 

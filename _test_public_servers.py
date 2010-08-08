@@ -28,7 +28,7 @@ def email_address():
         dummy_address = "anonymous@example.com"
         email = os.environ.get("EMAIL", dummy_address)
         if not email:
-            # environment variable exists but content is an empty string
+            # Environment variable exists but content is an empty string
             email = dummy_address
     return email
 
@@ -42,30 +42,30 @@ def ftp_client_listing(server, directory):
     listing with "dir". Return the list of items found as the
     an `os.listdir` would return it.
     """
-    # the -n option prevents an auto-login
+    # The -n option prevents an auto-login
     ftp_popen = subprocess.Popen(["ftp", "-n", server],
                                  stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE,
                                  universal_newlines=True)
     commands = ["user anonymous %s" % EMAIL, "dir", "bye"]
     if directory:
-        # change to this directory before calling "dir"
+        # Change to this directory before calling "dir"
         commands.insert(1, "cd %s" % directory)
     input_ = "\n".join(commands)
     stdout, stderr = ftp_popen.communicate(input_)
-    # collect the directory/file names from the listing's text
+    # Collect the directory/file names from the listing's text
     names = []
     for line in stdout.strip().split("\n"):
         if line.startswith("total "):
             continue
         parts = line.split()
         if parts[-2] == "->":
-            # most probably a link
+            # Most probably a link
             name = parts[-3]
         else:
             name = parts[-1]
         names.append(name)
-    # remove entries for current and parent directory
+    # Remove entries for current and parent directory
     names = [name  for name in names  if name not in (".", "..")]
     return names
 
@@ -89,11 +89,11 @@ class TestPublicServers(unittest.TestCase):
     # client. Other clients may work or not. If you have problems
     # testing some other client, please send me a (small) patch.
     # Keep in mind that I don't plan supporting as many FTP
-    # clients as servers. ;-)
+    # obscure commandline clients as servers. ;-)
 
-    # list of pairs with server name and a directory "guaranteed
+    # List of pairs with server name and a directory "guaranteed
     # to exist" under the login directory which is assumed to be
-    # the root directory
+    # the root directory.
     servers = [# Posix format
                ("ftp.gnome.org", "pub"),
                ("ftp.debian.org", "debian"),
@@ -131,9 +131,9 @@ class TestPublicServers(unittest.TestCase):
             host.chdir(initial_directory)
             for path in paths:
                 path = path.replace("DIR", initial_directory)
-                # make sure that we don't recycle directory entries, i. e.
+                # Make sure that we don't recycle directory entries, i. e.
                 #  really repeatedly retrieve the directory contents
-                #  (shouldn't happen anyway with the current implementation)
+                #  (shouldn't happen anyway with the current implementation).
                 host.stat_cache.clear()
                 names = host.listdir(path)
                 failure_message = "For server %s, directory %s: %s != %s" % \

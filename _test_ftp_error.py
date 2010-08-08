@@ -10,11 +10,11 @@ import ftp_error
 
 class TestFTPErrorArguments(unittest.TestCase):
     def test_bytestring_argument(self):
-        # a umlaut as latin-1 character
+        # An umlaut as latin-1 character
         os_error = ftp_error.FTPOSError("\xe4")
 
     def test_unicode_argument(self):
-        # a umlaut as unicode character
+        # An umlaut as unicode character
         io_error = ftp_error.FTPIOError(u"\xe4")
 
 

@@ -79,10 +79,10 @@ class MockSession(object):
     Mock class which works like `ftplib.FTP` for the purpose of the
     unit tests.
     """
-    # used by MockSession.cwd and MockSession.pwd
+    # Used by `MockSession.cwd` and `MockSession.pwd`
     current_dir = '/home/sschwarzer'
 
-    # used by MockSession.dir
+    # Used by `MockSession.dir`
     dir_contents = {
       '/': """\
 drwxr-xr-x   2 45854    200           512 May  4  2000 home""",
@@ -114,8 +114,8 @@ drwxr-sr-x   6 45854    200           512 Sep 20  1999 scios2""",
 total 1
 -rw-r--r--   1 45854    200          4604 Jan 19 23:11 file with spaces""",
 
-      # fail when trying to write to this directory (the content isn't
-      #  relevant)
+      # Fail when trying to write to this directory (the content isn't
+      #  relevant).
       'sschwarzer': "",
 
       '/home/msformat': """\
@@ -134,15 +134,15 @@ total 1
       '/home/msformat/XPLaunch/empty': "total 0",
     }
 
-    # file content to be used (indirectly) with transfercmd
+    # File content to be used (indirectly) with `transfercmd`.
     mock_file_content = ''
 
     def __init__(self, host='', user='', password=''):
         self.closed = 0
-        # count successful `transfercmd` invocations to ensure that
-        #  each has a corresponding `voidresp`
+        # Count successful `transfercmd` invocations to ensure that
+        #  each has a corresponding `voidresp`.
         self._transfercmds = 0
-        # dummy, only for getting/setting timeout in `_FTPFile.close`
+        # Dummy, only for getting/setting timeout in `_FTPFile.close`
         self.sock = MockSocket("", "")
 
     def voidcmd(self, cmd):
@@ -199,13 +199,13 @@ total 1
         """
         if DEBUG:
             print cmd
-        # fail if attempting to read from/write to a directory
+        # Fail if attempting to read from/write to a directory
         cmd, path = cmd.split()
         path = self._remove_trailing_slash(path)
         if self.dir_contents.has_key(path):
             raise ftplib.error_perm
-        # fail if path isn't available (this name is hard-coded here
-        #  and has to be used for the corresponding tests)
+        # Fail if path isn't available (this name is hard-coded here
+        #  and has to be used for the corresponding tests).
         if (cmd, path) == ('RETR', 'notthere'):
             raise ftplib.error_perm
         assert self._transfercmds == 0

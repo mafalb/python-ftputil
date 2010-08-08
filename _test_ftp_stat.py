@@ -34,12 +34,12 @@ class TestParsers(unittest.TestCase):
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
         parser = parser_class()
         for line, expected_stat_result in zip(lines, expected_stat_results):
-            # convert to list to compare with the list `expected_stat_results`
+            # Convert to list to compare with the list `expected_stat_results`
             stat_result = list(parser.parse_line(line))
-            # convert time tuple to seconds
+            # Convert time tuple to seconds
             expected_stat_result[8] = \
               stat_tuple_to_seconds(expected_stat_result[8])
-            # compare both lists
+            # Compare both lists
             self.assertEqual(stat_result, expected_stat_result)
 
     def _test_invalid_lines(self, parser_class, lines):
@@ -52,10 +52,10 @@ class TestParsers(unittest.TestCase):
         Return the expected year for the second line in the
         listing in `test_valid_unix_lines`.
         """
-        # if in this year it's after Dec 19, 23:11, use the current
+        # If in this year it's after Dec 19, 23:11, use the current
         #  year, else use the previous year ...
         now = time.localtime()
-        # we need only month, day, hour and minute
+        # We need only month, day, hour and minute
         current_time_parts = now[1:5]
         time_parts_in_listing = (12, 19, 23, 11)
         if current_time_parts > time_parts_in_listing:
@@ -66,7 +66,7 @@ class TestParsers(unittest.TestCase):
     def test_valid_unix_lines(self):
         lines = [
           "drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
-          # the year value for this line will change with the actual time
+          # The year value for this line will change with the actual time.
           "-rw-r--r--   1 45854    200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2 45854    200           512 May 29  2000 os2",
           "lrwxrwxrwx   2 45854    200           512 May 29  2000 osup -> "
@@ -95,11 +95,11 @@ class TestParsers(unittest.TestCase):
         self._test_invalid_lines(ftp_stat.UnixParser, lines)
 
     def test_alternative_unix_format(self):
-        # see http://ftputil.sschwarzer.net/trac/ticket/12 for a
-        #  description for the need for an alternative format
+        # See http://ftputil.sschwarzer.net/trac/ticket/12 for a
+        #  description for the need for an alternative format.
         lines = [
           "drwxr-sr-x   2   200           512 May  4  2000 chemeng",
-          # the year value for this line will change with the actual time
+          # The year value for this line will change with the actual time.
           "-rw-r--r--   1   200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2   200           512 May 29  2000 os2",
           "lrwxrwxrwx   2   200           512 May 29  2000 osup -> ../os2"
@@ -148,8 +148,8 @@ class TestParsers(unittest.TestCase):
         self._test_invalid_lines(ftp_stat.MSParser, lines)
 
     #
-    # the following code checks if the decision logic in the Unix
-    #  line parser for determining the year works
+    # The following code checks if the decision logic in the Unix
+    #  line parser for determining the year works.
     #
     def datetime_string(self, time_float):
         """
@@ -194,7 +194,7 @@ class TestParsers(unittest.TestCase):
         to full hours.
         """
         host = _test_base.ftp_host_factory()
-        # explicitly use Unix format parser
+        # Explicitly use Unix format parser
         host._stat._parser = ftp_stat.UnixParser()
         host.set_time_shift(supposed_time_shift)
         server_time = time.time() + supposed_time_shift + deviation
@@ -204,22 +204,22 @@ class TestParsers(unittest.TestCase):
 
     def test_time_shifts(self):
         """Test correct year depending on time shift value."""
-        # 1. test: client and server share the same local time
+        # 1. test: Client and server share the same local time
         self._test_time_shift(0.0)
-        # 2. test: server is three hours ahead of client
+        # 2. test: Server is three hours ahead of client
         self._test_time_shift(3 * 60 * 60)
-        # 3. test: client is three hours ahead of server
+        # 3. test: Client is three hours ahead of server
         self._test_time_shift(- 3 * 60 * 60)
-        # 4. test: server is supposed to be three hours ahead, but
+        # 4. test: Server is supposed to be three hours ahead, but
         #  is ahead three hours and one minute
         self._test_time_shift(3 * 60 * 60, 60)
-        # 5. test: server is supposed to be three hours ahead, but
+        # 5. test: Server is supposed to be three hours ahead, but
         #  is ahead three hours minus one minute
         self._test_time_shift(3 * 60 * 60, -60)
-        # 6. test: client is supposed to be three hours ahead, but
+        # 6. test: Client is supposed to be three hours ahead, but
         #  is ahead three hours and one minute
         self._test_time_shift(-3 * 60 * 60, -60)
-        # 7. test: client is supposed to be three hours ahead, but
+        # 7. test: Client is supposed to be three hours ahead, but
         #  is ahead three hours minus one minute
         self._test_time_shift(-3 * 60 * 60, 60)
 
@@ -294,30 +294,30 @@ class TestLstatAndStat(unittest.TestCase):
 
     def test_stat_following_link(self):
         """Test `stat` when invoked on a link."""
-        # simple link
+        # Simple link
         stat_result = self.stat.stat('/home/link')
         self.assertEqual(stat_result.st_size, 4604)
-        # link pointing to a link
+        # Link pointing to a link
         stat_result = self.stat.stat('/home/python/link_link')
         self.assertEqual(stat_result.st_size, 4604)
         stat_result = self.stat.stat('../python/link_link')
         self.assertEqual(stat_result.st_size, 4604)
-        # recursive link structures
+        # Recursive link structures
         self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '../python/bad_link')
         self.assertRaises(ftp_error.PermanentError, self.stat.stat,
                           '/home/bad_link')
 
     #
-    # test automatic switching of Unix/MS parsers
+    # Test automatic switching of Unix/MS parsers
     #
     def test_parser_switching_with_permanent_error(self):
         """Test non-switching of parser format with `PermanentError`."""
         self.assertEqual(self.stat._allow_parser_switching, True)
-        # with these directory contents, we get a `ParserError` for
+        # With these directory contents, we get a `ParserError` for
         #  the Unix parser, so `_allow_parser_switching` can be
         #  switched off no matter whether we got a `PermanentError`
-        #  or not
+        #  or not.
         self.assertRaises(ftp_error.PermanentError, self.stat.lstat,
                           "/home/msformat/nonexistent")
         self.assertEqual(self.stat._allow_parser_switching, False)
@@ -361,9 +361,9 @@ class TestListdir(unittest.TestCase):
 
     def test_succeeding_listdir(self):
         """Test succeeding `FTPHost.listdir`."""
-        # do we have all expected "files"?
+        # Do we have all expected "files"?
         self.assertEqual(len(self.stat.listdir('.')), 9)
-        # have they the expected names?
+        # Have they the expected names?
         expected = ('chemeng download image index.html os2 '
                     'osup publications python scios2').split()
         remote_file_list = self.stat.listdir('.')

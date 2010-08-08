@@ -19,7 +19,7 @@ class TestStatCache(unittest.TestCase):
         self.assertEqual(self.cache["path"], "test")
 
     def test_invalidate(self):
-        # don't raise a `CacheMissError` for missing paths
+        # Don't raise a `CacheMissError` for missing paths
         self.cache.invalidate("/path")
         self.cache["/path"] = "test"
         self.cache.invalidate("/path")
@@ -51,26 +51,26 @@ class TestStatCache(unittest.TestCase):
     def test_max_age1(self):
         """Set expiration after setting a cache item."""
         self.cache["/path1"] = "test1"
-        # expire after one second
+        # Expire after one second
         self.cache.max_age = 1
         time.sleep(0.5)
-        # should still be present
+        # Should still be present
         self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
-        # should have expired (_setting_ the cache counts)
+        # Should have expired (_setting_ the cache counts)
         self.assertRaises(ftp_stat_cache.CacheMissError,
                           self.cache.__getitem__, "/path1")
 
     def test_max_age2(self):
         """Set expiration before setting a cache item."""
-        # expire after one second
+        # Expire after one second
         self.cache.max_age = 1
         self.cache["/path1"] = "test1"
         time.sleep(0.5)
-        # should still be present
+        # Should still be present
         self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
-        # should have expired (_setting_ the cache counts)
+        # Should have expired (_setting_ the cache counts)
         self.assertRaises(ftp_stat_cache.CacheMissError,
                           self.cache.__getitem__, "/path1")
 
@@ -83,13 +83,13 @@ class TestStatCache(unittest.TestCase):
         self.assertRaises(ftp_stat_cache.CacheMissError,
                           self.cache.__getitem__, "/path2")
         self.assertEqual(len(self.cache), 1)
-        # don't raise a `CacheMissError` for missing paths
+        # Don't raise a `CacheMissError` for missing paths
         self.cache.invalidate("/path2")
 
     def test_cache_size_zero(self):
         host = _test_base.ftp_host_factory()
         host.stat_cache.resize(0)
-        # if bug #38 is present, this raises an `IndexError`
+        # If bug #38 is present, this raises an `IndexError`
         items = host.listdir(host.curdir)
         self.assertEqual(items[:3], ['chemeng', 'download', 'image'])
 
