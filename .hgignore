@@ -9,10 +9,17 @@ ftputil_ru.html
 README.html
 
 # temporary build directory used by distutils
-build
+build/**
+
+# target directory for package files
+dist/**
 
 # ignore directories built by Debian toolchain while packaging
 debian/ftputil-*
+debian/ftputil_*.dsc
+debian/ftputil_*.changes
+debian/ftputil_*.tar.gz
+debian/python-ftputil_*.deb
 
 # not supposed to be under version control
 private/**
