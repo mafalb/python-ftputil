@@ -29,8 +29,8 @@ core.setup(
   version=_version,
   packages=[_package],
   package_dir={_package: ""},
-  data_files=[("share/doc/ftputil", ["ftputil.txt", "ftputil.html",
-                                     "README.txt", "README.html"])],
+  data_files=[("doc/ftputil", ["ftputil.txt", "ftputil.html",
+                               "README.txt", "README.html"])],
   # Metadata
   author="Stefan Schwarzer",
   author_email="sschwarzer@sschwarzer.net",
