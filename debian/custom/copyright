@@ -35,7 +35,6 @@ License:
 On Debian systems, the complete text of the BSD License can be
 found in `/usr/share/common-licenses/BSD'.
 
-
 The Debian packaging is (C) 2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 and is licensed under the same license as ftputil.
 
