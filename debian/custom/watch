@@ -8,6 +8,7 @@ version=3
 
 # Uncomment to examine a Webpage
 # <Webpage URL> <string match>
+#XXX Does this need the "?format=raw" suffix that's used on the website?
 http://ftputil.sschwarzer.net/download ftputil-(.*)\.tar\.gz
 
 # Uncomment to examine a Webserver directory
