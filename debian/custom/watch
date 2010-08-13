@@ -21,5 +21,4 @@ http://ftputil.sschwarzer.net/download ftputil-(.*)\.tar\.gz
 
 # Uncomment to find new files on GooglePages
 # http://example.googlepages.com/foo.html ftputil-(.*)\.tar\.gz
-#
-http://ftputil.sschwarzer.net/trac/attachment/wiki/Download/ftputil-2.4.2.tar.gz?format=raw
+
