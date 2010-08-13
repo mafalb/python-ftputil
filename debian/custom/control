@@ -11,7 +11,7 @@ Package: python-ftputil
 Architecture: all
 Depends: ${python:Depends}, ${misc:Depends}
 XB-Python-Version: ${python:Versions}
-Description: High-level FTP client library
+Description: High-level FTP client library (virtual filesystem and more)
  ftputil is a high-level FTP client library for the Python programming
  language. ftputil implements a virtual file system for accessing FTP servers,
  that is, it can generate file-like objects for remote files. The library
