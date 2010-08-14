@@ -1,0 +1,14 @@
+Author: Chris Silva <racerx@makeworld.com>
+Description: Fixes path for docs.
+--- a/setup.py.orig
++++ b/setup.py
+@@ -67,8 +67,7 @@
+   version=_version,
+   packages=[_package],
+   package_dir={_package: ""},
+-  data_files=[("doc", ["ftputil.txt", "ftputil.html",
+-                       "README.txt", "README.html"])],
++  data_files=[("share/doc/ftputil", ["ftputil.txt", "README.txt"])],
+   cmdclass={'install_lib': FtputilInstallLib},
+ 
+   # metadata
