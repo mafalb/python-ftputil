@@ -8,11 +8,12 @@ import random
 import time
 import unittest
 
-import _mock_ftplib
-import _test_base
 import ftp_error
 import ftp_stat
 import ftputil
+
+import mock_ftplib
+import test_base
 
 
 #
@@ -45,11 +46,11 @@ def binary_data():
 #
 # Several customized `MockSession` classes
 #
-class FailOnLoginSession(_mock_ftplib.MockSession):
+class FailOnLoginSession(mock_ftplib.MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
 
-class RecursiveListingForDotAsPathSession(_mock_ftplib.MockSession):
+class RecursiveListingForDotAsPathSession(mock_ftplib.MockSession):
     dir_contents = {
       ".": """\
 lrwxrwxrwx   1 staff          7 Aug 13  2003 bin -> usr/bin
@@ -80,10 +81,10 @@ d--x--x--x   5 staff        512 Oct  3  2000 usr"""}
     def _transform_path(self, path):
         return path
 
-class BinaryDownloadMockSession(_mock_ftplib.MockSession):
+class BinaryDownloadMockSession(mock_ftplib.MockSession):
     mock_file_content = binary_data()
 
-class TimeShiftMockSession(_mock_ftplib.MockSession):
+class TimeShiftMockSession(mock_ftplib.MockSession):
     def delete(self, file_name):
         pass
 
@@ -127,7 +128,7 @@ class TestOpenAndClose(unittest.TestCase):
     """Test opening and closing of `FTPHost` objects."""
     def test_open_and_close(self):
         """Test closing of `FTPHost`."""
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.close()
         self.assertEqual(host.closed, True)
         self.assertEqual(host._children, [])
@@ -136,7 +137,7 @@ class TestOpenAndClose(unittest.TestCase):
 class TestLogin(unittest.TestCase):
     def test_invalid_login(self):
         """Login to invalid host must fail."""
-        self.assertRaises(ftp_error.FTPOSError, _test_base.ftp_host_factory,
+        self.assertRaises(ftp_error.FTPOSError, test_base.ftp_host_factory,
                           FailOnLoginSession)
 
 
@@ -144,7 +145,7 @@ class TestSetParser(unittest.TestCase):
     def test_set_parser(self):
         """Test if the selected parser is used."""
         # This test isn't very practical but should help at least a bit ...
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         # Implicitly fix at Unix format
         files = host.listdir("/home/sschwarzer")
         self.assertEqual(files, ['chemeng', 'download', 'image', 'index.html',
@@ -162,7 +163,7 @@ class TestCommandNotImplementedError(unittest.TestCase):
         Test if we get the anticipated exception if a command isn't
         implemented by the server.
         """
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         self.assertRaises(ftp_error.PermanentError,
                           host.chmod, "nonexistent", 0644)
         # `CommandNotImplementedError` is a subclass of `PermanentError`
@@ -176,7 +177,7 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
     http://ftputil.sschwarzer.net/trac/ticket/33 .
     """
     def test_recursive_listing(self):
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                  session_factory=RecursiveListingForDotAsPathSession)
         lines = host._dir(host.curdir)
         self.assertEqual(lines[0], "total 10")
@@ -185,7 +186,7 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
         host.close()
 
     def test_plain_listing(self):
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                  session_factory=RecursiveListingForDotAsPathSession)
         lines = host._dir("")
         self.assertEqual(lines[0], "total 10")
@@ -194,7 +195,7 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
         host.close()
 
     def test_empty_string_instead_of_dot_workaround(self):
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                  session_factory=RecursiveListingForDotAsPathSession)
         files = host.listdir(host.curdir)
         self.assertEqual(files, ['bin', 'dev', 'etc', 'pub', 'usr'])
@@ -216,13 +217,13 @@ class TestUploadAndDownload(unittest.TestCase):
         data = ascii_data()
         self.generate_ascii_file(data, local_source)
         # Upload
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.upload(local_source, 'dummy')
         # Check uploaded content
         # The data which was uploaded has its line endings converted
         #  so the conversion must also be applied to `data`.
         data = data.replace('\n', '\r\n')
-        remote_file_content = _mock_ftplib.content_of('dummy')
+        remote_file_content = mock_ftplib.content_of('dummy')
         self.assertEqual(data, remote_file_content)
         # Clean up
         os.unlink(local_source)
@@ -230,13 +231,13 @@ class TestUploadAndDownload(unittest.TestCase):
     def test_binary_download(self):
         """Test binary mode download."""
         local_target = '__test_target'
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                session_factory=BinaryDownloadMockSession)
         # Download
         host.download('dummy', local_target, 'b')
         # Read file and compare
         data = open(local_target, 'rb').read()
-        remote_file_content = _mock_ftplib.content_of('dummy')
+        remote_file_content = mock_ftplib.content_of('dummy')
         self.assertEqual(data, remote_file_content)
         # Clean up
         os.unlink(local_target)
@@ -247,25 +248,25 @@ class TestUploadAndDownload(unittest.TestCase):
         data = ascii_data()
         self.generate_ascii_file(data, local_source)
         # Target is newer, so don't upload
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                ftp_host_class=FailingUploadAndDownloadFTPHost)
         flag = host.upload_if_newer(local_source, '/home/newer')
         self.assertEqual(flag, False)
         # Target is older, so upload
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         flag = host.upload_if_newer(local_source, '/home/older')
         self.assertEqual(flag, True)
         # Check uploaded content
         # The data which was uploaded has its line endings converted
         #  so the conversion must also be applied to 'data'.
         data = data.replace('\n', '\r\n')
-        remote_file_content = _mock_ftplib.content_of('older')
+        remote_file_content = mock_ftplib.content_of('older')
         self.assertEqual(data, remote_file_content)
         # Target doesn't exist, so upload
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         flag = host.upload_if_newer(local_source, '/home/notthere')
         self.assertEqual(flag, True)
-        remote_file_content = _mock_ftplib.content_of('notthere')
+        remote_file_content = mock_ftplib.content_of('notthere')
         self.assertEqual(data, remote_file_content)
         # Clean up
         os.unlink(local_source)
@@ -274,7 +275,7 @@ class TestUploadAndDownload(unittest.TestCase):
         """Compare content of downloaded file with its source, then
         delete the local target file."""
         data = open(filename, 'rb').read()
-        remote_file_content = _mock_ftplib.content_of('newer')
+        remote_file_content = mock_ftplib.content_of('newer')
         self.assertEqual(data, remote_file_content)
         # Clean up
         os.unlink(filename)
@@ -283,7 +284,7 @@ class TestUploadAndDownload(unittest.TestCase):
         "Test conditional binary mode download when no target file exists."
         local_target = '__test_target'
         # Target does not exist, so download
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                session_factory=BinaryDownloadMockSession)
         flag = host.download_if_newer('/home/newer', local_target, 'b')
         self.assertEqual(flag, True)
@@ -295,7 +296,7 @@ class TestUploadAndDownload(unittest.TestCase):
         # Make target file
         open(local_target, 'w').close()
         # Source is newer, so download
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                session_factory=BinaryDownloadMockSession)
         flag = host.download_if_newer('/home/newer', local_target, 'b')
         self.assertEqual(flag, True)
@@ -307,9 +308,9 @@ class TestUploadAndDownload(unittest.TestCase):
         # Make target file
         open(local_target, 'w').close()
         # Source is older, so don't download
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                session_factory=BinaryDownloadMockSession)
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                ftp_host_class=FailingUploadAndDownloadFTPHost,
                session_factory=BinaryDownloadMockSession)
         flag = host.download_if_newer('/home/older', local_target, 'b')
@@ -321,7 +322,7 @@ class TestUploadAndDownload(unittest.TestCase):
 class TestTimeShift(unittest.TestCase):
     def test_rounded_time_shift(self):
         """Test if time shift is rounded correctly."""
-        host = _test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
+        host = test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
         # Use private bound method
         rounded_time_shift = host._FTPHost__rounded_time_shift
         # Pairs consisting of original value and expected result
@@ -335,7 +336,7 @@ class TestTimeShift(unittest.TestCase):
 
     def test_assert_valid_time_shift(self):
         """Test time shift sanity checks."""
-        host = _test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
+        host = test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
         # Use private bound method
         assert_time_shift = host._FTPHost__assert_valid_time_shift
         # Valid time shifts
@@ -352,7 +353,7 @@ class TestTimeShift(unittest.TestCase):
 
     def test_synchronize_times(self):
         """Test time synchronization with server."""
-        host = _test_base.ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
+        host = test_base.ftp_host_factory(ftp_host_class=TimeShiftFTPHost,
                session_factory=TimeShiftMockSession)
         # Valid time shift
         host.path.set_mtime(time.time() + 3630)

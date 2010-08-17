@@ -7,14 +7,15 @@ import stat
 import time
 import unittest
 
-import _test_base
 import ftp_error
 import ftp_stat
 import ftputil
 
+import test_base
+
 
 def test_stat():
-    host = _test_base.ftp_host_factory()
+    host = test_base.ftp_host_factory()
     stat = ftp_stat._Stat(host)
     # use Unix format parser explicitly
     stat._parser = ftp_stat.UnixParser()
@@ -193,7 +194,7 @@ class TestParsers(unittest.TestCase):
         time shift and the supposed time shift, which is rounded
         to full hours.
         """
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         # Explicitly use Unix format parser
         host._stat._parser = ftp_stat.UnixParser()
         host.set_time_shift(supposed_time_shift)

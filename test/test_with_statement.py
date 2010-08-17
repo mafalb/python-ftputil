@@ -6,11 +6,11 @@ from __future__ import with_statement
 
 import unittest
 
-import _test_base
 import ftp_error
 
-from _test_ftputil import FailOnLoginSession
-from _test_ftp_file import InaccessibleDirSession, ReadMockSession
+import test_base
+from test_ftputil import FailOnLoginSession
+from test_ftp_file import InaccessibleDirSession, ReadMockSession
 
 
 # Exception raised by client code, i. e. code using ftputil
@@ -24,13 +24,13 @@ class ClientCodeException(Exception):
 class TestHostContextManager(unittest.TestCase):
 
     def test_normal_operation(self):
-        with _test_base.ftp_host_factory() as host:
+        with test_base.ftp_host_factory() as host:
             self.assertEqual(host.closed, False)
         self.assertEqual(host.closed, True)
 
     def test_ftputil_exception(self):
         try:
-            with _test_base.ftp_host_factory(FailOnLoginSession) as host:
+            with test_base.ftp_host_factory(FailOnLoginSession) as host:
                 pass
         except ftp_error.FTPOSError:
             # We arrived here, that's fine. Because the `FTPHost` object
@@ -42,7 +42,7 @@ class TestHostContextManager(unittest.TestCase):
 
     def test_client_code_exception(self):
         try:
-            with _test_base.ftp_host_factory() as host:
+            with test_base.ftp_host_factory() as host:
                 self.assertEqual(host.closed, False)
                 raise ClientCodeException()
         except ClientCodeException:
@@ -54,7 +54,7 @@ class TestHostContextManager(unittest.TestCase):
 class TestFileContextManager(unittest.TestCase):
 
     def test_normal_operation(self):
-        with _test_base.ftp_host_factory(session_factory=ReadMockSession) \
+        with test_base.ftp_host_factory(session_factory=ReadMockSession) \
              as host:
             with host.file('dummy', 'r') as f:
                 self.assertEqual(f.closed, False)
@@ -64,7 +64,7 @@ class TestFileContextManager(unittest.TestCase):
             self.assertEqual(f.closed, True)
 
     def test_ftputil_exception(self):
-        with _test_base.ftp_host_factory(
+        with test_base.ftp_host_factory(
                session_factory=InaccessibleDirSession) as host:
             try:
                 # This should fail since the directory isn't accessible
@@ -79,7 +79,7 @@ class TestFileContextManager(unittest.TestCase):
                 raise self.failureException("ftp_error.FTPIOError not raised")
 
     def test_client_code_exception(self):
-        with _test_base.ftp_host_factory(session_factory=ReadMockSession) \
+        with test_base.ftp_host_factory(session_factory=ReadMockSession) \
              as host:
             try:
                 with host.file('dummy', 'r') as f:

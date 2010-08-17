@@ -3,6 +3,7 @@
 
 SHELL=/bin/sh
 PROJECT_DIR=/home/schwa/sd/python/ftputil
+TEST_DIR=${PROJECT_DIR}/test
 VERSION=$(shell cat VERSION)
 DEBIAN_DIR=${PROJECT_DIR}/debian
 DOC_FILES=README.html ftputil.html ftputil_ru.html
@@ -10,16 +11,18 @@ TMP_LS_FILE=tmp_ls.out
 STYLESHEET_PATH=default.css
 WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
+PYTHONPATH=${PROJECT_DIR}:${TEST_DIR}
 #TODO some platforms call that script rst2html.py - allow both
 RST2HTML=rst2html
-PRODUCTION_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
-				 ftp_stat.py ftputil.py ftputil_version.py __init__.py \
-				 find_deprecated_code.py
+CHECK_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
+			ftp_stat.py ftputil.py ftputil_version.py __init__.py \
+			find_deprecated_code.py
 # name test files; make sure the long-running tests come last
-TEST_FILES=$(shell ls _test_*.py | \
-             sed -e "s/_test_real_ftp.py//" | \
-             sed -e "s/_test_public_servers.py//" ) \
-           _test_real_ftp.py _test_public_servers.py
+TEST_FILES=$(shell ls -1 ${TEST_DIR}/test_*.py | \
+			 grep -v "test_real_ftp.py" | \
+			 grep -v "test_public_servers.py" ) \
+		   ${TEST_DIR}/test_real_ftp.py \
+		   ${TEST_DIR}/test_public_servers.py
 
 .PHONY: dist extdist test pylint docs clean register patch debdistclean debdist
 .SUFFIXES: .txt .html
@@ -27,18 +30,18 @@ TEST_FILES=$(shell ls _test_*.py | \
 test:
 	@echo "=== Running tests for ftputil ${VERSION} ===\n"
 	if which python2.4; then \
-		python2.4 _test_python2_4.py; \
+		PYTHONPATH=${PYTHONPATH} python2.4 ${TEST_DIR}/test_python2_4.py; \
 	else \
 		echo "Tests specific for Python 2.4 have been skipped."; \
 	fi
 	for file in $(TEST_FILES); \
 	do \
 		echo $$file ; \
-		python $$file ; \
+		PYTHONPATH=${PYTHONPATH} python $$file ; \
 	done
 
 pylint:
-	pylint --rcfile=pylintrc ${PRODUCTION_FILES} | less
+	pylint --rcfile=pylintrc ${CHECK_FILES} | less
 
 ftputil_ru.html: ftputil_ru_utf8.txt
 	${RST2HTML} --stylesheet-path=${STYLESHEET_PATH} --embed-stylesheet \

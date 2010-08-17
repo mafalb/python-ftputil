@@ -4,10 +4,11 @@
 import ftplib
 import unittest
 
-import _mock_ftplib
-import _test_base
 import ftp_error
 import ftputil
+
+import mock_ftplib
+import test_base
 
 
 class FailingFTPHost(ftputil.FTPHost):
@@ -16,7 +17,7 @@ class FailingFTPHost(ftputil.FTPHost):
 
 
 # Mock session, used for testing an inaccessible login directory
-class SessionWithInaccessibleLoginDirectory(_mock_ftplib.MockSession):
+class SessionWithInaccessibleLoginDirectory(mock_ftplib.MockSession):
     def cwd(self, dir):
         # Assume that `dir` is the inaccessible login directory.
         raise ftplib.error_perm("can't change into this directory")
@@ -27,7 +28,7 @@ class TestPath(unittest.TestCase):
     def test_regular_isdir_isfile_islink(self):
         """Test regular `FTPHost._Path.isdir/isfile/islink`."""
         testdir = '/home/sschwarzer'
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.chdir(testdir)
         # Test a path which isn't there
         self.failIf(host.path.isdir('notthere'))
@@ -51,7 +52,7 @@ class TestPath(unittest.TestCase):
     def test_workaround_for_spaces(self):
         """Test whether the workaround for space-containing paths is used."""
         testdir = '/home/sschwarzer'
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.chdir(testdir)
         # Test a file name containing spaces
         testfile = '/home/dir with spaces/file with spaces'
@@ -61,7 +62,7 @@ class TestPath(unittest.TestCase):
 
     def test_inaccessible_home_directory_and_whitespace_workaround(self):
         "Test combination of inaccessible home directory + whitespace in path."
-        host = _test_base.ftp_host_factory(
+        host = test_base.ftp_host_factory(
                session_factory=SessionWithInaccessibleLoginDirectory)
         self.assertRaises(ftp_error.InaccessibleLoginDirError,
                           host._dir, '/home dir')
@@ -69,7 +70,7 @@ class TestPath(unittest.TestCase):
     def test_abnormal_isdir_isfile_islink(self):
         """Test abnormal `FTPHost._Path.isdir/isfile/islink`."""
         testdir = '/home/sschwarzer'
-        host = _test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
+        host = test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
         host.chdir(testdir)
         # Test a path which isn't there
         self.assertRaises(ftp_error.FTPOSError, host.path.isdir, "index.html")
@@ -80,12 +81,12 @@ class TestPath(unittest.TestCase):
         """Test if "abnormal" FTP errors come through `path.exists`."""
         # Regular use of `exists`
         testdir = '/home/sschwarzer'
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.chdir(testdir)
         self.assertEqual(host.path.exists("index.html"), True)
         self.assertEqual(host.path.exists("notthere"), False)
         # "Abnormal" failure
-        host = _test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
+        host = test_base.ftp_host_factory(ftp_host_class=FailingFTPHost)
         self.assertRaises(ftp_error.FTPOSError, host.path.exists, "index.html")
 
 

@@ -614,7 +614,7 @@ Test for real FTP access.
 This test writes some files and directories on the local client and the
 remote server. Thus, you may want to skip this test by pressing [Ctrl-C].
 If the test should run, provide the login data for the remote server in
-function `get_login_data` in `_test_real_ftp.py` and restart this test.
+function `get_login_data` in `test_real_ftp.py` and restart this test.
 
 You'll need write access in the login directory. This test can last a few
 minutes because it has to wait to test the timezone calculation.

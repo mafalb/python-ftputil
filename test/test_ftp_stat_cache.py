@@ -5,7 +5,8 @@ import time
 import unittest
 
 import ftp_stat_cache
-import _test_base
+
+import test_base
 
 
 class TestStatCache(unittest.TestCase):
@@ -87,7 +88,7 @@ class TestStatCache(unittest.TestCase):
         self.cache.invalidate("/path2")
 
     def test_cache_size_zero(self):
-        host = _test_base.ftp_host_factory()
+        host = test_base.ftp_host_factory()
         host.stat_cache.resize(0)
         # If bug #38 is present, this raises an `IndexError`
         items = host.listdir(host.curdir)
