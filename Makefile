@@ -80,7 +80,7 @@ debdist: debdistclean
 	  cd debian && \
 	  rm *.ex *.EX README.Debian
 	# copy custom files (control, rules, copyright, changelog, maybe others)
-	cp ${DEBIAN_DIR}/custom/* ${DEBIAN_DIR}/ftputil-${VERSION}/debian
+	cp -r ${DEBIAN_DIR}/custom/* ${DEBIAN_DIR}/ftputil-${VERSION}/debian
 	cd ${DEBIAN_DIR}/ftputil-${VERSION} && \
 	  dpkg-buildpackage -us -uc
 	# put the Debian package beneath the .tar.gz files
