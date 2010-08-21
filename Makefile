@@ -103,6 +103,9 @@ register:
 
 extdist: test dist debdist localcopy register
 
+cleanorig:
+	find ${PROJECT_DIR} -name '*.orig' -exec rm {} \;
+
 clean:
 	rm -f ${DOC_FILES}
 # use absolute path to ensure we delete the right directory
