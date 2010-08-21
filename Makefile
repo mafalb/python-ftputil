@@ -9,7 +9,6 @@ DEBIAN_DIR=${PROJECT_DIR}/debian
 DOC_FILES=README.html ftputil.html ftputil_ru.html
 TMP_LS_FILE=tmp_ls.out
 STYLESHEET_PATH=default.css
-WWW_DIR=${HOME}/www
 SED=sed -i'' -r -e
 PYTHONPATH=${PROJECT_DIR}:${TEST_DIR}
 #TODO some platforms call that script rst2html.py - allow both
@@ -91,17 +90,11 @@ debdist: debdistclean
 	# final check (better than nothing)
 	lintian --info ${DEBIAN_DIR}/python-ftputil_${VERSION}_all.deb
 
-localcopy:
-	@echo "Copying archive and documentation to local webspace"
-	cp -p dist/ftputil-${VERSION}.tar.gz ${WWW_DIR}/download
-	cp -p ftputil.html ${WWW_DIR}/python
-	touch ${WWW_DIR}/python/python_software.tmpl
-
 register:
 	@echo "Registering new version with PyPI"
 	python setup.py register
 
-extdist: test dist debdist localcopy register
+extdist: test dist debdist register
 
 cleanorig:
 	find ${PROJECT_DIR} -name '*.orig' -exec rm {} \;
