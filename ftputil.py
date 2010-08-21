@@ -163,6 +163,8 @@ class FTPHost(object):
         # Store arguments for later operations
         self._args = args
         self._kwargs = kwargs
+        #XXX Maybe put the following in a `reset` method. Probably
+        #  the time shift setting shouldn't be reset though.
         # Make a session according to these arguments
         self._session = self._make_session()
         # Simulate os.path.
