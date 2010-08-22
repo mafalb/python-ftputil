@@ -300,7 +300,12 @@ class UnixParser(Parser):
         # st_ctime
         st_ctime = None
         # st_name
-        if " -> " in name:
+        if name.count(" -> ") > 1:
+            # If we have more than one arrow we can't tell where the link
+            #  name ends and the target name starts.
+            raise ftp_error.ParserError(
+                  'name "%s" contains more than one "->"' % name)
+        elif name.count(" -> ") == 1:
             st_name, st_target = name.split(' -> ')
         else:
             st_name, st_target = name, None

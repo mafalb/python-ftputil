@@ -97,6 +97,8 @@ class TestParsers(unittest.TestCase):
           "drwxr-sr-    2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
           "xrwxr-sr-x   2 45854    200           51x May  4  2000 chemeng",
+          "drwxr-sr-x   2 45854    200           512 May 29  2000 "
+            "os1 -> os2 -> os3",
           ]
         self._test_invalid_lines(ftp_stat.UnixParser, lines)
 
