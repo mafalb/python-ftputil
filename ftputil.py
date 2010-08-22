@@ -163,11 +163,11 @@ class FTPHost(object):
         # Store arguments for later operations
         self._args = args
         self._kwargs = kwargs
-        #XXX Maybe put the following in a `reset` method. Probably
-        #  the time shift setting shouldn't be reset though.
+        #XXX Maybe put the following in a `reset` method.
+        #  The time shift setting shouldn't be reset though.
         # Make a session according to these arguments
         self._session = self._make_session()
-        # Simulate os.path.
+        # Simulate os.path
         self.path = ftp_path._Path(self)
         # lstat, stat, listdir services
         self._stat = ftp_stat._Stat(self)
@@ -177,7 +177,8 @@ class FTPHost(object):
         self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
         # Associated `FTPHost` objects for data transfer
         self._children = []
-        # This is only set if this instance represents an `_FTPFile`.
+        # This is only set to something else than `None` if this instance
+        #  represents an `_FTPFile`.
         self._file = None
         # Now opened
         self.closed = False
@@ -222,11 +223,11 @@ class FTPHost(object):
         """
         #FIXME Don't reuse child sessions that have timed out.
         #  (Maybe this should go into `_make_session` or `file`.)
-        #  Write a unit test prior to attempting a fix.
+        #  Write a unit test before attempting a fix.
         for host in self._children:
             if host._file.closed:
                 return host
-        # Be explicit
+        # Be explicit.
         return None
 
     def file(self, path, mode='r'):
@@ -362,17 +363,17 @@ class FTPHost(object):
         """
         minute = 60.0
         hour = 60.0 * minute
-        # Avoid division by zero below
+        # Avoid division by zero below.
         if time_shift == 0:
             return 0.0
-        # Use a positive value for rounding
+        # Use a positive value for rounding.
         absolute_time_shift = abs(time_shift)
         signum = time_shift / absolute_time_shift
         # Round it to hours. This code should also work for later Python
         #  versions because of the explicit `int`.
         absolute_rounded_time_shift = \
           int( (absolute_time_shift + 30*minute) / hour ) * hour
-        # return with correct sign
+        # Return with correct sign.
         return signum * absolute_rounded_time_shift
 
     def __assert_valid_time_shift(self, time_shift):
@@ -381,7 +382,7 @@ class FTPHost(object):
         seconds). If the value is invalid, raise a `TimeShiftError`,
         else simply return `None`.
         """
-        minute = 60.0
+        minute = 60.0  # seconds
         hour = 60.0 * minute
         absolute_rounded_time_shift = abs(self.__rounded_time_shift(time_shift))
         # Test 1: Fail if the absolute time shift is greater than
@@ -390,7 +391,7 @@ class FTPHost(object):
             raise ftp_error.TimeShiftError(
                   "time shift (%.2f s) > 1 day" % time_shift)
         # Test 2: Fail if the deviation between given time shift and
-        #  full hours is greater than a certain limit (e. g. five minutes).
+        #  full hours is greater than a certain limit.
         maximum_deviation = 5 * minute
         if abs(time_shift - self.__rounded_time_shift(time_shift)) > \
            maximum_deviation:
@@ -445,11 +446,11 @@ class FTPHost(object):
             #  written to.
             raise ftp_error.TimeShiftError(
                   "could write helper file but not unlink it")
-        # Calculate the difference between server and client
+        # Calculate the difference between server and client.
         time_shift = server_time - time.time()
-        # Do some sanity checks
+        # Do some sanity checks.
         self.__assert_valid_time_shift(time_shift)
-        # If tests passed, store the time difference as time shift value
+        # If tests passed, store the time difference as time shift value.
         self.set_time_shift(self.__rounded_time_shift(time_shift))
 
     #
@@ -479,7 +480,7 @@ class FTPHost(object):
     def __copy_file(self, source_file, target_file, conditional):
         """
         Copy a file from `source_file` to `target_file`.
-        
+
         These are `_LocalFile` or `_RemoteFile` objects. Which of them
         is a local or a remote file, respectively, is determined by
         the arguments. If `conditional` is true, the file is only
@@ -613,23 +614,23 @@ class FTPHost(object):
         #  current directory. Therefore, change to the directory
         #  which contains the item to run the command on and invoke
         #  the command just there.
-        # Remember old working directory
+        # Remember old working directory.
         old_dir = self.getcwd()
         try:
             if descend_deeply:
-                # Invoke the command in (not: on) the deepest directory
+                # Invoke the command in (not: on) the deepest directory.
                 self.chdir(path)
                 # Workaround for some servers that give recursive
                 #  listings when called with a dot as path; see issue #33,
                 #  http://ftputil.sschwarzer.net/trac/ticket/33
                 return command(self, "")
             else:
-                # Invoke the command in the "next to last" directory
+                # Invoke the command in the "next to last" directory.
                 head, tail = self.path.split(path)
                 self.chdir(head)
                 return command(self, tail)
         finally:
-            # Restore the old directory
+            # Restore the old directory.
             self.chdir(old_dir)
 
     #
@@ -698,7 +699,7 @@ class FTPHost(object):
         path = self.path.abspath(path)
         if self.listdir(path):
             raise ftp_error.PermanentError("directory '%s' not empty" % path)
-        #XXX How will `rmd` work with links?
+        #XXX How does `rmd` work with links?
         def command(self, path):
             """Callback function."""
             ftp_error._try_with_oserror(self._session.rmd, path)
@@ -805,7 +806,7 @@ class FTPHost(object):
         target_head, target_tail = self.path.split(target)
         paths_contain_whitespace = (" " in source_head) or (" " in target_head)
         if paths_contain_whitespace and source_head == target_head:
-            # Both items are in the same directory
+            # Both items are in the same directory.
             old_dir = self.getcwd()
             try:
                 self.chdir(source_head)
@@ -814,7 +815,7 @@ class FTPHost(object):
             finally:
                 self.chdir(old_dir)
         else:
-            # Use straightforward command
+            # Use straightforward command.
             ftp_error._try_with_oserror(self._session.rename, source, target)
 
     #XXX One could argue to put this method into the `_Stat` class, but
@@ -885,25 +886,21 @@ class FTPHost(object):
         Iterate over directory tree and return a tuple (dirpath,
         dirnames, filenames) on each iteration, like the `os.walk`
         function (see http://docs.python.org/lib/os-file-dir.html ).
-
-        Implementation note: The code is copied from `os.walk` in
-        Python 2.4 and adapted to ftputil.
         """
-        # Code from `os.walk` ...
+        # The following code is copied from `os.walk` in Python 2.4
+        #  and adapted to ftputil.
         try:
             names = self.listdir(top)
         except ftp_error.FTPOSError, err:
             if onerror is not None:
                 onerror(err)
             return
-
         dirs, nondirs = [], []
         for name in names:
             if self.path.isdir(self.path.join(top, name)):
                 dirs.append(name)
             else:
                 nondirs.append(name)
-
         if topdown:
             yield top, dirs, nondirs
         for name in dirs:
@@ -945,6 +942,6 @@ class FTPHost(object):
         # We don't need the `exc_*` arguments here
         # pylint: disable-msg=W0613
         self.close()
-        # Be explicit
+        # Be explicit.
         return False
 
