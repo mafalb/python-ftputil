@@ -492,7 +492,7 @@ class FTPHost(object):
         else:
             return 'r', 'w'
 
-    def __copy_file(self, source_file, target_file, conditional):
+    def _copy_file(self, source_file, target_file, conditional):
         """
         Copy a file from `source_file` to `target_file`.
 
@@ -529,7 +529,7 @@ class FTPHost(object):
         Upload from `source` to `target` which are `_TransferredFile`
         objects. The string `mode` may be "" or "b". If `conditional`
         is true, check if file should be copied at all. See the
-        docstring of `__copy_file` for more.
+        docstring of `_copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
         source_file = LocalFile(source, source_mode)
@@ -537,7 +537,7 @@ class FTPHost(object):
         target_file = RemoteFile(self, target, target_mode)
         # The path in the stat cache is implicitly invalidated when
         #  the file is opened on the remote host.
-        return self.__copy_file(source_file, target_file, conditional)
+        return self._copy_file(source_file, target_file, conditional)
 
     def upload(self, source, target, mode=''):
         """
@@ -563,13 +563,13 @@ class FTPHost(object):
         Download from `source` to `target` which are `_TransferredFile`
         objects. The string `mode` may be "" or "b". If `conditional`
         is true, check if file should be copied at all. See the
-        docstring of `__copy_file` for more.
+        docstring of `_copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
         # Passing `self` (the `FTPHost` instance) here is correct.
         source_file = RemoteFile(self, source, source_mode)
         target_file = LocalFile(target, target_mode)
-        return self.__copy_file(source_file, target_file, conditional)
+        return self._copy_file(source_file, target_file, conditional)
 
     def download(self, source, target, mode=''):
         """
