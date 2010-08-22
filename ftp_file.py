@@ -50,7 +50,7 @@ class _FTPFile(object):
         self._session = host._session
         # The file is still closed.
         self.closed = True
-        # Overwritten later in `_open`
+        # Overwritten later in `_open`.
         self._bin_mode = None
         self._conn = None
         self._read_mode = None
@@ -58,7 +58,7 @@ class _FTPFile(object):
 
     def _open(self, path, mode):
         """Open the remote file with given path name and mode."""
-        # Check mode
+        # Check mode.
         if 'a' in mode:
             raise ftp_error.FTPIOError("append mode not supported")
         if mode not in ('r', 'rb', 'w', 'wb'):
@@ -66,20 +66,20 @@ class _FTPFile(object):
         # Remember convenience variables instead of the mode itself.
         self._bin_mode = 'b' in mode
         self._read_mode = 'r' in mode
-        # Select ASCII or binary mode
+        # Select ASCII or binary mode.
         transfer_type = ('A', 'I')[self._bin_mode]
         command = 'TYPE %s' % transfer_type
         ftp_error._try_with_ioerror(self._session.voidcmd, command)
-        # Make transfer command
+        # Make transfer command.
         command_type = ('STOR', 'RETR')[self._read_mode]
         command = '%s %s' % (command_type, path)
         # Ensure we can process the raw line separators.
         #  Force to binary regardless of transfer type.
         if not 'b' in mode:
             mode = mode + 'b'
-        # Get connection and file object
+        # Get connection and file object.
         self._conn = ftp_error._try_with_ioerror(
-                     self._session.transfercmd, command)
+                       self._session.transfercmd, command)
         self._fo = self._conn.makefile(mode)
         # This comes last so that `close` won't try to close `_FTPFile`
         #  objects without `_conn` and `_fo` attributes in case of an error.
