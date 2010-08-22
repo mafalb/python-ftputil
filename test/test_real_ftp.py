@@ -96,6 +96,7 @@ class Cleaner(object):
 
 
 class RealFTPTest(unittest.TestCase):
+
     def setUp(self):
         self.host = ftputil.FTPHost(server, user, password)
         self.cleaner = Cleaner(self.host)
@@ -120,9 +121,9 @@ class RealFTPTest(unittest.TestCase):
         fobj.write("abc\x12\x34def\t")
         fobj.close()
 
-    #
-    # `mkdir`, `makedirs`, `rmdir` and `rmtree`
-    #
+
+class TestMkdir(RealFTPTest):
+
     def test_mkdir_rmdir(self):
         host = self.host
         dir_name = "_testdir_"
@@ -244,6 +245,9 @@ class RealFTPTest(unittest.TestCase):
         host.makedirs('rootdir2/dir2')
         host.makedirs('rootdir2/dir2/dir3')
 
+
+class TestRemoval(RealFTPTest):
+
     def test_rmtree_without_error_handler(self):
         host = self.host
         # Build a tree
@@ -292,9 +296,21 @@ class RealFTPTest(unittest.TestCase):
         self.assertEqual(log[1][0], host.rmdir)
         self.assertEqual(log[1][1], '_dir1_')
 
-    #
-    # Directory tree walking
-    #
+    def test_remove_non_existent_item(self):
+        host = self.host
+        self.assertRaises(ftp_error.PermanentError, host.remove, "nonexistent")
+
+    def test_remove_existent_file(self):
+        self.cleaner.add_file('_testfile_')
+        self.make_file('_testfile_')
+        host = self.host
+        self.failUnless(host.path.isfile('_testfile_'))
+        host.remove('_testfile_')
+        self.failIf(host.path.exists('_testfile_'))
+
+
+class TestWalk(RealFTPTest):
+
     def test_walk_topdown(self):
         # Preparation: build tree in directory `walk_test`
         host = self.host
@@ -339,9 +355,9 @@ class RealFTPTest(unittest.TestCase):
         for index in range(len(actual)):
             self.assertEqual(actual[index], expected[index])
 
-    #
-    # Renaming
-    #
+
+class TestRename(RealFTPTest):
+
     def test_rename(self):
         host = self.host
         # Make sure the target of the renaming operation is removed
@@ -362,9 +378,9 @@ class RealFTPTest(unittest.TestCase):
         self.failIf(host.path.exists(dir_name + "/testfile1"))
         self.failUnless(host.path.exists(dir_name + "/testfile2"))
 
-    #
-    # Stat'ing
-    #
+
+class TestStat(RealFTPTest):
+
     def test_stat(self):
         host = self.host
         dir_name = "_testdir_"
@@ -423,9 +439,10 @@ class RealFTPTest(unittest.TestCase):
         host1.stat_cache.invalidate(absolute_path)
         self.assertRaises(ftp_error.PermanentError, host1.stat, "_testfile_")
 
-    #
-    # `upload` (including time shift test)
-    #
+
+class TestUploadAndDownload(RealFTPTest):
+    """Test upload and download (including time shift test)."""
+
     def test_time_shift(self):
         self.host.synchronize_times()
         self.assertEqual(self.host.time_shift(), EXPECTED_TIME_SHIFT)
@@ -487,24 +504,9 @@ class RealFTPTest(unittest.TestCase):
             # Clean up.
             os.unlink(local_file)
 
-    #
-    # Remove/unlink
-    #
-    def test_remove_non_existent_item(self):
-        host = self.host
-        self.assertRaises(ftp_error.PermanentError, host.remove, "nonexistent")
 
-    def test_remove_existent_file(self):
-        self.cleaner.add_file('_testfile_')
-        self.make_file('_testfile_')
-        host = self.host
-        self.failUnless(host.path.isfile('_testfile_'))
-        host.remove('_testfile_')
-        self.failIf(host.path.exists('_testfile_'))
+class TestChmod(RealFTPTest):
 
-    #
-    # `chmod`
-    #
     def assert_mode(self, path, expected_mode):
         """Return an integer containing the allowed bits in the
         mode change command.
@@ -571,9 +573,9 @@ class RealFTPTest(unittest.TestCase):
         host.chmod(file_name, 0646)
         self.assert_mode(file_name, 0646)
 
-    #
-    # Other tests
-    #
+
+class TestOther(RealFTPTest):
+
     def test_open_for_reading(self):
         # Test for issues #17 and #51,
         #  http://ftputil.sschwarzer.net/trac/ticket/17 and
