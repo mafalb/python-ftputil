@@ -188,8 +188,8 @@ class FTPHost(object):
         self._stat = ftp_stat._Stat(self)
         self.stat_cache = self._stat._lstat_cache
         self.stat_cache.enable()
-        # Save (cache) current directory
-        self._current_dir = ftp_error._try_with_oserror(self._session.pwd)
+        self._cached_current_dir = \
+          ftp_error._try_with_oserror(self._session.pwd)
         # Associated `FTPHost` objects for data transfer
         self._children = []
         # This is only set to something else than `None` if this instance
@@ -651,14 +651,15 @@ class FTPHost(object):
     #
     def getcwd(self):
         """Return the current path name."""
-        return self._current_dir
+        return self._cached_current_dir
 
     def chdir(self, path):
         """Change the directory on the host."""
         ftp_error._try_with_oserror(self._session.cwd, path)
-        self._current_dir = self.path.normpath(self.path.join(
-                                               # Use "old" current dir
-                                               self._current_dir, path))
+        # The path given as the argument is relative to the old current
+        #  directory, therefore join them.
+        self._cached_current_dir = \
+          self.path.normpath(self.path.join(self._cached_current_dir, path))
 
     def mkdir(self, path, mode=None):
         """
