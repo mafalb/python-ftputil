@@ -504,6 +504,10 @@ class TestUploadAndDownload(RealFTPTest):
             # Clean up.
             os.unlink(local_file)
 
+    def test_callback_with_transfer(self):
+        host = self.host
+        def callback(bytes
+
 
 class TestChmod(RealFTPTest):
 

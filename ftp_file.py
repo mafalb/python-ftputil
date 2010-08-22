@@ -25,7 +25,7 @@ def _crlf_to_python_linesep(text):
     """
     return text.replace('\r', '')
 
-# Converter for Python line ends into `\r\n`
+# Converter for Python line ends to `\r\n`
 def _python_to_crlf_linesep(text):
     """
     Return `text` with Python's internal line ending representation
@@ -36,9 +36,9 @@ def _python_to_crlf_linesep(text):
 
 class _FTPFile(object):
     """
-    Represents a file-like object connected to an FTP host. File and
-    socket are closed appropriately if the `close` operation is
-    requested.
+    Represents a file-like object associated with an FTP host. File
+    and socket are closed appropriately if the `close` operation is
+    called.
     """
 
     # Set timeout in seconds when closing file connections (see ticket #51).
@@ -130,7 +130,7 @@ class _FTPFile(object):
         data = self._fo.readline(*args)
         if self._bin_mode:
             return data
-        # If necessary, complete begun newline
+        # If necessary, complete begun newline.
         if data.endswith('\r'):
             data = data + self.read(1)
         return _crlf_to_python_linesep(data)
@@ -154,7 +154,7 @@ class _FTPFile(object):
         Return the next line or raise `StopIteration`, if there are
         no more.
         """
-        # Apply implicit line ending conversion
+        # Apply implicit line ending conversion.
         line = self.readline()
         if line:
             return line
