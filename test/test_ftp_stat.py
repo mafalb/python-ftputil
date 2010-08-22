@@ -69,7 +69,8 @@ class TestParsers(unittest.TestCase):
 
     def test_valid_unix_lines(self):
         lines = [
-          "drwxr-sr-x   2 45854    200           512 May  4  2000 chemeng",
+          "drwxr-sr-x   2 45854    200           512 May  4  2000 "
+            "chemeng link -> chemeng target",
           # The year value for this line will change with the actual time.
           "-rw-r--r--   1 45854    200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2 45854    200           512 May 29  2000 os2",
@@ -78,7 +79,7 @@ class TestParsers(unittest.TestCase):
           ]
         expected_stat_results = [
           [17901, None, None, 2, '45854', '200', 512, None,
-           (2000, 5, 4, 0, 0, 0), None, "chemeng", None],
+           (2000, 5, 4, 0, 0, 0), None, "chemeng link", "chemeng target"],
           [33188, None, None, 1, '45854', '200', 4604, None,
            (self._expected_year(), 12, 19, 23, 11, 0), None,
            "index.html", None],
@@ -103,7 +104,8 @@ class TestParsers(unittest.TestCase):
         # See http://ftputil.sschwarzer.net/trac/ticket/12 for a
         #  description for the need for an alternative format.
         lines = [
-          "drwxr-sr-x   2   200           512 May  4  2000 chemeng",
+          "drwxr-sr-x   2   200           512 May  4  2000 "
+            "chemeng link -> chemeng target",
           # The year value for this line will change with the actual time.
           "-rw-r--r--   1   200          4604 Dec 19 23:11 index.html",
           "drwxr-sr-x   2   200           512 May 29  2000 os2",
@@ -111,7 +113,7 @@ class TestParsers(unittest.TestCase):
           ]
         expected_stat_results = [
           [17901, None, None, 2, None, '200', 512, None,
-           (2000, 5, 4, 0, 0, 0), None, "chemeng", None],
+           (2000, 5, 4, 0, 0, 0), None, "chemeng link", "chemeng target"],
           [33188, None, None, 1, None, '200', 4604, None,
            (self._expected_year(), 12, 19, 23, 11, 0), None,
            "index.html", None],

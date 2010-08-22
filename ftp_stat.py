@@ -253,28 +253,25 @@ class UnixParser(Parser):
         # This method encapsulates the recognition of an unusual
         #  Unix format variant (see ticket
         #  http://ftputil.sschwarzer.net/trac/ticket/12 ).
-        USER_FIELD_INDEX = 2
-        LINK_NAME_INDEX = -2
-        parts = line.split(None, 8)
-        if len(parts) == 9:
-            # For the alternative format, the last part will not be
-            #  "link_name -> link_target" but "-> link_target" and the link
-            #  name will be in the previous field. This heuristic will fail
-            #  for names starting with "-> " which should be _quite_ rare.
-            if parts[LINK_NAME_INDEX+1].startswith("-> "):
-                parts.insert(USER_FIELD_INDEX, None)
-                # Turn "link", "-> target" into "link -> target".
-                parts[LINK_NAME_INDEX] = "%s %s" % \
-                                         tuple(parts[LINK_NAME_INDEX:])
-                del parts[LINK_NAME_INDEX+1]
-            return parts
-        elif len(parts) == 8:
-            # Alternative unusual format
-            parts.insert(USER_FIELD_INDEX, None)
-            return parts
-        else:
+        line_parts = line.split()
+        FIELD_COUNT_WITHOUT_USERID = 8
+        FIELD_COUNT_WITH_USERID = FIELD_COUNT_WITHOUT_USERID + 1
+        if len(line_parts) < FIELD_COUNT_WITHOUT_USERID:
             # No known Unix-style format
             raise ftp_error.ParserError("line '%s' can't be parsed" % line)
+        # If we have a valid format (either with or without user id field),
+        #  the field with index 5 is either the month abbreviation or a day.
+        try:
+            int(line_parts[5])
+        except ValueError:
+            # Month abbreviation, "invalid literal for int"
+            line_parts = line.split(None, FIELD_COUNT_WITH_USERID-1)
+        else:
+            # Day
+            line_parts = line.split(None, FIELD_COUNT_WITHOUT_USERID-1)
+            USER_FIELD_INDEX = 2
+            line_parts.insert(USER_FIELD_INDEX, None)
+        return line_parts
 
     def parse_line(self, line, time_shift=0.0):
         """
