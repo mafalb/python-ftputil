@@ -208,7 +208,7 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
 
 
 class MockFile(object):
-    """Class compatible with `_LocalFile` and `_RemoteFile`."""
+    """Class compatible with `LocalFile` and `RemoteFile`."""
 
     def __init__(self, mtime, mtime_precision):
         self._mtime = mtime
