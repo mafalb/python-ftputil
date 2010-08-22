@@ -231,9 +231,9 @@ class Parser(object):
             hour, minute = int(hour), int(minute)
         except (ValueError, IndexError):
             raise ftp_error.ParserError("invalid time string '%s'" % time_)
-        if am_pm == 'A' and hour == 12:
+        if hour == 12 and am_pm == 'A':
             hour = 0
-        if am_pm == 'P' and hour != 12:
+        if hour != 12 and am_pm == 'P':
             hour = hour + 12
         st_mtime = time.mktime( (year, month, day,
                                  hour, minute, 0, 0, 0, -1) )
