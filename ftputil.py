@@ -280,7 +280,6 @@ class FTPHost(object):
             self.stat_cache.invalidate(effective_path)
         return host._file
 
-    # make `open` an alias
     open = file
 
     def close(self):
