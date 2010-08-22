@@ -140,7 +140,8 @@ def source_is_newer_than_target(source_file, target_file):
 
     For the purpose of this test the source is newer than the
     target, if the target modification datetime plus its precision
-    is before the source precision.
+    is before the source precision. In other words: If in doubt,
+    the file should be transferred.
     """
     return source_file.mtime() + source_file.mtime_precision() >= \
            target_file.mtime()
