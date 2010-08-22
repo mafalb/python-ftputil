@@ -247,27 +247,30 @@ class UnixParser(Parser):
         """
         Split a line in metadata, nlink, user, group, size, month,
         day, year_or_time and name and return the result as an
-        nine-element list of these values.
+        nine-element list of these values. If the name is a link,
+        it will be encoded as a string "link_name -> link_target".
         """
         # This method encapsulates the recognition of an unusual
         #  Unix format variant (see ticket
         #  http://ftputil.sschwarzer.net/trac/ticket/12 ).
+        USER_FIELD_INDEX = 2
+        LINK_NAME_INDEX = -2
         parts = line.split(None, 8)
         if len(parts) == 9:
-            if parts[-1].startswith("-> "):
-                # For the alternative format, the last part will not be
-                #  "link_name -> link_target" but "-> link_target" and the
-                #  link name will be in the previous field.
-                # This heuristic will fail for names starting with "-> "
-                #  which should be _quite_ rare.
-                # Insert `None` for the user field
-                parts.insert(2, None)
-                parts[-2] = "%s %s" % tuple(parts[-2:])
-                del parts[-1]
+            # For the alternative format, the last part will not be
+            #  "link_name -> link_target" but "-> link_target" and the link
+            #  name will be in the previous field. This heuristic will fail
+            #  for names starting with "-> " which should be _quite_ rare.
+            if parts[LINK_NAME_INDEX+1].startswith("-> "):
+                parts.insert(USER_FIELD_INDEX, None)
+                # Turn "link", "-> target" into "link -> target".
+                parts[LINK_NAME_INDEX] = "%s %s" % \
+                                         tuple(parts[LINK_NAME_INDEX:])
+                del parts[LINK_NAME_INDEX+1]
             return parts
         elif len(parts) == 8:
-            # Alternative unusual format, insert `None` for the user field
-            parts.insert(2, None)
+            # Alternative unusual format
+            parts.insert(USER_FIELD_INDEX, None)
             return parts
         else:
             # No known Unix-style format
