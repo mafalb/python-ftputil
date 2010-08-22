@@ -34,7 +34,7 @@ class StatResult(tuple):
         self._st_target = None
 
     def __getattr__(self, attr_name):
-        if self._index_mapping.has_key(attr_name):
+        if attr_name in self._index_mapping:
             return self[self._index_mapping[attr_name]]
         else:
             raise AttributeError("'StatResult' object has no attribute '%s'" %
