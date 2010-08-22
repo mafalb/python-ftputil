@@ -65,7 +65,7 @@ __all__ = ['FTPHost']
 __version__ = ftputil_version.__version__
 
 
-class _LocalFile(object):
+class LocalFile(object):
     """
     Represent a file on the local side which is to be transferred or
     is already transferred.
@@ -97,7 +97,7 @@ class _LocalFile(object):
         return open(self.name, self.mode)
 
 
-class _RemoteFile(object):
+class RemoteFile(object):
     """
     Represent a file on the remote side which is to be transferred or
     is already transferred.
@@ -136,7 +136,7 @@ def source_is_newer_than_target(source_file, target_file):
     """
     Return `True` if the source is newer than the target, else `False`.
     
-    Both arguments are `_LocalFile` or `_RemoteFile` objects.
+    Both arguments are `LocalFile` or `RemoteFile` objects.
 
     For the purpose of this test the source is newer than the
     target, if the target modification datetime plus its precision
@@ -496,7 +496,7 @@ class FTPHost(object):
         """
         Copy a file from `source_file` to `target_file`.
 
-        These are `_LocalFile` or `_RemoteFile` objects. Which of them
+        These are `LocalFile` or `RemoteFile` objects. Which of them
         is a local or a remote file, respectively, is determined by
         the arguments. If `conditional` is true, the file is only
         copied if the target doesn't exist or is older than the
@@ -505,10 +505,8 @@ class FTPHost(object):
         """
         if conditional:
             # Evaluate condition: The target file either doesn't exist or is
-            #  older than the source file. Use >= in the comparison, that is
-            #  if in doubt (due to imprecise timestamps), do the transfer.
-            #FIXME We probably need a more complex comparison, depending
-            #  on the precision of the timestamp on the server!
+            #  older than the source file. If in doubt (due to imprecise
+            #  timestamps), perform the transfer.
             transfer_condition = not target_file.exists() or \
               source_is_newer_than_target(source_file, target_file)
             if not transfer_condition:
@@ -534,9 +532,9 @@ class FTPHost(object):
         docstring of `__copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        source_file = _LocalFile(source, source_mode)
+        source_file = LocalFile(source, source_mode)
         # Passing `self` (the `FTPHost` instance) here is correct.
-        target_file = _RemoteFile(self, target, target_mode)
+        target_file = RemoteFile(self, target, target_mode)
         # The path in the stat cache is implicitly invalidated when
         #  the file is opened on the remote host.
         return self.__copy_file(source_file, target_file, conditional)
@@ -569,8 +567,8 @@ class FTPHost(object):
         """
         source_mode, target_mode = self.__get_modes(mode)
         # Passing `self` (the `FTPHost` instance) here is correct.
-        source_file = _RemoteFile(self, source, source_mode)
-        target_file = _LocalFile(target, target_mode)
+        source_file = RemoteFile(self, source, source_mode)
+        target_file = LocalFile(target, target_mode)
         return self.__copy_file(source_file, target_file, conditional)
 
     def download(self, source, target, mode=''):
