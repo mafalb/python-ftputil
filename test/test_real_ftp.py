@@ -435,7 +435,7 @@ class RealFTPTest(unittest.TestCase):
         host.synchronize_times()
         local_file = '_local_file_'
         remote_file = '_remote_file_'
-        # Make local file to upload
+        # Make local file to upload.
         self.make_local_file()
         # Wait, else small time differences between client and server
         #  actually could trigger the update.
@@ -446,7 +446,7 @@ class RealFTPTest(unittest.TestCase):
             # Retry; shouldn't be uploaded
             uploaded = host.upload_if_newer(local_file, remote_file, 'b')
             self.assertEqual(uploaded, False)
-            # Rewrite the local file
+            # Rewrite the local file.
             self.make_local_file()
             # Retry; should be uploaded now
             uploaded = host.upload_if_newer(local_file, remote_file, 'b')
@@ -460,9 +460,9 @@ class RealFTPTest(unittest.TestCase):
         host.synchronize_times()
         local_file = '_local_file_'
         remote_file = '_remote_file_'
-        # Make a remote file
+        # Make a remote file.
         self.make_file(remote_file)
-        # File should be downloaded as it's not present yet
+        # File should be downloaded as it's not present yet.
         downloaded = host.download_if_newer(remote_file, local_file, 'b')
         self.assertEqual(downloaded, True)
         try:
@@ -476,10 +476,7 @@ class RealFTPTest(unittest.TestCase):
             # Local file is present and newer, so shouldn't download.
             downloaded = host.download_if_newer(remote_file, local_file, 'b')
             self.assertEqual(downloaded, False)
-            # Wait. Else small time differences between client and server
-            #  actually could trigger the update.
-            time.sleep(65)
-            # Re-make the remote file
+            # Re-make the remote file.
             self.make_file(remote_file)
             # Local file is present but possibly older (taking the
             #  possible deviation because of the precision into account),
@@ -487,7 +484,7 @@ class RealFTPTest(unittest.TestCase):
             downloaded = host.download_if_newer(remote_file, local_file, 'b')
             self.assertEqual(downloaded, True)
         finally:
-            # Clean up
+            # Clean up.
             os.unlink(local_file)
 
     #
