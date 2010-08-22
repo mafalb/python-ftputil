@@ -65,6 +65,10 @@ __all__ = ['FTPHost']
 __version__ = ftputil_version.__version__
 
 
+# Maximum size of buffer in `FTPHost.copyfileobj` in bytes.
+MAX_COPY_BUFFER_SIZE = 64 * 1024
+
+
 class LocalFile(object):
     """
     Represent a file on the local side which is to be transferred or
@@ -471,15 +475,31 @@ class FTPHost(object):
     # Operations based on file-like objects (rather high-level),
     #  like upload and download
     #
-    def copyfileobj(self, source, target, length=64*1024):
+    @staticmethod
+    def _dummy_callback(transferred_buffers, buffer_size, transferred_bytes):
+        pass
+
+    def copyfileobj(self, source, target, callback,
+                    buffer_size=MAX_COPY_BUFFER_SIZE):
         "Copy data from file-like object source to file-like object target."
         # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
+        # Call callback function before transfer actually starts.
+        transferred_buffers = 0
+        actual_buffer_size = 0
+        transferred_bytes = 0
+        callback(transferred_buffers, actual_buffer_size, transferred_bytes)
         while True:
-            buffer_ = source.read(length)
+            buffer_ = source.read(buffer_size)
             if not buffer_:
                 break
             target.write(buffer_)
+            # Update callback data and call the function.
+            transferred_buffers += 1
+            actual_buffer_size = len(buffer_)
+            transferred_bytes += actual_buffer_size
+            callback(transferred_buffers, actual_buffer_size,
+                     transferred_bytes)
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""
@@ -491,7 +511,7 @@ class FTPHost(object):
         else:
             return 'r', 'w'
 
-    def _copy_file(self, source_file, target_file, conditional):
+    def _copy_file(self, source_file, target_file, conditional, callback):
         """
         Copy a file from `source_file` to `target_file`.
 
@@ -516,7 +536,7 @@ class FTPHost(object):
         try:
             target_fobj = target_file.fobj()
             try:
-                self.copyfileobj(source_fobj, target_fobj)
+                self.copyfileobj(source_fobj, target_fobj, callback=callback)
             finally:
                 target_fobj.close()
         finally:
@@ -524,7 +544,7 @@ class FTPHost(object):
         # Transfer accomplished
         return True
 
-    def _upload(self, source, target, mode, conditional):
+    def _upload(self, source, target, mode, conditional, callback):
         """
         Upload from `source` to `target` which are `_TransferredFile`
         objects. The string `mode` may be "" or "b". If `conditional`
@@ -537,17 +557,21 @@ class FTPHost(object):
         target_file = RemoteFile(self, target, target_mode)
         # The path in the stat cache is implicitly invalidated when
         #  the file is opened on the remote host.
-        return self._copy_file(source_file, target_file, conditional)
+        return self._copy_file(source_file, target_file, conditional,
+                               callback)
 
-    def upload(self, source, target, mode=''):
+    def upload(self, source, target, mode='', callback=None):
         """
         Upload a file from the local source (name) to the remote
         target (name). The argument `mode` is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        self._upload(source, target, mode, conditional=False)
+        if callback is None:
+            callback = self._dummy_callback
+        self._upload(source, target, mode, conditional=False,
+                     callback=callback)
 
-    def upload_if_newer(self, source, target, mode=''):
+    def upload_if_newer(self, source, target, mode='', callback=None):
         """
         Upload a file only if it's newer than the target on the
         remote host or if the target file does not exist. See the
@@ -556,9 +580,12 @@ class FTPHost(object):
         If an upload was necessary, return `True`, else return
         `False`.
         """
-        return self._upload(source, target, mode, conditional=True)
+        if callback is None:
+            callback = self._dummy_callback
+        return self._upload(source, target, mode, conditional=True,
+                            callback=callback)
 
-    def _download(self, source, target, mode, conditional):
+    def _download(self, source, target, mode, conditional, callback):
         """
         Download from `source` to `target` which are `_TransferredFile`
         objects. The string `mode` may be "" or "b". If `conditional`
@@ -566,20 +593,22 @@ class FTPHost(object):
         docstring of `_copy_file` for more.
         """
         source_mode, target_mode = self.__get_modes(mode)
-        # Passing `self` (the `FTPHost` instance) here is correct.
         source_file = RemoteFile(self, source, source_mode)
         target_file = LocalFile(target, target_mode)
-        return self._copy_file(source_file, target_file, conditional)
+        return self._copy_file(source_file, target_file, conditional, callback)
 
-    def download(self, source, target, mode=''):
+    def download(self, source, target, mode='', callback=None):
         """
         Download a file from the remote source (name) to the local
         target (name). The argument mode is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        self._download(source, target, mode, conditional=False)
+        if callback is None:
+            callback = self._dummy_callback
+        self._download(source, target, mode, conditional=False,
+                       callback=callback)
 
-    def download_if_newer(self, source, target, mode=''):
+    def download_if_newer(self, source, target, mode='', callback=None):
         """
         Download a file only if it's newer than the target on the
         local host or if the target file does not exist. See the
@@ -588,7 +617,10 @@ class FTPHost(object):
         If a download was necessary, return `True`, else return
         `False`.
         """
-        return self._download(source, target, mode, conditional=True)
+        if callback is None:
+            callback = self._dummy_callback
+        return self._download(source, target, mode, conditional=True,
+                              callback=callback)
 
     #
     # Helper methods to descend into a directory before executing a command

@@ -4,6 +4,7 @@
 # Execute a test on a real FTP server (other tests use a mock server)
 
 import getpass
+import inspect
 import operator
 import os
 import time
@@ -506,7 +507,47 @@ class TestUploadAndDownload(RealFTPTest):
 
     def test_callback_with_transfer(self):
         host = self.host
-        def callback(bytes
+        FILENAME = "debian-keyring.tar.gz"
+        # Default buffer size as in `FTPHost.copyfileobj`
+        MAX_COPY_BUFFER_SIZE = ftputil.MAX_COPY_BUFFER_SIZE
+        file_size = host.path.getsize(FILENAME)
+        buffer_count, remainder = divmod(file_size, MAX_COPY_BUFFER_SIZE)
+        # Add one buffer for remainder.
+        buffer_count += 1
+        # Define a callback that just collects all data passed to it.
+        def test_callback(transferred_buffers, buffer_size, transferred_bytes):
+            collected_data_fields = inspect.getargspec(test_callback).args
+            for field_name in collected_data_fields:
+                test_callback.collected_data.setdefault(field_name, []).\
+                  append(vars()[field_name])
+        test_callback.collected_data = {}
+        try:
+            host.download(FILENAME, FILENAME, 'b', callback=test_callback)
+            # Examine data collected by callback function.
+            collected_data = test_callback.collected_data
+            transferred_buffers_list = collected_data['transferred_buffers']
+            buffer_size_list = collected_data['buffer_size']
+            transferred_bytes_list = collected_data['transferred_bytes']
+            # - transferred_buffers
+            self.assertEqual(len(transferred_buffers_list), buffer_count+1)
+            self.assertEqual(transferred_buffers_list, range(buffer_count+1))
+            # - buffer_size
+            # Add 1 for initial callback call at transfer start.
+            self.assertEqual(len(buffer_size_list), buffer_count+1)
+            self.assertEqual(buffer_size_list,
+                             [0] + (buffer_count-1) * [MAX_COPY_BUFFER_SIZE] +
+                             [remainder])
+            # - transferred_bytes
+            self.assertEqual(len(transferred_bytes_list), buffer_count+1)
+            bytes_in_complete_buffers = (buffer_count-1) * MAX_COPY_BUFFER_SIZE
+            self.assertEqual(transferred_bytes_list,
+                             # Add 1 to include `bytes_in_complete_buffers`
+                             #  in range
+                             range(0, bytes_in_complete_buffers+1,
+                                   MAX_COPY_BUFFER_SIZE) +
+                             [bytes_in_complete_buffers+remainder])
+        finally:
+            os.unlink(FILENAME)
 
 
 class TestChmod(RealFTPTest):
@@ -640,5 +681,6 @@ minutes because it has to wait to test the timezone calculation.
     server, user, password = get_login_data()
     unittest.main()
     import __main__
-    #unittest.main(__main__, "RealFTPTest.test_open_for_reading")
+    #unittest.main(__main__,
+    #              "TestUploadAndDownload.test_callback_with_transfer")
 
