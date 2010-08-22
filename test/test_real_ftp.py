@@ -466,7 +466,14 @@ class RealFTPTest(unittest.TestCase):
         downloaded = host.download_if_newer(remote_file, local_file, 'b')
         self.assertEqual(downloaded, True)
         try:
-            # Local file is present and newer, so shouldn't download
+            # If the remote file, taking the datetime precision into
+            #  account, _might_ be newer, the file will be downloaded
+            #  again. To prevent this, wait a bit over a minute (the
+            #  remote precision), then "touch" the local file.
+            time.sleep(65)
+            fobj = open(local_file, "w")
+            fobj.close()
+            # Local file is present and newer, so shouldn't download.
             downloaded = host.download_if_newer(remote_file, local_file, 'b')
             self.assertEqual(downloaded, False)
             # Wait. Else small time differences between client and server
@@ -474,7 +481,9 @@ class RealFTPTest(unittest.TestCase):
             time.sleep(65)
             # Re-make the remote file
             self.make_file(remote_file)
-            # Local file is present but older, so should download
+            # Local file is present but possibly older (taking the
+            #  possible deviation because of the precision into account),
+            #  so should download.
             downloaded = host.download_if_newer(remote_file, local_file, 'b')
             self.assertEqual(downloaded, True)
         finally:

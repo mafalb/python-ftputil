@@ -126,6 +126,7 @@ class TimeShiftFTPHost(ftputil.FTPHost):
 #
 class TestOpenAndClose(unittest.TestCase):
     """Test opening and closing of `FTPHost` objects."""
+
     def test_open_and_close(self):
         """Test closing of `FTPHost`."""
         host = test_base.ftp_host_factory()
@@ -135,6 +136,7 @@ class TestOpenAndClose(unittest.TestCase):
 
 
 class TestLogin(unittest.TestCase):
+
     def test_invalid_login(self):
         """Login to invalid host must fail."""
         self.assertRaises(ftp_error.FTPOSError, test_base.ftp_host_factory,
@@ -142,6 +144,7 @@ class TestLogin(unittest.TestCase):
 
 
 class TestSetParser(unittest.TestCase):
+
     def test_set_parser(self):
         """Test if the selected parser is used."""
         # This test isn't very practical but should help at least a bit ...
@@ -158,6 +161,7 @@ class TestSetParser(unittest.TestCase):
 
 
 class TestCommandNotImplementedError(unittest.TestCase):
+
     def test_command_not_implemented_error(self):
         """
         Test if we get the anticipated exception if a command isn't
@@ -176,6 +180,7 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
     is a dot. This is used to test for issue #33, see
     http://ftputil.sschwarzer.net/trac/ticket/33 .
     """
+
     def test_recursive_listing(self):
         host = test_base.ftp_host_factory(
                  session_factory=RecursiveListingForDotAsPathSession)
@@ -200,6 +205,61 @@ class TestRecursiveListingForDotAsPath(unittest.TestCase):
         files = host.listdir(host.curdir)
         self.assertEqual(files, ['bin', 'dev', 'etc', 'pub', 'usr'])
         host.close()
+
+
+class MockFile(object):
+    """Class compatible with `_LocalFile` and `_RemoteFile`."""
+
+    def __init__(self, mtime, mtime_precision):
+        self._mtime = mtime
+        self._mtime_precision = mtime_precision
+
+    def mtime(self):
+        return self._mtime
+
+    def mtime_precision(self):
+        return self._mtime_precision
+
+
+class TestTimestampComparison(unittest.TestCase):
+
+    def test_source_is_newer_than_target(self):
+        """Test whether the source is newer than the target, i. e.
+        if the file should be transferred."""
+        # Define some precisions.
+        second = 1.0
+        minute = 60.0 * second
+        hour = 60 * minute
+        day = 24 * hour
+        # Define input arguments; modification datetimes are in seconds.
+        #  Fields are source datetime/precision, target datetime/precision,
+        #  expected comparison result.
+        file_data = [
+          # Non-overlapping modification datetimes/precisions
+          (1000.0, second, 900.0, second, True),
+          (900.0, second, 1000.0, second, False),
+          # Equal modification datetimes/precisions (if in doubt, transfer)
+          (1000.0, second, 1000.0, second, True),
+          # Just touching intervals
+          (1000.0, second, 1000.0+second, minute, True),
+          (1000.0+second, minute, 1000.0, second, True),
+          # Other overlapping intervals
+          (10000.0-0.5*hour, hour, 10000.0, day, True),
+          (10000.0+0.5*hour, hour, 10000.0, day, True),
+          (10000.0+0.2*hour, 0.2*hour, 10000.0, hour, True),
+          (10000.0-0.2*hour, 2*hour, 10000.0, hour, True),
+        ]
+        for (source_mtime, source_mtime_precision,
+             target_mtime, target_mtime_precision,
+             expected_result) in file_data:
+            # print (source_mtime, source_mtime_precision,
+            #        target_mtime, target_mtime_precision,
+            #        expected_result)
+            source_file = MockFile(source_mtime, source_mtime_precision)
+            target_file = MockFile(target_mtime, target_mtime_precision)
+            result = ftputil.source_is_newer_than_target(source_file, 
+                                                         target_file)
+            self.assertEqual(result, expected_result)
 
 
 class TestUploadAndDownload(unittest.TestCase):
@@ -320,6 +380,7 @@ class TestUploadAndDownload(unittest.TestCase):
 
 
 class TestTimeShift(unittest.TestCase):
+
     def test_rounded_time_shift(self):
         """Test if time shift is rounded correctly."""
         host = test_base.ftp_host_factory(session_factory=TimeShiftMockSession)
@@ -366,4 +427,7 @@ class TestTimeShift(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+    import __main__
+    # unittest.main(__main__,
+    #   "TestTimestampComparison.test_source_is_newer_than_target")
 

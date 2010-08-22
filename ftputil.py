@@ -132,6 +132,20 @@ class _RemoteFile(object):
         return self._host.file(self.name, self.mode)
 
 
+def source_is_newer_than_target(source_file, target_file):
+    """
+    Return `True` if the source is newer than the target, else `False`.
+    
+    Both arguments are `_LocalFile` or `_RemoteFile` objects.
+
+    For the purpose of this test the source is newer than the
+    target, if the target modification datetime plus its precision
+    is before the source precision.
+    """
+    return source_file.mtime() + source_file.mtime_precision() >= \
+           target_file.mtime()
+
+
 #####################################################################
 # `FTPHost` class with several methods similar to those of `os`
 
@@ -494,10 +508,10 @@ class FTPHost(object):
             #  if in doubt (due to imprecise timestamps), do the transfer.
             #FIXME We probably need a more complex comparison, depending
             #  on the precision of the timestamp on the server!
-            condition = not target_file.exists() or \
-                        source_file.mtime() > target_file.mtime()
-            if not condition:
-                # We didn't transfer
+            transfer_condition = not target_file.exists() or \
+              source_is_newer_than_target(source_file, target_file)
+            if not transfer_condition:
+                # We didn't transfer.
                 return False
         source_fobj = source_file.fobj()
         try:
