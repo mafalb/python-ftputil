@@ -501,7 +501,8 @@ class FTPHost(object):
         the arguments. If `conditional` is true, the file is only
         copied if the target doesn't exist or is older than the
         source. If `conditional` is false, the file is copied
-        unconditionally.
+        unconditionally. Return `True` if the file was copied, else
+        `False`.
         """
         if conditional:
             # Evaluate condition: The target file either doesn't exist or is
