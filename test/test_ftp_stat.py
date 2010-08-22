@@ -32,11 +32,14 @@ def stat_tuple_to_seconds(t):
 
 
 class TestParsers(unittest.TestCase):
+
     def _test_valid_lines(self, parser_class, lines, expected_stat_results):
         parser = parser_class()
         for line, expected_stat_result in zip(lines, expected_stat_results):
             # Convert to list to compare with the list `expected_stat_results`
-            stat_result = list(parser.parse_line(line))
+            parse_result = parser.parse_line(line)
+            stat_result = list(parse_result) + [parse_result._st_name,
+                                                parse_result._st_target]
             # Convert time tuple to seconds
             expected_stat_result[8] = \
               stat_tuple_to_seconds(expected_stat_result[8])
@@ -75,13 +78,14 @@ class TestParsers(unittest.TestCase):
           ]
         expected_stat_results = [
           [17901, None, None, 2, '45854', '200', 512, None,
-           (2000, 5, 4, 0, 0, 0), None],
+           (2000, 5, 4, 0, 0, 0), None, "chemeng", None],
           [33188, None, None, 1, '45854', '200', 4604, None,
-           (self._expected_year(), 12, 19, 23, 11, 0), None],
+           (self._expected_year(), 12, 19, 23, 11, 0), None,
+           "index.html", None],
           [17901, None, None, 2, '45854', '200', 512, None,
-           (2000, 5, 29, 0, 0, 0), None],
+           (2000, 5, 29, 0, 0, 0), None, "os2", None],
           [41471, None, None, 2, '45854', '200', 512, None,
-           (2000, 5, 29, 0, 0, 0), None]
+           (2000, 5, 29, 0, 0, 0), None, "osup", "../os2"]
           ]
         self._test_valid_lines(ftp_stat.UnixParser, lines,
                                expected_stat_results)
@@ -107,13 +111,14 @@ class TestParsers(unittest.TestCase):
           ]
         expected_stat_results = [
           [17901, None, None, 2, None, '200', 512, None,
-           (2000, 5, 4, 0, 0, 0), None],
+           (2000, 5, 4, 0, 0, 0), None, "chemeng", None],
           [33188, None, None, 1, None, '200', 4604, None,
-           (self._expected_year(), 12, 19, 23, 11, 0), None],
+           (self._expected_year(), 12, 19, 23, 11, 0), None,
+           "index.html", None],
           [17901, None, None, 2, None, '200', 512, None,
-           (2000, 5, 29, 0, 0, 0), None],
+           (2000, 5, 29, 0, 0, 0), None, "os2", None],
           [41471, None, None, 2, None, '200', 512, None,
-           (2000, 5, 29, 0, 0, 0), None]
+           (2000, 5, 29, 0, 0, 0), None, "osup", "../os2"]
           ]
         self._test_valid_lines(ftp_stat.UnixParser, lines,
                                expected_stat_results)
@@ -128,15 +133,15 @@ class TestParsers(unittest.TestCase):
           ]
         expected_stat_results = [
           [16640, None, None, None, None, None, None, None,
-           (2001, 7, 27, 11, 16, 0), None],
+           (2001, 7, 27, 11, 16, 0), None, "Test", None],
           [16640, None, None, None, None, None, None, None,
-           (1995, 10, 23, 15, 25, 0), None],
+           (1995, 10, 23, 15, 25, 0), None, "WindowsXP", None],
           [33024, None, None, None, None, None, 12266720, None,
-           (2000, 7, 17, 14, 8, 0), None],
+           (2000, 7, 17, 14, 8, 0), None, "test.exe", None],
           [33024, None, None, None, None, None, 12266720, None,
-           (2009, 7, 17, 0, 8, 0), None],
+           (2009, 7, 17, 0, 8, 0), None, "test.exe", None],
           [33024, None, None, None, None, None, 12266720, None,
-           (2009, 7, 17, 12, 8, 0), None]
+           (2009, 7, 17, 12, 8, 0), None, "test.exe", None]
           ]
         self._test_valid_lines(ftp_stat.MSParser, lines, expected_stat_results)
 
