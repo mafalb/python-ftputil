@@ -491,6 +491,8 @@ class FTPHost(object):
             warnings.warn(("Parameter name `length` will be removed in "
                            "ftputil 2.6, use `buffer_size` instead"),
                           DeprecationWarning, stacklevel=2)
+        if callback is None:
+            callback = self._dummy_callback
         # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
         # Call callback function before transfer actually starts.
