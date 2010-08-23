@@ -1,4 +1,4 @@
-# Copyright (C) 2003-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2003-2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # See the file LICENSE for licensing terms.
 
 """
@@ -16,12 +16,12 @@ import ftputil_version
 
 
 class FTPError(Exception):
-    """General error class."""
+    """General ftputil error class."""
 
     def __init__(self, *args):
         # `ftplib.Error` doesn't have a `__subclasses__` _method_ but a
         #  static method, so my use of `ftplib.Error.__subclasses__` in
-        #  my opinion is valid
+        #  my opinion is valid.
         # pylint: disable-msg = e1101
         # Contrary to what `ftplib`'s documentation says, `all_errors`
         #  does _not_ contain the subclasses, so I explicitly add them.
@@ -36,7 +36,7 @@ class FTPError(Exception):
         except TypeError:
             # Fallback to old approach.
             Exception.__init__(self, *args)
-        # Don't use `args[0]` because `args` may be empty.
+        # Don't use `args[0]` directly because `args` may be empty.
         if args:
             self.strerror = self.args[0]
         else:
@@ -50,6 +50,7 @@ class FTPError(Exception):
     def __str__(self):
         return "%s\nDebugging info: %s" % \
                (self.strerror, ftputil_version.version_info)
+
 
 # Internal errors are those that have more to do with the inner
 #  workings of ftputil than with errors on the server side.
@@ -123,6 +124,7 @@ def _try_with_oserror(callee, *args, **kwargs):
     except ftplib.all_errors:
         exc = sys.exc_info()[1]
         raise FTPOSError(*exc.args)
+
 
 class FTPIOError(FTPError, IOError):
     """Generic FTP error related to `IOError`."""
