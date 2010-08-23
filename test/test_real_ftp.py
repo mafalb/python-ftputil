@@ -13,6 +13,7 @@ import stat
 import sys
 
 import ftputil
+from ftputil import file_transfer
 from ftputil import ftp_error
 from ftputil import ftp_stat
 
@@ -509,7 +510,7 @@ class TestUploadAndDownload(RealFTPTest):
         host = self.host
         FILENAME = "debian-keyring.tar.gz"
         # Default buffer size as in `FTPHost.copyfileobj`
-        MAX_COPY_BUFFER_SIZE = ftputil.MAX_COPY_BUFFER_SIZE
+        MAX_COPY_BUFFER_SIZE = file_transfer.MAX_COPY_BUFFER_SIZE
         file_size = host.path.getsize(FILENAME)
         buffer_count, remainder = divmod(file_size, MAX_COPY_BUFFER_SIZE)
         # Add one buffer for remainder.

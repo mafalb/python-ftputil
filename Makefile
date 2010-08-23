@@ -15,7 +15,7 @@ PYTHONPATH=${PROJECT_DIR}:${TEST_DIR}
 RST2HTML=rst2html
 CHECK_FILES=ftp_error.py ftp_file.py ftp_path.py ftp_stat_cache.py \
 			ftp_stat.py ftputil.py ftputil_version.py __init__.py \
-			find_deprecated_code.py
+			file_transfer.py ftp_sync.py find_deprecated_code.py
 # name test files; make sure the long-running tests come last
 TEST_FILES=$(shell ls -1 ${TEST_DIR}/test_*.py | \
 			 grep -v "test_real_ftp.py" | \

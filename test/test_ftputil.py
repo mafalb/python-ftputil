@@ -8,6 +8,7 @@ import random
 import time
 import unittest
 
+import file_transfer
 import ftp_error
 import ftp_stat
 import ftputil
@@ -257,8 +258,8 @@ class TestTimestampComparison(unittest.TestCase):
             #        expected_result)
             source_file = MockFile(source_mtime, source_mtime_precision)
             target_file = MockFile(target_mtime, target_mtime_precision)
-            result = ftputil.source_is_newer_than_target(source_file, 
-                                                         target_file)
+            result = file_transfer.source_is_newer_than_target(source_file, 
+                                                               target_file)
             self.assertEqual(result, expected_result)
 
 
