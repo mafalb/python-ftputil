@@ -577,8 +577,6 @@ class FTPHost(object):
         target (name). The argument `mode` is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        if callback is None:
-            callback = self._dummy_callback
         self._upload(source, target, mode, conditional=False,
                      callback=callback)
 
@@ -591,8 +589,6 @@ class FTPHost(object):
         If an upload was necessary, return `True`, else return
         `False`.
         """
-        if callback is None:
-            callback = self._dummy_callback
         return self._upload(source, target, mode, conditional=True,
                             callback=callback)
 
@@ -614,8 +610,6 @@ class FTPHost(object):
         target (name). The argument mode is an empty string or 'a' for
         text copies, or 'b' for binary copies.
         """
-        if callback is None:
-            callback = self._dummy_callback
         self._download(source, target, mode, conditional=False,
                        callback=callback)
 
@@ -628,8 +622,6 @@ class FTPHost(object):
         If a download was necessary, return `True`, else return
         `False`.
         """
-        if callback is None:
-            callback = self._dummy_callback
         return self._download(source, target, mode, conditional=True,
                               callback=callback)
 
