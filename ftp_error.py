@@ -23,20 +23,20 @@ class FTPError(Exception):
         #  static method, so my use of `ftplib.Error.__subclasses__` in
         #  my opinion is valid
         # pylint: disable-msg = e1101
-        # contrary to what `ftplib`'s documentation says, `all_errors`
-        #  does _not_ contain the subclasses, so I explicitly add them
+        # Contrary to what `ftplib`'s documentation says, `all_errors`
+        #  does _not_ contain the subclasses, so I explicitly add them.
         if args and (args[0].__class__ in ftplib.all_errors or
                      issubclass(args[0].__class__, ftplib.Error)):
             warnings.warn(("Passing exception objects into the FTPError "
               "constructor is deprecated and will be disabled in ftputil 2.6"),
               DeprecationWarning, stacklevel=2)
         try:
-            # works only for new style-classes (Python 2.5+)
+            # Works only for new style-classes (Python 2.5+).
             super(FTPError, self).__init__(*args)
         except TypeError:
-            # fallback to old approach
+            # Fallback to old approach.
             Exception.__init__(self, *args)
-        # don't use `args[0]` because `args` may be empty
+        # Don't use `args[0]` because `args` may be empty.
         if args:
             self.strerror = self.args[0]
         else:
@@ -51,8 +51,8 @@ class FTPError(Exception):
         return "%s\nDebugging info: %s" % \
                (self.strerror, ftputil_version.version_info)
 
-# internal errors are those that have more to do with the inner
-#  workings of ftputil than with errors on the server side
+# Internal errors are those that have more to do with the inner
+#  workings of ftputil than with errors on the server side.
 class InternalError(FTPError):
     """Internal error."""
     pass
@@ -73,7 +73,7 @@ class ParserError(InternalError):
     """Raised if a line of a remote directory can't be parsed."""
     pass
 
-# currently not used
+# Currently not used
 class KeepAliveError(InternalError):
     """Raised if the keep-alive feature failed."""
     pass
@@ -94,7 +94,7 @@ class CommandNotImplementedError(PermanentError):
     """Raised if the server doesn't implement a certain feature (502)."""
     pass
 
-# currently not used
+# Currently not used
 class SyncError(PermanentError):
     """Raised for problems specific to syncing directories."""
     pass
@@ -108,14 +108,14 @@ def _try_with_oserror(callee, *args, **kwargs):
     exceptions from `ftplib.all_errors` to `FTPOSError` and its
     derived classes.
     """
-    # use `*exc.args` instead of `str(args)` because args might be
-    #  a unicode string with non-ascii characters
+    # Use `*exc.args` instead of `str(args)` because args might be
+    #  a unicode string with non-ascii characters.
     try:
         return callee(*args, **kwargs)
     except ftplib.error_temp, exc:
         raise TemporaryError(*exc.args)
     except ftplib.error_perm, exc:
-        # if `exc.args` is present, assume it's a byte or unicode string
+        # If `exc.args` is present, assume it's a byte or unicode string.
         if exc.args and exc.args[0].startswith("502"):
             raise CommandNotImplementedError(*exc.args)
         else:
@@ -138,7 +138,7 @@ def _try_with_ioerror(callee, *args, **kwargs):
         return callee(*args, **kwargs)
     except ftplib.all_errors:
         exc = sys.exc_info()[1]
-        # use `*exc.args` instead of `str(args)` because args might be
-        #  a unicode string with non-ascii characters
+        # Use `*exc.args` instead of `str(args)` because args might be
+        #  a unicode string with non-ascii characters.
         raise FTPIOError(*exc.args)
 
