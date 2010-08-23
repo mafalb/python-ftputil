@@ -52,6 +52,7 @@ import os
 import stat
 import sys
 import time
+import warnings
 
 import ftp_error
 import ftp_file
@@ -479,9 +480,17 @@ class FTPHost(object):
     def _dummy_callback(transferred_buffers, buffer_size, transferred_bytes):
         pass
 
-    def copyfileobj(self, source, target, callback,
-                    buffer_size=MAX_COPY_BUFFER_SIZE):
+    # This code doesn't complain if the buffer size is passed as a
+    #  positional argument but emits a deprecation warning if `length`
+    #  is used as a keyword argument.
+    def copyfileobj(self, source, target, buffer_size=MAX_COPY_BUFFER_SIZE,
+                    callback=None, **kwargs):
         "Copy data from file-like object source to file-like object target."
+        if 'length' in kwargs:
+            buffer_size = kwargs['length']
+            warnings.warn(("Parameter name `length` will be removed in "
+                           "ftputil 2.6, use `buffer_size` instead"),
+                          DeprecationWarning, stacklevel=2)
         # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
         #  code directly because it might change)
         # Call callback function before transfer actually starts.
