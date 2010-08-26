@@ -97,23 +97,28 @@ def source_is_newer_than_target(source_file, target_file):
            target_file.mtime()
 
 
-def null_callback(*args, **kwargs):
+class CallbackInfo(object):
+
+    def __init__(self, **kwargs):
+        """Turn the keyword arguments into instance attributes."""
+        self.__dict__.update(kwargs)
+
+
+def null_callback(callback_info):
     """Default callback, does nothing."""
     pass
 
 
-def copyfileobj(source_fobj, target_fobj, chunk_size=MAX_COPY_CHUNK_SIZE,
+def copyfileobj(source_fobj, target_fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE,
                 callback=null_callback):
     """Copy data from file-like object source to file-like object target."""
     # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
     #  code directly because it might change)
-    # Call callback function before transfer actually starts.
     transferred_chunks = 0
     actual_chunk_size = 0
     transferred_bytes = 0
-    callback(transferred_chunks, actual_chunk_size, transferred_bytes)
     while True:
-        chunk = source_fobj.read(chunk_size)
+        chunk = source_fobj.read(max_chunk_size)
         if not chunk:
             break
         target_fobj.write(chunk)
@@ -121,7 +126,11 @@ def copyfileobj(source_fobj, target_fobj, chunk_size=MAX_COPY_CHUNK_SIZE,
         transferred_chunks += 1
         actual_chunk_size = len(chunk)
         transferred_bytes += actual_chunk_size
-        callback(transferred_chunks, actual_chunk_size, transferred_bytes)
+        callback_info = CallbackInfo(chunk=chunk,
+                                     transferred_chunks=transferred_chunks,
+                                     actual_chunk_size=actual_chunk_size,
+                                     transferred_bytes=transferred_bytes)
+        callback(callback_info)
 
 
 def copy_file(source_file, target_file, conditional, callback):
