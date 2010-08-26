@@ -107,7 +107,7 @@ def null_callback(*args, **kwargs):
 #  is used as a keyword argument.
 def copyfileobj(source_fobj, target_fobj, buffer_size=MAX_COPY_BUFFER_SIZE,
                 callback=null_callback):
-    "Copy data from file-like object source to file-like object target."
+    """Copy data from file-like object source to file-like object target."""
     # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
     #  code directly because it might change)
     # Call callback function before transfer actually starts.
