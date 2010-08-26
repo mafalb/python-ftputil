@@ -109,6 +109,24 @@ def null_callback(callback_info):
     pass
 
 
+def chunks(fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE):
+    """Return an iterator which yields the contents of the file object.
+
+    For each iteration, at most `max_chunk_size` bytes are read from
+    `fobj` and yielded as a byte string. If the file object is
+    exhausted, the don't yield any more data but stop the iteration,
+    so the client does _not_ get an empty byte string.
+
+    Any exceptions resulting from reading the file object are passed
+    through to the client.
+    """
+    while True:
+        chunk = fobj.read(max_chunk_size)
+        if not chunk:
+            break
+        yield chunk
+
+
 def copyfileobj(source_fobj, target_fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE,
                 callback=null_callback):
     """Copy data from file-like object source to file-like object target."""
@@ -117,10 +135,7 @@ def copyfileobj(source_fobj, target_fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE,
     transferred_chunks = 0
     actual_chunk_size = 0
     transferred_bytes = 0
-    while True:
-        chunk = source_fobj.read(max_chunk_size)
-        if not chunk:
-            break
+    for chunk in chunks(source_fobj, max_chunk_size):
         target_fobj.write(chunk)
         # Update callback data and call the function.
         transferred_chunks += 1
