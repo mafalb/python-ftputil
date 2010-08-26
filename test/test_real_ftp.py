@@ -4,7 +4,6 @@
 # Execute a test on a real FTP server (other tests use a mock server)
 
 import getpass
-import inspect
 import operator
 import os
 import time
