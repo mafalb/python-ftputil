@@ -509,14 +509,14 @@ class TestUploadAndDownload(RealFTPTest):
     def test_callback_with_transfer(self):
         host = self.host
         FILENAME = "debian-keyring.tar.gz"
-        # Default buffer size as in `FTPHost.copyfileobj`
-        MAX_COPY_BUFFER_SIZE = file_transfer.MAX_COPY_BUFFER_SIZE
+        # Default chunk size as in `FTPHost.copyfileobj`
+        MAX_COPY_CHUNK_SIZE = file_transfer.MAX_COPY_CHUNK_SIZE
         file_size = host.path.getsize(FILENAME)
-        buffer_count, remainder = divmod(file_size, MAX_COPY_BUFFER_SIZE)
-        # Add one buffer for remainder.
-        buffer_count += 1
+        chunk_count, remainder = divmod(file_size, MAX_COPY_CHUNK_SIZE)
+        # Add one chunk for remainder.
+        chunk_count += 1
         # Define a callback that just collects all data passed to it.
-        def test_callback(transferred_buffers, buffer_size, transferred_bytes):
+        def test_callback(transferred_chunks, chunk_size, transferred_bytes):
             collected_data_fields = inspect.getargspec(test_callback).args
             for field_name in collected_data_fields:
                 test_callback.collected_data.setdefault(field_name, []).\
@@ -526,27 +526,27 @@ class TestUploadAndDownload(RealFTPTest):
             host.download(FILENAME, FILENAME, 'b', callback=test_callback)
             # Examine data collected by callback function.
             collected_data = test_callback.collected_data
-            transferred_buffers_list = collected_data['transferred_buffers']
-            buffer_size_list = collected_data['buffer_size']
+            transferred_chunks_list = collected_data['transferred_chunks']
+            chunk_size_list = collected_data['chunk_size']
             transferred_bytes_list = collected_data['transferred_bytes']
-            # - transferred_buffers
-            self.assertEqual(len(transferred_buffers_list), buffer_count+1)
-            self.assertEqual(transferred_buffers_list, range(buffer_count+1))
-            # - buffer_size
+            # - transferred_chunks
+            self.assertEqual(len(transferred_chunks_list), chunk_count+1)
+            self.assertEqual(transferred_chunks_list, range(chunk_count+1))
+            # - chunk_size
             # Add 1 for initial callback call at transfer start.
-            self.assertEqual(len(buffer_size_list), buffer_count+1)
-            self.assertEqual(buffer_size_list,
-                             [0] + (buffer_count-1) * [MAX_COPY_BUFFER_SIZE] +
+            self.assertEqual(len(chunk_size_list), chunk_count+1)
+            self.assertEqual(chunk_size_list,
+                             [0] + (chunk_count-1) * [MAX_COPY_CHUNK_SIZE] +
                              [remainder])
             # - transferred_bytes
-            self.assertEqual(len(transferred_bytes_list), buffer_count+1)
-            bytes_in_complete_buffers = (buffer_count-1) * MAX_COPY_BUFFER_SIZE
+            self.assertEqual(len(transferred_bytes_list), chunk_count+1)
+            bytes_in_complete_chunks = (chunk_count-1) * MAX_COPY_CHUNK_SIZE
             self.assertEqual(transferred_bytes_list,
-                             # Add 1 to include `bytes_in_complete_buffers`
+                             # Add 1 to include `bytes_in_complete_chunks`
                              #  in range
-                             range(0, bytes_in_complete_buffers+1,
-                                   MAX_COPY_BUFFER_SIZE) +
-                             [bytes_in_complete_buffers+remainder])
+                             range(0, bytes_in_complete_chunks+1,
+                                   MAX_COPY_CHUNK_SIZE) +
+                             [bytes_in_complete_chunks+remainder])
         finally:
             os.unlink(FILENAME)
 

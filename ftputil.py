@@ -391,19 +391,19 @@ class FTPHost(object):
     # Operations based on file-like objects (rather high-level),
     #  like upload and download
     #
-    # This code doesn't complain if the buffer size is passed as a
+    # This code doesn't complain if the chunk size is passed as a
     #  positional argument but emits a deprecation warning if `length`
     #  is used as a keyword argument.
     def copyfileobj(self, source, target,
-                    buffer_size=file_transfer.MAX_COPY_BUFFER_SIZE,
+                    chunk_size=file_transfer.MAX_COPY_CHUNK_SIZE,
                     callback=file_transfer.null_callback, **kwargs):
         "Copy data from file-like object source to file-like object target."
         if 'length' in kwargs:
-            buffer_size = kwargs['length']
+            chunk_size = kwargs['length']
             warnings.warn(("Parameter name `length` will be removed in "
-                           "ftputil 2.6, use `buffer_size` instead"),
+                           "ftputil 2.6, use `chunk_size` instead"),
                           DeprecationWarning, stacklevel=2)
-        file_transfer.copyfileobj(source, target, buffer_size, callback)
+        file_transfer.copyfileobj(source, target, chunk_size, callback)
 
     def __get_modes(self, mode):
         """Return modes for source and target file."""

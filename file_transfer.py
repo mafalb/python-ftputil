@@ -11,8 +11,8 @@ import os
 __all__ = []
 
 
-# Maximum size of buffer in `FTPHost.copyfileobj` in bytes.
-MAX_COPY_BUFFER_SIZE = 64 * 1024
+# Maximum size of chunk in `FTPHost.copyfileobj` in bytes.
+MAX_COPY_CHUNK_SIZE = 64 * 1024
 
 
 class LocalFile(object):
@@ -102,30 +102,26 @@ def null_callback(*args, **kwargs):
     pass
 
 
-# This code doesn't complain if the buffer size is passed as a
-#  positional argument but emits a deprecation warning if `length`
-#  is used as a keyword argument.
-def copyfileobj(source_fobj, target_fobj, buffer_size=MAX_COPY_BUFFER_SIZE,
+def copyfileobj(source_fobj, target_fobj, chunk_size=MAX_COPY_CHUNK_SIZE,
                 callback=null_callback):
     """Copy data from file-like object source to file-like object target."""
     # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
     #  code directly because it might change)
     # Call callback function before transfer actually starts.
-    transferred_buffers = 0
-    actual_buffer_size = 0
+    transferred_chunks = 0
+    actual_chunk_size = 0
     transferred_bytes = 0
-    callback(transferred_buffers, actual_buffer_size, transferred_bytes)
+    callback(transferred_chunks, actual_chunk_size, transferred_bytes)
     while True:
-        buffer_ = source_fobj.read(buffer_size)
-        if not buffer_:
+        chunk = source_fobj.read(chunk_size)
+        if not chunk:
             break
-        target_fobj.write(buffer_)
+        target_fobj.write(chunk)
         # Update callback data and call the function.
-        transferred_buffers += 1
-        actual_buffer_size = len(buffer_)
-        transferred_bytes += actual_buffer_size
-        callback(transferred_buffers, actual_buffer_size,
-                 transferred_bytes)
+        transferred_chunks += 1
+        actual_chunk_size = len(chunk)
+        transferred_bytes += actual_chunk_size
+        callback(transferred_chunks, actual_chunk_size, transferred_bytes)
 
 
 def copy_file(source_file, target_file, conditional, callback):
