@@ -9,6 +9,10 @@ ftp_file.py - support for file-like objects on FTP servers
 import ftp_error
 
 
+# This module shouldn't be used by clients of the ftputil library.
+__all__ = []
+
+
 # Converter for `\r\n` line ends to normalized ones in Python. RFC 959
 #  states that the server will send `\r\n` on text mode transfers, so
 #  this conversion should be safe. I still use text mode transfers

@@ -13,6 +13,9 @@ import ftp_error
 import ftp_stat_cache
 
 
+__all__ = ['StatResult', 'Parser', 'UnixParser', 'MSParser']
+
+
 class StatResult(tuple):
     """
     Support class resembling a tuple like that returned from

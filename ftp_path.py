@@ -11,6 +11,11 @@ import stat
 import ftp_error
 
 
+# The `_Path` class shouldn't be used directly by clients of the
+#  ftputil library.
+__all__ = []
+
+
 class _Path(object):
     """
     Support class resembling `os.path`, accessible from the `FTPHost`

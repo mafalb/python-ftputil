@@ -10,6 +10,10 @@ import time
 import lrucache
 
 
+# This module shouldn't be used by clients of the ftputil library.
+__all__ = []
+
+
 #TODO Move this to `ftp_error.py`!
 class CacheMissError(Exception):
     """Raised if a path isn't found in the cache."""

@@ -15,6 +15,25 @@ import warnings
 import ftputil_version
 
 
+# You _can_ import these with `from ftp_error import *`, - but
+#  it's _not_ recommended.
+__all__ = [
+  'FTPError',
+  'InternalError',
+  'RootDirError',
+  'InaccessibleLoginDirError',
+  'TimeShiftError',
+  'ParserError',
+  'KeepAliveError',
+  'FTPOSError',
+  'TemporaryError',
+  'PermanentError',
+  'CommandNotImplementedError',
+  'SyncError',
+  'FTPIOError',
+  ]
+
+
 class FTPError(Exception):
     """General ftputil error class."""
 
