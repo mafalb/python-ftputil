@@ -515,37 +515,22 @@ class TestUploadAndDownload(RealFTPTest):
         # Add one chunk for remainder.
         chunk_count += 1
         # Define a callback that just collects all data passed to it.
-        def test_callback(callback_info):
-            collected_data_fields = dir(callback_info)
-            for field_name in collected_data_fields:
-                test_callback.collected_data.setdefault(field_name, []).\
-                  append(getattr(callback_info, field_name))
-        test_callback.collected_data = {}
+        transferred_chunks_list = []
+        def test_callback(chunk):
+            transferred_chunks_list.append(chunk)
         try:
             host.download(FILENAME, FILENAME, 'b', callback=test_callback)
+            # Construct a list of data chunks we expect.
+            expected_chunks_list = []
+            downloaded_fobj = open(FILENAME, 'rb')
+            while True:
+                chunk = downloaded_fobj.read(MAX_COPY_CHUNK_SIZE)
+                if not chunk:
+                    break
+                expected_chunks_list.append(chunk)
             # Examine data collected by callback function.
-            collected_data = test_callback.collected_data
-            transferred_chunks_list = collected_data['transferred_chunks']
-            chunk_size_list = collected_data['actual_chunk_size']
-            transferred_bytes_list = collected_data['transferred_bytes']
-            # - transferred_chunks
             self.assertEqual(len(transferred_chunks_list), chunk_count)
-            self.assertEqual(transferred_chunks_list, range(1, chunk_count+1))
-            # - chunk_size
-            self.assertEqual(len(chunk_size_list), chunk_count)
-            self.assertEqual(chunk_size_list,
-                             (chunk_count-1) * [MAX_COPY_CHUNK_SIZE] +
-                             [remainder])
-            # - transferred_bytes
-            self.assertEqual(len(transferred_bytes_list), chunk_count)
-            bytes_in_complete_chunks = (chunk_count-1) * MAX_COPY_CHUNK_SIZE
-            self.assertEqual(transferred_bytes_list,
-                             # Add 1 to include `bytes_in_complete_chunks`
-                             #  in range
-                             range(MAX_COPY_CHUNK_SIZE,
-                                   bytes_in_complete_chunks+1,
-                                   MAX_COPY_CHUNK_SIZE) +
-                             [bytes_in_complete_chunks+remainder])
+            self.assertEqual(transferred_chunks_list, expected_chunks_list)
         finally:
             os.unlink(FILENAME)
 
