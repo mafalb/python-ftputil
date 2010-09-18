@@ -369,25 +369,36 @@ Remote file system navigation
 Uploading and downloading files
 ```````````````````````````````
 
-- ``upload(source, target, mode='')``
+.. _`callback function`:
+
+- ``upload(source, target, mode='', callback=None)``
 
   copies a local source file (given by a filename, i. e. a string)
   to the remote host under the name target. Both ``source`` and
   ``target`` may be absolute paths or relative to their corresponding
   current directory (on the local or the remote host, respectively).
+
   The mode may be "" or "a" for ASCII uploads or "b" for binary
   uploads. ASCII mode is the default, similar to regular local
   file objects.
 
-- ``download(source, target, mode='')``
+  The callback, if given, has to be a callable accepting one argument. The
+  callback function will be invoked with each transferred chunk of data::
+
+    callback(chunk)
+
+  where ``chunk`` is a bytestring. An example usage of a callback
+  method is to display a progress indicator.
+
+- ``download(source, target, mode='', callback=None)``
 
   performs a download from the remote source to a target file. Both
-  ``source`` and ``target`` are strings. Most of the description of
-  the upload method applies here, too.
+  ``source`` and ``target`` are strings. See the description of
+  ``upload`` for more details.
 
 .. _`upload_if_newer`:
 
-- ``upload_if_newer(source, target, mode='')``
+- ``upload_if_newer(source, target, mode='', callback=None)``
 
   is similar to the ``upload`` method. The only difference is that the
   upload is only invoked if the time of the last modification for the
@@ -421,7 +432,7 @@ Uploading and downloading files
 
 .. _`download_if_newer`:
 
-- ``download_if_newer(source, target, mode='')``
+- ``download_if_newer(source, target, mode='', callback=None)``
 
   corresponds to ``upload_if_newer`` but performs a download from the
   server to the local host. Read the descriptions of download and
