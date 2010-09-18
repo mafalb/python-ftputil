@@ -126,6 +126,19 @@ class FTPHost(object):
         #  `download_if_newer`).
         self.set_time_shift(0.0)
 
+    def keep_alive(self):
+        """
+        Try to keep the connection alive in order to avoid server timeouts.
+
+        Note that this won't help if the connection has already timed
+        out! In this case, `keep_alive` will raise an `TemporaryError`.
+        (Actually, if you get a server timeout, the error - for a specific
+        connection - will be permanent.)
+        """
+        # Warning: Don't call this method on `FTPHost` instances which
+        #  represent file transfers. This may fail in confusing ways.
+        ftp_error._try_with_oserror(self._session.pwd)
+
     #
     # Dealing with child sessions and file-like objects
     #  (rather low-level)

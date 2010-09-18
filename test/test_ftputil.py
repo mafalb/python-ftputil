@@ -1,4 +1,4 @@
-# Copyright (C) 2002-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2002-2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # See the file LICENSE for licensing terms.
 
 import ftplib
@@ -50,6 +50,15 @@ def binary_data():
 class FailOnLoginSession(mock_ftplib.MockSession):
     def __init__(self, host='', user='', password=''):
         raise ftplib.error_perm
+
+class FailOnKeepAliveSession(mock_ftplib.MockSession):
+    def pwd(self):
+        # Raise exception on second call to let the constructor work.
+        if not hasattr(self, "pwd_called"):
+            self.pwd_called = True
+        else:
+            raise ftplib.error_temp
+
 
 class RecursiveListingForDotAsPathSession(mock_ftplib.MockSession):
     dir_contents = {
@@ -142,6 +151,20 @@ class TestLogin(unittest.TestCase):
         """Login to invalid host must fail."""
         self.assertRaises(ftp_error.FTPOSError, test_base.ftp_host_factory,
                           FailOnLoginSession)
+
+
+class TestKeepAlive(unittest.TestCase):
+
+    def test_succeeding_keep_alive(self):
+        """Assume the connection is still alive."""
+        host = test_base.ftp_host_factory()
+        host.keep_alive()
+
+    def test_failing_keep_alive(self):
+        """Assume the connection has timed out, so `keep_alive` fails."""
+        host = test_base.ftp_host_factory(
+                 session_factory=FailOnKeepAliveSession)
+        self.assertRaises(ftp_error.TemporaryError, host.keep_alive)
 
 
 class TestSetParser(unittest.TestCase):
