@@ -152,16 +152,27 @@ class FTPHost(object):
 
     def _available_child(self):
         """
-        Return an available (i. e. one whose `_file` object is closed)
-        child (`FTPHost` object) from the pool of children or `None`
-        if there aren't any.
+        Return an available (i. e. one whose `_file` object is closed
+        and doesn't have a timed-out server connection) child
+        (`FTPHost` object) from the pool of children or `None` if
+        there aren't any.
         """
-        #FIXME Don't reuse child sessions that have timed out.
-        #  (Maybe this should go into `_make_session` or `file`.)
-        #  Write a unit test before attempting a fix.
         for host in self._children:
+            # Test for timeouts only after testing for a closed file:
+            # - If a file isn't closed, save time; don't bother to access
+            #   the remote server.
+            # - If a file transfer on the child is in progress, requesting
+            #   the directory is an invalid operation because of the way
+            #   the FTP state machine works (see RFC 959).
             if host._file.closed:
-                return host
+                try:
+                    host._session.pwd()
+                # Timed-out sessions raise `error_temp`.
+                except ftplib.error_temp:
+                    continue
+                else:
+                    # Everything's ok; use this `FTPHost` instance.
+                    return host
         # Be explicit.
         return None
 
