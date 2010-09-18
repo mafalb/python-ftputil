@@ -905,6 +905,35 @@ Other methods
 
 .. _`extra section`: `Writing directory parsers`_
 
+- ``keep_alive``
+
+  attempts to keep the connection to the remote server active in order
+  to prevent timeouts from happening. This method is primarily
+  intended to keep the underlying FTP connection of an ``FTPHost``
+  object alive while a file is uploaded or downloaded. This will
+  require either an extra thread while the upload or download is in
+  progress or calling ``keep_alive`` from a `callback function`_.
+
+  If you want to use this method, keep in mind that FTP servers define
+  a timeout for a reason. A timeout prevents running out of server
+  connections because of clients that never disconnect on their own.
+
+  Note that the ``keep_alive`` method does not affect the "hidden" FTP
+  connections established by ``FTPHost.open``. You *can't* use
+  ``keep_alive`` to avoid a timeout in a stalling transfer like
+  this::
+
+      host = ftputil.FTPHost(server, userid, password)
+      fobj = host.open("some_remote_file", 'rb')
+      data = fobj.read(100)
+      # _Futile_ attempt to avoid file connection timeout
+      for i in xrange(15):
+          time.sleep(60)
+          host.keep_alive()
+      # Will raise an `ftp_error.TemporaryError`
+      data += fobj.read()
+      fobj.close()
+
 
 File-like objects
 -----------------
