@@ -366,10 +366,10 @@ Remote file system navigation
   sets the current directory on the FTP server. This resembles
   ``os.chdir``, as you may have expected.
 
+.. _`callback function`:
+
 Uploading and downloading files
 ```````````````````````````````
-
-.. _`callback function`:
 
 - ``upload(source, target, mode='', callback=None)``
 
@@ -1205,6 +1205,7 @@ factory" in ``ftputil.FTPHost``'s constructor::
     from M2Crypto import ftpslib
 
     class SSLFTPSession(ftpslib.FTP_TLS):
+
         def __init__(self, host, userid, password):
             """
             Use M2Crypto's `FTP_TLS` class to establish an
@@ -1222,10 +1223,16 @@ factory" in ``ftputil.FTPHost``'s constructor::
                            session_factory=SSLFTPSession)
     # use `host` as usual
 
+If you work with Python 2.7, you can use a similar recipe with the new
+class ``FTP_TLS`` in the ``ftplib`` module. Note that you need to call
+``prot_p`` on the ``FTP_TLS`` instance to actually use a secure
+transfer. This makes it still necessary to define a session class
+similar to the one above.
+
 .. _M2Crypto: http://wiki.osafoundation.org/bin/view/Projects/MeTooCrypto#Downloads
 
-Connecting on another port
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+How do I connect to a non-default port?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 By default, an instantiated ``FTPHost`` object connects on the usual
 FTP ports. If you have to use a different port, refer to the
@@ -1234,8 +1241,8 @@ section `FTPHost construction`_.
 You can use the same approach to connect in active or passive mode, as
 you like.
 
-Using active or passive connections
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+How to switch between active and passive connections?
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Use a wrapper class for ``ftplib.FTP``, as described in section
 `FTPHost construction`_::
