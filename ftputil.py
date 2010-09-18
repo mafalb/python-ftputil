@@ -126,26 +126,6 @@ class FTPHost(object):
         #  `download_if_newer`).
         self.set_time_shift(0.0)
 
-    def reset(self):
-        """Reset this `FTPHost` instance.
-
-        After calling `reset`, the state of this object is:
-
-        - cache cleared
-        - open file objects closed
-        - open sessions closed
-        - child sessions removed
-        - time shift setting the same as before reset
-        - current directory is login directory
-
-        TODO: What to do about these?
-        - `FTPHost` instance had been closed already.
-        - Re-use cached current directory or reset to login directory?
-        - Re-use time shift settings or reset to 0?
-        - Re-use set parser or reset to automated parser setting?
-        """
-        pass
-
     #
     # Dealing with child sessions and file-like objects
     #  (rather low-level)

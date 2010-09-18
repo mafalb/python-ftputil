@@ -123,30 +123,6 @@ class RealFTPTest(unittest.TestCase):
         fobj.close()
 
 
-class TestReset(RealFTPTest):
-
-    def test_reset(self):
-        """Test reset of `FTPHost` object."""
-        host = self.host
-        # Implicitly put something into the stat cache; ignore result.
-        host.listdir(host.curdir)
-        # Implicitly make a child session.
-        fobj = host.open("debian-keyring.tar.gz", 'rb')
-        # Save the child session to later check whether it was closed.
-        child_session = host._children[0]
-        host.reset()
-        # Check if everything's reset correctly.
-        # - Cache cleared?
-        self.assertEqual(host.stat_cache._cache._LRUCache__heap, [])
-        self.assertEqual(host.stat_cache._cache._LRUCache__dict, {})
-        # - File object and child session closed and removed?
-        self.assert_(fobj.closed)
-        self.assert_(child_session.closed)
-        self.assertEqual(host._children, [])
-        # Host object must _not_ be closed.
-        self.assert_(not host.closed)
-
-
 class TestMkdir(RealFTPTest):
 
     def test_mkdir_rmdir(self):
@@ -688,8 +664,8 @@ minutes because it has to wait to test the timezone calculation.
         sys.exit()
     # Get login data only once, not for each test
     server, user, password = get_login_data()
-    #unittest.main()
+    unittest.main()
     import __main__
-    unittest.main(__main__,
-                  "TestReset.test_reset")
+    #unittest.main(__main__,
+    #              "TestUploadAndDownload.test_callback_with_transfer")
 
