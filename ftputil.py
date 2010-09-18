@@ -170,6 +170,10 @@ class FTPHost(object):
         (`FTPHost` object) from the pool of children or `None` if
         there aren't any.
         """
+        #TODO: Currently timed-out child sessions aren't removed and
+        #  may collect over time. In very busy or long running
+        #  processes, this might slow down an application because the
+        #  same stale child sessions have to processed again and again.
         for host in self._children:
             # Test for timeouts only after testing for a closed file:
             # - If a file isn't closed, save time; don't bother to access
