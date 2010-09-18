@@ -420,7 +420,7 @@ class FTPHost(object):
     #  is used as a keyword argument.
     def copyfileobj(self, source, target,
                     max_chunk_size=file_transfer.MAX_COPY_CHUNK_SIZE,
-                    callback=file_transfer.null_callback, **kwargs):
+                    callback=None, **kwargs):
         "Copy data from file-like object source to file-like object target."
         if 'length' in kwargs:
             max_chunk_size = kwargs['length']
@@ -450,8 +450,7 @@ class FTPHost(object):
         target_file = file_transfer.RemoteFile(self, target_path, target_mode)
         return source_file, target_file
 
-    def upload(self, source, target, mode='',
-               callback=file_transfer.null_callback):
+    def upload(self, source, target, mode='', callback=None):
         """
         Upload a file from the local source (name) to the remote
         target (name). The argument `mode` is an empty string or 'a' for
@@ -461,8 +460,7 @@ class FTPHost(object):
         file_transfer.copy_file(source_file, target_file,
                                 conditional=False, callback=callback)
 
-    def upload_if_newer(self, source, target, mode='',
-                        callback=file_transfer.null_callback):
+    def upload_if_newer(self, source, target, mode='', callback=None):
         """
         Upload a file only if it's newer than the target on the
         remote host or if the target file does not exist. See the
@@ -473,7 +471,7 @@ class FTPHost(object):
         """
         source_file, target_file = self._upload_files(source, target, mode)
         return file_transfer.copy_file(source_file, target_file,
-                                       conditional=True, callback=callback)
+                                       conditional=True, callback=None)
 
     def _download_files(self, source_path, target_path, mode):
         """
@@ -485,8 +483,7 @@ class FTPHost(object):
         target_file = file_transfer.LocalFile(target_path, target_mode)
         return source_file, target_file
 
-    def download(self, source, target, mode='',
-                 callback=file_transfer.null_callback):
+    def download(self, source, target, mode='', callback=None):
         """
         Download a file from the remote source (name) to the local
         target (name). The argument mode is an empty string or 'a' for
@@ -496,8 +493,7 @@ class FTPHost(object):
         file_transfer.copy_file(source_file, target_file,
                                 conditional=False, callback=callback)
 
-    def download_if_newer(self, source, target, mode='',
-                          callback=file_transfer.null_callback):
+    def download_if_newer(self, source, target, mode='', callback=None):
         """
         Download a file only if it's newer than the target on the
         local host or if the target file does not exist. See the

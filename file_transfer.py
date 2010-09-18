@@ -99,11 +99,6 @@ def source_is_newer_than_target(source_file, target_file):
            target_file.mtime()
 
 
-def null_callback(chunk):
-    """Default callback, does nothing."""
-    pass
-
-
 def chunks(fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE):
     """Return an iterator which yields the contents of the file object.
 
@@ -123,13 +118,14 @@ def chunks(fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE):
 
 
 def copyfileobj(source_fobj, target_fobj, max_chunk_size=MAX_COPY_CHUNK_SIZE,
-                callback=null_callback):
+                callback=None):
     """Copy data from file-like object source to file-like object target."""
     # Inspired by `shutil.copyfileobj` (I don't use the `shutil`
     #  code directly because it might change)
     for chunk in chunks(source_fobj, max_chunk_size):
         target_fobj.write(chunk)
-        callback(chunk)
+        if callback is not None:
+            callback(chunk)
 
 
 def copy_file(source_file, target_file, conditional, callback):
