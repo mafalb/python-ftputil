@@ -13,6 +13,7 @@ import ftp_error
 import ftp_stat_cache
 
 
+# These can be used to write custom parsers.
 __all__ = ['StatResult', 'Parser', 'UnixParser', 'MSParser']
 
 
