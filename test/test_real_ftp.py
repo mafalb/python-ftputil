@@ -535,6 +535,21 @@ class TestUploadAndDownload(RealFTPTest):
             os.unlink(FILENAME)
 
 
+class TestFTPFiles(RealFTPTest):
+
+    def test_only_closed_children(self):
+        REMOTE_FILENAME = "debian-keyring.tar.gz"
+        host = self.host
+        file_obj1 = host.open(REMOTE_FILENAME, 'rb')
+        file_obj2 = host.open(REMOTE_FILENAME, 'rb')
+        file_obj2.close()
+        # This should re-use the second child because the first isn't
+        #  closed but the second is.
+        file_obj = host.open(REMOTE_FILENAME, 'rb')
+        self.assertEqual(len(host._children), 2)
+        self.assert_(file_obj._host is host._children[1])
+
+
 class TestChmod(RealFTPTest):
 
     def assert_mode(self, path, expected_mode):
@@ -667,5 +682,5 @@ minutes because it has to wait to test the timezone calculation.
     unittest.main()
     import __main__
     #unittest.main(__main__,
-    #              "TestUploadAndDownload.test_callback_with_transfer")
+    #              "TestFTPFiles.test_only_closed_children")
 
