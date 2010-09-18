@@ -382,8 +382,8 @@ Uploading and downloading files
   uploads. ASCII mode is the default, similar to regular local
   file objects.
 
-  The callback, if given, has to be a callable accepting one argument. The
-  callback function will be invoked with each transferred chunk of data::
+  The callback, if given, will be invoked for each transferred chunk
+  of data::
 
     callback(chunk)
 
