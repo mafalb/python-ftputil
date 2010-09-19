@@ -474,7 +474,7 @@ class FTPHost(object):
         """
         source_file, target_file = self._upload_files(source, target, mode)
         return file_transfer.copy_file(source_file, target_file,
-                                       conditional=True, callback=None)
+                                       conditional=True, callback=callback)
 
     def _download_files(self, source_path, target_path, mode):
         """
