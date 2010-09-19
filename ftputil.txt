@@ -403,10 +403,28 @@ Uploading and downloading files
   is similar to the ``upload`` method. The only difference is that the
   upload is only invoked if the time of the last modification for the
   source file is more recent than that of the target file or the
-  target doesn't exist at all. If an upload actually happened, the
-  return value is a true value, else a false value.
+  target doesn't exist at all. The check for the last modification
+  time considers the precision of the timestamps and transfers a file
+  "if in doubt". Consequently the code
 
-  Note that this method only checks the existence and/or the
+  ::
+
+    host.upload_if_newer('source_file', 'target_file', 'b')
+    time.sleep(10)
+    host.upload_if_newer('source_file', 'target_file', 'b')
+
+  might upload the file again if the timestamp of the target file is
+  precise up to a minute, which is typically the case because the
+  remote datetime is determined by parsing a directory listing from
+  the server. To avoid unnecessary transfers, wait at least a minute
+  between calls of ``upload_if_newer`` for the same file. If it still
+  seems that a file is uploaded unnecessarily (or not when it should),
+  read the subsection on `time shift`_ settings.
+
+  If an upload actually happened, the return value of
+  ``upload_if_newer`` is a true value, else a false value.
+
+  Note that the method only checks the existence and/or the
   modification time of the source and target file; it can't recognize
   a change in the transfer mode, e. g.
 
@@ -427,9 +445,6 @@ Uploading and downloading files
   - remove the incomplete target file with ``FTPHost.remove``, then
     use ``upload`` or ``upload_if_newer`` to transfer it again.
 
-  If it seems that a file is uploaded unnecessarily or not when it
-  should, read the subsection on `time shift`_ settings.
-
 .. _`download_if_newer`:
 
 - ``download_if_newer(source, target, mode='', callback=None)``
@@ -438,9 +453,6 @@ Uploading and downloading files
   server to the local host. Read the descriptions of download and
   ``upload_if_newer`` for more. If a download actually happened, the
   return value is a true value, else a false value.
-
-  If it seems that a file is downloaded unnecessarily or not when it
-  should, read the subsection on `time zone correction`_.
 
 .. _`time shift`:
 .. _`time zone correction`:
@@ -924,7 +936,7 @@ Other methods
   object alive while a file is uploaded or downloaded. This will
   require either an extra thread while the upload or download is in
   progress or calling ``keep_alive`` from a `callback function`_.
-  
+
   ``keep_alive`` won't help if the connection has already timed out.
   In this case, a ``ftp_error.TemporaryError`` is raised.
 
@@ -1070,9 +1082,10 @@ class ``Parser`` in the ``ftp_stat`` module. Here's an example::
             ...
             # make a `StatResult` object from the parts above
             stat_result = ftp_stat.StatResult(...)
-            # `_st_name` and `_st_target` are optional
+            # `_st_name`, `_st_target` and `_st_mtime_precision` are optional
             stat_result._st_name = ...
             stat_result._st_target = ...
+            stat_result._st_mtime_precision = ...
             return stat_result
 
         # define `ignores_line` only if the default in the base class
@@ -1098,26 +1111,28 @@ A ``StatResult`` object is similar to the value returned by
                    st_gid, st_size, st_atime, st_mtime, st_ctime) )
     stat_result._st_name = ...
     stat_result._st_target = ...
+    stat_result._st_mtime_precision = ...
 
 with the arguments of the ``StatResult`` constructor described in
 the following table.
 
-===== ========== ============ =============== =======================
-Index Attribute  os.stat type StatResult type Notes
-===== ========== ============ =============== =======================
-0     st_mode    int          int
-1     st_ino     long         long
-2     st_dev     long         long
-3     st_nlink   int          int
-4     st_uid     int          str             usually only available as string
-5     st_gid     int          str             usually only available as string
-6     st_size    long         long
-7     st_atime   int/float    float
-8     st_mtime   int/float    float
-9     st_ctime   int/float    float
-\-    _st_name   \-           str             file name without directory part
-\-    _st_target \-           str             link target
-===== ========== ============ =============== =======================
+===== =================== ============ =================== =======================
+Index Attribute           os.stat type ``StatResult`` type Notes
+===== =================== ============ =================== =======================
+0     st_mode             int          int
+1     st_ino              long         long
+2     st_dev              long         long
+3     st_nlink            int          int
+4     st_uid              int          str                 usually only available as string
+5     st_gid              int          str                 usually only available as string
+6     st_size             long         long
+7     st_atime            int/float    float
+8     st_mtime            int/float    float
+9     st_ctime            int/float    float
+\-    _st_name            \-           str                 file name without directory part
+\-    _st_target          \-           str                 link target (may be absolute or relative)
+\-    _st_mtime_precision \-           int                 ``st_mtime`` precision in seconds
+===== =================== ============ =================== =======================
 
 If you can't extract all the desirable data from a line (for
 example, the MS format doesn't contain any information about the
