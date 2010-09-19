@@ -436,7 +436,6 @@ class FTPHost(object):
     def __get_modes(self, mode):
         """Return modes for source and target file."""
         #XXX Should we allow mode "a" at all? We don't support appending!
-        #XXX Use dictionary?
         # Invalid mode values are handled when a file object is made.
         if mode == 'b':
             return 'rb', 'wb'
