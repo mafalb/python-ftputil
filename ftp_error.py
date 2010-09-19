@@ -93,6 +93,10 @@ class ParserError(InternalError):
     """Raised if a line of a remote directory can't be parsed."""
     pass
 
+class CacheMissError(InternalError):
+    """Raised if a path isn't found in the cache."""
+    pass
+
 # Currently not used
 class KeepAliveError(InternalError):
     """Raised if the keep-alive feature failed."""

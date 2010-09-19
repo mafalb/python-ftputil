@@ -4,6 +4,7 @@
 import time
 import unittest
 
+import ftp_error
 import ftp_stat_cache
 
 import test_base
@@ -14,7 +15,7 @@ class TestStatCache(unittest.TestCase):
         self.cache = ftp_stat_cache.StatCache()
 
     def test_get_set(self):
-        self.assertRaises(ftp_stat_cache.CacheMissError,
+        self.assertRaises(ftp_error.CacheMissError,
                           self.cache.__getitem__, "path")
         self.cache["path"] = "test"
         self.assertEqual(self.cache["path"], "test")
@@ -59,7 +60,7 @@ class TestStatCache(unittest.TestCase):
         self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
         # Should have expired (_setting_ the cache counts)
-        self.assertRaises(ftp_stat_cache.CacheMissError,
+        self.assertRaises(ftp_error.CacheMissError,
                           self.cache.__getitem__, "/path1")
 
     def test_max_age2(self):
@@ -72,16 +73,16 @@ class TestStatCache(unittest.TestCase):
         self.assertEqual(self.cache["/path1"], "test1")
         time.sleep(0.6)
         # Should have expired (_setting_ the cache counts)
-        self.assertRaises(ftp_stat_cache.CacheMissError,
+        self.assertRaises(ftp_error.CacheMissError,
                           self.cache.__getitem__, "/path1")
 
     def test_disabled(self):
         self.cache["/path1"] = "test1"
         self.cache.disable()
         self.cache["/path2"] = "test2"
-        self.assertRaises(ftp_stat_cache.CacheMissError,
+        self.assertRaises(ftp_error.CacheMissError,
                           self.cache.__getitem__, "/path1")
-        self.assertRaises(ftp_stat_cache.CacheMissError,
+        self.assertRaises(ftp_error.CacheMissError,
                           self.cache.__getitem__, "/path2")
         self.assertEqual(len(self.cache), 1)
         # Don't raise a `CacheMissError` for missing paths

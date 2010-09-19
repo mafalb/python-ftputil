@@ -1,4 +1,4 @@
-# Copyright (C) 2006-2009, Stefan Schwarzer <sschwarzer@sschwarzer.net>
+# Copyright (C) 2006-2010, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # See the file LICENSE for licensing terms.
 
 """
@@ -7,17 +7,12 @@ ftp_stat_cache.py - cache for (l)stat data
 
 import time
 
+import ftp_error
 import lrucache
 
 
 # This module shouldn't be used by clients of the ftputil library.
 __all__ = []
-
-
-#TODO Move this to `ftp_error.py`!
-class CacheMissError(Exception):
-    """Raised if a path isn't found in the cache."""
-    pass
 
 
 class StatCache(object):
@@ -82,7 +77,8 @@ class StatCache(object):
         try:
             return time.time() - self._cache.mtime(path)
         except lrucache.CacheKeyError:
-            raise CacheMissError("no entry for path %s in cache" % path)
+            raise ftp_error.CacheMissError(
+                    "no entry for path %s in cache" % path)
 
     def clear(self):
         """Clear (invalidate) all cache entries."""
@@ -120,18 +116,20 @@ class StatCache(object):
         stat entry or the cache is disabled, raise `CacheMissError`.
         """
         if not self._enabled:
-            raise CacheMissError("cache is disabled")
+            raise ftp_error.CacheMissError("cache is disabled")
         # Possibly raise a `CacheMissError` in `_age`
         if (self.max_age is not None) and (self._age(path) > self.max_age):
             self.invalidate(path)
-            raise CacheMissError("entry for path %s has expired" % path)
+            raise ftp_error.CacheMissError(
+                    "entry for path %s has expired" % path)
         else:
             #XXX I don't know if this may raise a `CacheMissError` in
             #  case of race conditions. I prefer robust code.
             try:
                 return self._cache[path]
             except lrucache.CacheKeyError:
-                raise CacheMissError("entry for path %s not found" % path)
+                raise ftp_error.CacheMissError(
+                        "entry for path %s not found" % path)
 
     def __setitem__(self, path, stat_result):
         """
@@ -153,7 +151,7 @@ class StatCache(object):
             # pylint: disable=W0612
             stat_result = self[path]
             return True
-        except CacheMissError:
+        except ftp_error.CacheMissError:
             return False
 
     #
