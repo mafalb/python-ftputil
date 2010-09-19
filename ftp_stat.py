@@ -36,6 +36,7 @@ class StatResult(tuple):
         # These may be overwritten in a `Parser.parse_line` method.
         self._st_name = ""
         self._st_target = None
+        self._st_mtime_precision = None
 
     def __getattr__(self, attr_name):
         if attr_name in self._index_mapping:
