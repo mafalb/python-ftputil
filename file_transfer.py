@@ -8,10 +8,11 @@ file_transfer.py - upload, download and generic file copy
 import os
 
 
-# Only `chunks` should be used by clients of the ftputil library. Any
-#  other functionality is supposed to be used via `FTPHost` objects.
-__all__ = ['chunks']
-
+#TODO Think a bit more about the API before making it public.
+# # Only `chunks` should be used by clients of the ftputil library. Any
+# #  other functionality is supposed to be used via `FTPHost` objects.
+# __all__ = ['chunks']
+__all__ = []
 
 # Maximum size of chunk in `FTPHost.copyfileobj` in bytes.
 MAX_COPY_CHUNK_SIZE = 64 * 1024
