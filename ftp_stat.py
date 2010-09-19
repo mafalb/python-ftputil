@@ -33,6 +33,8 @@ class StatResult(tuple):
         #  sequence is implicitly handled by `tuple.__new__`, not
         #  `tuple.__init__`. As a by-product, this avoids a
         #  `DeprecationWarning` in Python 2.6+ .
+        # pylint: disable=W0231
+        #
         # These may be overwritten in a `Parser.parse_line` method.
         self._st_name = ""
         self._st_target = None
