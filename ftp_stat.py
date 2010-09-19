@@ -522,8 +522,7 @@ class _Stat(object):
         original_path = path
         # Most code in this method is used to detect recursive
         #  link structures.
-        #TODO Now, as we require Python 2.4, we can use sets.
-        visited_paths = {}
+        visited_paths = set()
         while True:
             # Stat the link if it is one, else the file/directory.
             lstat_result = self._real_lstat(path, _exception_for_missing_path)
@@ -535,19 +534,19 @@ class _Stat(object):
                 return lstat_result
             # If we stat'ed a link, calculate a normalized path for
             #  the file the link points to.
-            # We don't use `basename`
+            # We don't use `basename`.
             # pylint: disable=W0612
             dirname, basename = self._path.split(path)
             path = self._path.join(dirname, lstat_result._st_target)
             path = self._path.abspath(self._path.normpath(path))
-            # Check for cyclic structure
+            # Check for cyclic structure.
             if path in visited_paths:
-                # We had seen this path already
+                # We had seen this path already.
                 raise ftp_error.PermanentError(
                       "recursive link structure detected for remote path '%s'" %
                       original_path)
-            # Remember the path we have encountered
-            visited_paths[path] = True
+            # Remember the path we have encountered.
+            visited_paths.add(path)
 
     def __call_with_parser_retry(self, method, *args, **kwargs):
         """
