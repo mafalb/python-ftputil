@@ -26,7 +26,8 @@ class _Path(object):
 
     def __init__(self, host):
         self._host = host
-        # Delegate these to the `posixpath` module
+        # Delegate these to the `posixpath` module.
+        # pylint: disable=C0103
         pp = posixpath
         self.dirname      = pp.dirname
         self.basename     = pp.basename
