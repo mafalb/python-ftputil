@@ -937,8 +937,8 @@ Other methods
   require either an extra thread while the upload or download is in
   progress or calling ``keep_alive`` from a `callback function`_.
 
-  ``keep_alive`` won't help if the connection has already timed out.
-  In this case, a ``ftp_error.TemporaryError`` is raised.
+  The ``keep_alive`` method won't help if the connection has already
+  timed out. In this case, a ``ftp_error.TemporaryError`` is raised.
 
   If you want to use this method, keep in mind that FTP servers define
   a timeout for a reason. A timeout prevents running out of server
