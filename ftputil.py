@@ -520,12 +520,11 @@ class FTPHost(object):
         the current directory is the login directory.
         """
         presumable_login_dir = self.getcwd()
-        # Bail out with an internal error rather than modifying the
+        # Bail out with an internal error rather than modify the
         #  current directory without hope of restoration.
         try:
             self.chdir(presumable_login_dir)
         except ftp_error.PermanentError:
-            # `old_dir` is an inaccessible login directory
             raise ftp_error.InaccessibleLoginDirError(
                   "directory '%s' is not accessible" % presumable_login_dir)
 
