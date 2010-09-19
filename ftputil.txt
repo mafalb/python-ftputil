@@ -1,8 +1,8 @@
 ``ftputil`` -- a high-level FTP client library
 ==============================================
 
-:Version:   2.4.2
-:Date:      2009-11-12
+:Version:   2.5b
+:Date:      2010-09-19
 :Summary:   high-level FTP client library for Python
 :Keywords:  FTP, ``ftplib`` substitute, virtual filesystem, pure Python
 :Author:    Stefan Schwarzer <sschwarzer@sschwarzer.net>
@@ -925,6 +925,8 @@ Other methods
   the `mailing list`_.
 
 .. _`extra section`: `Writing directory parsers`_
+
+.. _`keep_alive`:
 
 - ``keep_alive``
 
