@@ -1,12 +1,11 @@
 Planned:
 
-- get ftputil included into Debian repositories
+- clean up the code by using decorators
 - add `ftp_session` module containing session classes (e. g. for
   passive mode connections)
 
 Ideas for future development:
 
-- add an interface module for ftpparse (see conversation with
-  Oleg Broytmann) -> perhaps license issues
+- see ticket system
 - WebDAV support?
 
