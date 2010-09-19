@@ -308,6 +308,8 @@ class FTPHost(object):
 
         The time shift is measured in seconds.
         """
+        # Implicitly set via `set_time_shift` call in constructor
+        # pylint: disable=W0201
         self._time_shift = time_shift
 
     def time_shift(self):
