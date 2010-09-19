@@ -1,3 +1,70 @@
+ftputil 2.5b is now available from
+http://ftputil.sschwarzer.net/download .
+
+Changes since version 2.4.2
+---------------------------
+
+- As announced over a year ago [1], the `xreadlines` method for
+  FTP file objects has been removed, and exceptions can no longer be
+  accessed via the `ftputil` namespace. Only use `ftp_error` to access
+  the exceptions.
+
+  The distribution contains a small tool `find_deprecated_code.py` to
+  scan a directory tree for the deprecated uses. Invoke the program
+  with the `--help` option to see a description.
+
+- Upload and download methods now accept a `callback` argument to do
+  things during a transfer. Modification time comparisons in
+  `upload_if_newer` and `download_if_newer` now consider the timestamp
+  precision of the remote file which may lead to some unneccesary
+  transfers. These can be avoided by waiting at least a minute between
+  calls of `upload_if_newer` (or `download_if_newer`) for the same
+  file. See the documentation for details [2].
+
+- The `FTPHost` class got a `keep_alive` method. It should be used
+  carefully though, not routinely. Please read the description [3] in
+  the documentation.
+
+- Several bugs were fixed [4-7].
+
+- The source code was restructured. The tests are now in a `test`
+  subdirectory and are no longer part of the release archive. You can
+  still get them via the source repository. Licensing matters have
+  been moved to a common `LICENSE` file.
+
+Upgrading is recommended.
+
+What is ftputil?
+----------------
+
+ftputil is a high-level FTP client library for the Python programming
+language. ftputil implements a virtual file system for accessing FTP
+servers, that is, it can generate file-like objects for remote files.
+The library supports many functions similar to those in the os,
+os.path and shutil modules. ftputil has convenience functions for
+conditional uploads and downloads, and handles FTP clients and servers
+in different timezones.
+
+Read the documentation at
+http://ftputil.sschwarzer.net/documentation .
+
+License
+-------
+
+ftputil is Open Source software, released under the revised BSD
+license (see http://www.opensource.org/licenses/bsd-license.php ).
+
+[1] http://codespeak.net/pipermail/ftputil/2009q1/000256.html
+[2] http://ftputil.sschwarzer.net/trac/wiki/Documentation#uploading-and-downloading-files
+[3] http://ftputil.sschwarzer.net/trac/wiki/Documentation#keep-alive
+[4] http://ftputil.sschwarzer.net/trac/ticket/44
+[5] http://ftputil.sschwarzer.net/trac/ticket/46
+[6] http://ftputil.sschwarzer.net/trac/ticket/47
+[7] http://ftputil.sschwarzer.net/trac/ticket/51
+
+Stefan
+
+----------------------------------------------------------------------
 ftputil 2.4.2 is now available from
 http://ftputil.sschwarzer.net/download .
 
