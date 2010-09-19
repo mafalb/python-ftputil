@@ -59,6 +59,8 @@ class StatCache(object):
         stored before calling `disable` can still be retrieved unless
         disturbed by a `resize` command or normal cache expiration.
         """
+        # `enable` is called by `__init__`, so it's not set outside `__init__`
+        # pylint: disable=W0201
         self._enabled = False
 
     def resize(self, new_size):
