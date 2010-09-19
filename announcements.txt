@@ -16,7 +16,7 @@ Changes since version 2.4.2
 - Upload and download methods now accept a `callback` argument to do
   things during a transfer. Modification time comparisons in
   `upload_if_newer` and `download_if_newer` now consider the timestamp
-  precision of the remote file which may lead to some unneccesary
+  precision of the remote file which may lead to some unnecesary
   transfers. These can be avoided by waiting at least a minute between
   calls of `upload_if_newer` (or `download_if_newer`) for the same
   file. See the documentation for details [2].
