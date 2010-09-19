@@ -88,9 +88,7 @@ Exception hierarchy
 -------------------
 
 The exceptions are in the namespace of the ``ftp_error`` module, e. g.
-``ftp_error.TemporaryError``. Getting the exception classes from the
-"package module" ``ftputil`` is deprecated and will no longer be
-supported in ``ftputil`` version 2.5.
+``ftp_error.TemporaryError``.
 
 The exception classes are organized as follows::
 
