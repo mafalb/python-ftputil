@@ -29,14 +29,14 @@ Examples::
 
     import ftputil
 
-    # download some files from the login directory
+    # Download some files from the login directory.
     host = ftputil.FTPHost('ftp.domain.com', 'user', 'password')
     names = host.listdir(host.curdir)
     for name in names:
         if host.path.isfile(name):
             host.download(name, name, 'b')  # remote, local, binary mode
 
-    # make a new directory and copy a remote file into it
+    # Make a new directory and copy a remote file into it.
     host.mkdir('newdir')
     source = host.file('index.html', 'r')         # file-like object
     target = host.file('newdir/index.html', 'w')  # file-like object
@@ -303,10 +303,10 @@ class::
             self.connect(host, port)
             self.login(userid, password)
 
-    # try not to use MySession() as factory, - use the class itself
+    # Try not to use MySession() as factory, - use the class itself.
     host = ftputil.FTPHost(host, userid, password,
                            port=EXAMPLE_PORT, session_factory=MySession)
-    # use `host` as usual
+    # Use `host` as usual.
 
 On login, the format of the directory listings (needed for stat'ing
 files and directories) should be determined automatically. If not,
@@ -320,7 +320,7 @@ Support for the ``with`` statement
 If you are sure that all the users of your code use at least Python
 2.5, you can use Python's `with statement`_::
 
-    # not needed for Python 2.6 and later
+    # Not needed for Python 2.6 and later
     from __future__ import with_statement
 
     import ftputil
@@ -428,9 +428,9 @@ Uploading and downloading files
 
   ::
 
-    # transfer in ASCII mode
+    # Transfer in ASCII mode.
     host.upload_if_newer('source_file', 'target_file', 'a')
-    # won't transfer the file again, which is bad!
+    # Won't transfer the file again, which is bad!
     host.upload_if_newer('source_file', 'target_file', 'b')
 
   Similarly, if a transfer is interrupted, the remote file will have a
@@ -753,8 +753,8 @@ a file system simultaneously::
         host2.remove("some_file")
         # `host1` will still see the obsolete cache entry!
         print host1.stat("some_file")
-        # will raise an exception since an `FTPHost` object
-        #  knows of its own changes
+        # Will raise an exception since an `FTPHost` object
+        #  knows of its own changes.
         print host2.stat("some_file")
     finally:
         host1.close()
@@ -775,13 +775,13 @@ example above, it could be used like this::
         stat_result1 = host1.stat("some_file")
         stat_result2 = host2.stat("some_file")
         host2.remove("some_file")
-        # invalidate using an absolute path
+        # Invalidate using an absolute path.
         absolute_path = host1.path.abspath(
                         host1.path.join(host1.curdir, "some_file"))
         host1.stat_cache.invalidate(absolute_path)
-        # will now raise an exception as it should
+        # Will now raise an exception as it should
         print host1.stat("some_file")
-        # would raise an exception since an `FTPHost` object
+        # Would raise an exception since an `FTPHost` object
         #  knows of its own changes, even without `invalidate`
         print host2.stat("some_file")
     finally:
@@ -892,10 +892,10 @@ Other methods
     try:
         host.chmod("some_file", 0644)
     except ftp_error.CommandNotImplementedError:
-        # chmod not supported
+        # `chmod` not supported
         ...
     except ftp_error.PermanentError:
-        # possibly a non-existent file
+        # Possibly a non-existent file
         ...
 
   Because the ``CommandNotImplementedError`` is more specific, you
@@ -992,12 +992,12 @@ If you are sure that all the users of your code use at least Python
 2.5, you can use Python's `with statement`_ with the ``FTPFile``
 constructor::
 
-    # not needed for Python 2.6 and later
+    # Not needed for Python 2.6 and later
     from __future__ import with_statement
 
     import ftputil
 
-    # get an ``FTPHost`` object from somewhere
+    # Get an ``FTPHost`` object from somewhere.
     ...
 
     with host.file("new_file", "w") as f:
@@ -1034,7 +1034,7 @@ line::
     host = ftputil.FTPHost(...)
     input_file = host.file("some_file")
     for line in input_file:
-        # do something with the line, e. g.
+        # Do something with the line, e. g.
         print line.strip().replace("ftplib", "ftputil")
     input_file.close()
 
@@ -1077,18 +1077,18 @@ class ``Parser`` in the ``ftp_stat`` module. Here's an example::
             parsing of dates and times. See the class
             `ftp_stat.UnixParser` for an example.
             """
-            # split the `line` argument and examine it further; if
-            #  something goes wrong, raise an `ftp_error.ParserError`
+            # Split the `line` argument and examine it further; if
+            #  something goes wrong, raise an `ftp_error.ParserError`.
             ...
-            # make a `StatResult` object from the parts above
+            # Make a `StatResult` object from the parts above.
             stat_result = ftp_stat.StatResult(...)
-            # `_st_name`, `_st_target` and `_st_mtime_precision` are optional
+            # `_st_name`, `_st_target` and `_st_mtime_precision` are optional.
             stat_result._st_name = ...
             stat_result._st_target = ...
             stat_result._st_mtime_precision = ...
             return stat_result
 
-        # define `ignores_line` only if the default in the base class
+        # Define `ignores_line` only if the default in the base class
         #  doesn't do enough!
         def ignores_line(self, line):
             """
@@ -1230,16 +1230,16 @@ factory" in ``ftputil.FTPHost``'s constructor::
             SSL connection.
             """
             ftpslib.FTP_TLS.__init__(self)
-            # do anything necessary to set up the SSL connection
+            # Do anything necessary to set up the SSL connection.
             ...
             self.connect(host, port)
             self.login(userid, password)
             ...
 
-    # note the `session_factory` parameter
+    # Note the `session_factory` parameter.
     host = ftputil.FTPHost(host, userid, password,
                            session_factory=SSLFTPSession)
-    # use `host` as usual
+    # Use `host` as usual.
 
 If you work with Python 2.7, you can use a similar recipe with the new
 class ``FTP_TLS`` in the ``ftplib`` module. Note that you need to call
@@ -1276,7 +1276,7 @@ Use a wrapper class for ``ftplib.FTP``, as described in section
             ftplib.FTP.__init__(self)
             self.connect(host, port)
             self.login(userid, password)
-            # see http://docs.python.org/lib/ftp-objects.html
+            # See http://docs.python.org/lib/ftp-objects.html
             self.set_pasv(False)
 
 Use this class as the ``session_factory`` argument in ``FTPHost``'s
