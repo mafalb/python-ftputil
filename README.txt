@@ -15,46 +15,35 @@ in different timezones.
 What's new?
 -----------
 
-Since version 2.4.1 the following changed:
+Since version 2.4.2 the following changed:
 
-- Some FTP servers seem to have problems using *any* directory
-  argument which contains slashes. The new default for FTP commands
-  now is to change into the directory before actually invoking the
-  command on a relative path (report and fix suggestion by Nicola
-  Murino).
+- As announced `over a year ago`_, the ``xreadlines`` method for
+  FTP file objects has been removed, and exceptions can no longer be
+  accessed via the ``ftputil`` namespace. Only use ``ftp_error`` to access
+  the exceptions.
 
-- Calling the method ``FTPHost.stat_cache.resize`` with an argument 0
-  caused an exception. This has been fixed; a zero cache size now
-  of course doesn't cache anything but doesn't lead to a traceback
-  either.
+  The distribution contains a small tool ``find_deprecated_code.py`` to
+  scan a directory tree for the deprecated uses. Invoke the program
+  with the ``--help`` option to see a description.
 
-- The installation script ``setup.py`` didn't work with the ``--home``
-  option because it still tried to install the documentation in a
-  system directory (report by Albrecht Mühlenschulte).
+- Upload and download methods now accept a ``callback`` argument to do
+  things during a transfer. Modification time comparisons in
+  ``upload_if_newer`` and ``download_if_newer`` now consider the timestamp
+  precision of the remote file which may lead to some unneccesary
+  transfers. These can be avoided by waiting at least a minute between
+  calls of ``upload_if_newer`` (or ``download_if_newer``) for the same
+  file. See the documentation for `details`_.
 
-  As a side effect, when using the *global* installation, the
-  documentation is no longer installed in the ftputil package
-  directory but in a subdirectory ``doc`` of a directory determined by
-  Distutils. For example, on my system (Ubuntu 9.04) the documentation
-  files are put into ``/usr/local/doc``.
+- The ``FTPHost`` class got a ``keep_alive`` method. It should be used
+  carefully though, not routinely. Please read the `description`_ in
+  the documentation.
 
-Incompatibility notice
-----------------------
+- Several bugs were fixed (`#44`_, `#46`_, `#47`_, `#51`_).
 
-When doing a system-wide installation, the documentation files are now
-placed in another location than before (see last paragraph of the
-previous section). This doesn't change anything regarding the use of
-the library, though.
-
-Both the ``xreadlines`` method and the long-deprecated direct access
-of exceptions via the ``ftputil`` module (as in
-``ftputil.PermanentError``) will be removed in ftputil *2.5*. Starting
-with that version, exception classes will only be accessible via the
-``ftp_error`` module.
-
-The distribution contains a small tool ``find_deprecated_code.py`` to
-scan a directory for the deprecated uses. Invoke the program with the
-``--help`` option to see a description.
+- The source code was restructured. The tests are now in a ``test``
+  subdirectory and are no longer part of the release archive. You can
+  still get them via the source repository. Licensing matters have
+  been moved to a common ``LICENSE`` file.
 
 Documentation
 -------------
@@ -66,7 +55,7 @@ from ftputil.txt).
 Prerequisites
 -------------
 
-To use ftputil, you need Python, at least version 2.3. Python is a
+To use ftputil, you need Python, at least version 2.4. Python is a
 programming language, available from http://www.python.org for free.
 
 Installation
@@ -127,3 +116,10 @@ Evan Prodromou <evan@bad.dynu.ca> (lrucache module)
 
 Please provide feedback! It's certainly appreciated. :-)
 
+.. _`over a year ago`: http://codespeak.net/pipermail/ftputil/2009q1/000256.html
+.. _`details`: http://ftputil.sschwarzer.net/trac/wiki/Documentation#uploading-and-downloading-files
+.. _`description`: http://ftputil.sschwarzer.net/trac/wiki/Documentation#keep-alive
+.. _`#44`: http://ftputil.sschwarzer.net/trac/ticket/44
+.. _`#46`: http://ftputil.sschwarzer.net/trac/ticket/46
+.. _`#47`: http://ftputil.sschwarzer.net/trac/ticket/47
+.. _`#51`: http://ftputil.sschwarzer.net/trac/ticket/51
