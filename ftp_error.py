@@ -6,7 +6,7 @@ ftp_error.py - exception classes and wrappers
 """
 
 # "Too many ancestors"
-# pylint: disable-msg = R0901
+# pylint: disable = R0901
 
 import ftplib
 import sys
@@ -41,7 +41,7 @@ class FTPError(Exception):
         # `ftplib.Error` doesn't have a `__subclasses__` _method_ but a
         #  static method, so my use of `ftplib.Error.__subclasses__` in
         #  my opinion is valid.
-        # pylint: disable-msg = e1101
+        # pylint: disable = e1101
         # Contrary to what `ftplib`'s documentation says, `all_errors`
         #  does _not_ contain the subclasses, so I explicitly add them.
         if args and (args[0].__class__ in ftplib.all_errors or

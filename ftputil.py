@@ -253,7 +253,7 @@ class FTPHost(object):
 
     def __del__(self):
         # Don't complain about lazy except clause
-        # pylint: disable-msg=W0702, W0704
+        # pylint: disable=W0702, W0704
         try:
             self.close()
         except:
@@ -588,7 +588,7 @@ class FTPHost(object):
         `os.mkdir`.
         """
         # Ignore unused argument `mode`
-        # pylint: disable-msg=W0613
+        # pylint: disable=W0613
         def command(self, path):
             """Callback function."""
             return ftp_error._try_with_oserror(self._session.mkd, path)
@@ -602,7 +602,7 @@ class FTPHost(object):
         `os.makedirs` but otherwise ignored.
         """
         # Ignore unused argument `mode`
-        # pylint: disable-msg=W0613
+        # pylint: disable=W0613
         path = self.path.abspath(path)
         directories = path.split(self.sep)
         # Try to build the directory chain from the "uppermost" to
@@ -697,13 +697,13 @@ class FTPHost(object):
             def new_onerror(*args):
                 """Do nothing."""
                 # Ignore unused arguments
-                # pylint: disable-msg=W0613
+                # pylint: disable=W0613
                 pass
         elif onerror is None:
             def new_onerror(*args):
                 """Re-raise exception."""
                 # Ignore unused arguments
-                # pylint: disable-msg=W0613
+                # pylint: disable=W0613
                 raise
         else:
             new_onerror = onerror
@@ -874,7 +874,7 @@ class FTPHost(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         # We don't need the `exc_*` arguments here
-        # pylint: disable-msg=W0613
+        # pylint: disable=W0613
         self.close()
         # Be explicit.
         return False

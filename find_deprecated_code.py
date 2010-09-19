@@ -2,7 +2,7 @@
 # Copyright (C) 2008, Stefan Schwarzer <sschwarzer@sschwarzer.net>
 # See the file LICENSE for licensing terms.
 
-# pylint: disable-msg=W0622
+# pylint: disable=W0622
 
 """\
 This script scans a directory tree for files which contain code which
@@ -53,7 +53,7 @@ def scan_file(file_name):
     try:
         for index, line in enumerate(fobj):
             # `title` isn't used here
-            # pylint: disable-msg=W0612
+            # pylint: disable=W0612
             for title, regex, positions in deprecated_features:
                 if regex.search(line):
                     positions.setdefault(file_name, [])
@@ -68,7 +68,7 @@ def print_results():
     """
     last_title = ""
     # `regex` isn't used here
-    # pylint: disable-msg=W0612
+    # pylint: disable=W0612
     for title, regex, positions in deprecated_features:
         if title != last_title:
             print
@@ -93,7 +93,7 @@ def main(start_dir):
     of deprecated features, if any were found.
     """
     # `dir_names` isn't used here
-    # pylint: disable-msg=W0612
+    # pylint: disable=W0612
     for dir_path, dir_names, file_names in os.walk(start_dir):
         for file_name in file_names:
             abs_name = os.path.abspath(os.path.join(dir_path, file_name))

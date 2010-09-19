@@ -52,7 +52,7 @@ class StatCache(object):
     def enable(self):
         """Enable storage of stat results."""
         # `enable` is called by `__init__`, so it's not set outside `__init__`
-        # pylint: disable-msg=W0201
+        # pylint: disable=W0201
         self._enabled = True
 
     def disable(self):
@@ -109,7 +109,7 @@ class StatCache(object):
         try:
             del self._cache[path]
         # Don't complain about lazy except clause
-        # pylint: disable-msg=W0704
+        # pylint: disable=W0704
         except lrucache.CacheKeyError:
             # Ignore errors
             pass
@@ -150,7 +150,7 @@ class StatCache(object):
         try:
             # Implicitly do an age test which may raise `CacheMissError`.
             #  Deliberately ignore the return value `stat_result`.
-            # pylint: disable-msg=W0612
+            # pylint: disable=W0612
             stat_result = self[path]
             return True
         except CacheMissError:

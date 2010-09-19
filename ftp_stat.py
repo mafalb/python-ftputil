@@ -219,7 +219,7 @@ class Parser(object):
         raises an `ftp_error.ParserError`.
         """
         # Don't complain about unused `time_shift` argument
-        # pylint: disable-msg=W0613
+        # pylint: disable=W0613
         # For the time being, I don't add a `with_precision`
         #  parameter as in the Unix parser because the precision for
         #  the DOS format is always a minute and can be set in
@@ -536,7 +536,7 @@ class _Stat(object):
             # If we stat'ed a link, calculate a normalized path for
             #  the file the link points to.
             # We don't use `basename`
-            # pylint: disable-msg=W0612
+            # pylint: disable=W0612
             dirname, basename = self._path.split(path)
             path = self._path.join(dirname, lstat_result._st_target)
             path = self._path.abspath(self._path.normpath(path))
