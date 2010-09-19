@@ -48,7 +48,6 @@ Note: ftputil currently is not threadsafe. More specifically, you can
 """
 
 import ftplib
-import os
 import stat
 import sys
 import time
