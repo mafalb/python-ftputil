@@ -10,7 +10,7 @@ FTPHost objects
     systems. In addition, it provides a method `file` which will
     return file-objects corresponding to remote files.
 
-    # example session
+    # Example session
     host = ftputil.FTPHost('ftp.domain.com', 'me', 'secret')
     print host.getcwd()  # e. g. '/home/me'
     source = host.file('sourcefile', 'r')
@@ -34,13 +34,13 @@ FTPHost objects
     transfer mode will be for binary files.
 
     For even more functionality refer to the documentation in
-    `ftputil.txt`.
+    `ftputil.txt` or `ftputil.html`.
 
 FTPFile objects
     `FTPFile` objects are constructed via the `file` method (`open`
     is an alias) of `FTPHost` objects. `FTPFile` objects support the
     usual file operations for non-seekable files (`read`, `readline`,
-    `readlines`, `xreadlines`, `write`, `writelines`, `close`).
+    `readlines`, `write`, `writelines`, `close`).
 
 Note: ftputil currently is not threadsafe. More specifically, you can
       use different `FTPHost` objects in different threads but not
