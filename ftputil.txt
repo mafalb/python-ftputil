@@ -928,7 +928,7 @@ Other methods
 
 .. _`keep_alive`:
 
-- ``keep_alive``
+- ``keep_alive()``
 
   attempts to keep the connection to the remote server active in order
   to prevent timeouts from happening. This method is primarily
