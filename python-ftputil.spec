@@ -2,8 +2,8 @@
 %define pyver  %(%{__python} -c 'import sys ; print sys.version[:3]')
 
 Name:           python-ftputil
-Version:        2.4.2
-Release: 	0.2
+Version:        2.5b
+Release: 	0.1
 Summary:        The ftputil Python library is a high-level interface to the ftplib module.
 Group:          System Environment/Libraries
 License:        Open source (revised BSD license)
